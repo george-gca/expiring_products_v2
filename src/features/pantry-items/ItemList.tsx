@@ -23,8 +23,6 @@ export function ItemList({
 	const [addOpen, setAddOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<PantryItem | null>(null);
 
-	if (loading) return null;
-
 	const { getSortDirection, getFilter } = useUiPreferencesStore();
 	const direction = getSortDirection(category.key);
 	const filter = getFilter(category.key);
@@ -36,6 +34,8 @@ export function ItemList({
 	});
 	const sorted = sortItems(filtered);
 	if (direction === "desc") sorted.reverse();
+
+	if (loading) return null;
 
 	return (
 		<>
