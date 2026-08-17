@@ -1,0 +1,55 @@
+import { Form, InputNumber, Modal } from "antd";
+import { useTranslation } from "react-i18next";
+import { updateItemQuantities } from "./firestoreWrites";
+import type { PantryItem } from "./schema";
+
+interface EditFormValues {
+	opened: number;
+	consumed: number;
+	discarded: number;
+}
+
+export function EditItemModal({
+	uid,
+	item,
+	onClose,
+}: {
+	uid: string;
+	item: PantryItem;
+	onClose: () => void;
+}) {
+	const { t } = useTranslation();
+	const [form] = Form.useForm<EditFormValues>();
+
+	const handleOk = async () => {
+		const values = await form.validateFields();
+		await updateItemQuantities(uid, item.id, values);
+		onClose();
+	};
+
+	return (
+		<Modal
+			title={item.name}
+			open
+			onOk={handleOk}
+			onCancel={onClose}
+			destroyOnHidden
+		>
+			<Form
+				form={form}
+				layout="vertical"
+				initialValues={{ opened: 0, consumed: 0, discarded: 0 }}
+			>
+				<Form.Item name="opened" label={t("items.openedItems")}>
+					<InputNumber min={0} max={item.quantity} style={{ width: "100%" }} />
+				</Form.Item>
+				<Form.Item name="consumed" label={t("items.consumedItems")}>
+					<InputNumber min={0} max={item.quantity} style={{ width: "100%" }} />
+				</Form.Item>
+				<Form.Item name="discarded" label={t("items.discardedItems")}>
+					<InputNumber min={0} max={item.quantity} style={{ width: "100%" }} />
+				</Form.Item>
+			</Form>
+		</Modal>
+	);
+}
