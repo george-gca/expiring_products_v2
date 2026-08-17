@@ -45,7 +45,6 @@ expiring-products-v2/
 │   │   ├── pt-br.json
 │   │   └── en-us.json
 │   ├── routes/
-│   │   ├── router.tsx            # TanStack Router instance + route tree
 │   │   ├── root-route.tsx        # auth gate
 │   │   └── app-route.tsx         # main authenticated shell
 │   ├── features/
@@ -95,7 +94,7 @@ npm install
 - [ ] **Step 2: Install core runtime dependencies**
 
 ```bash
-npm install antd dayjs firebase zustand zod react-i18next i18next i18next-browser-languagedetector @tanstack/react-router
+npm install antd @ant-design/icons dayjs firebase zustand zod react-i18next i18next i18next-browser-languagedetector
 ```
 
 - [ ] **Step 3: Install dev/test dependencies**
@@ -521,7 +520,7 @@ git commit -m "feat: add Zod schemas for Category and Item Firestore boundary pa
 ### Task 4: Auth (login/signup/logout) + route shell
 
 **Files:**
-- Create: `src/features/auth/useAuth.ts`, `src/features/auth/useAuth.test.tsx`, `src/features/auth/LoginPage.tsx`, `src/routes/router.tsx`, `src/routes/root-route.tsx`, `src/routes/app-route.tsx`
+- Create: `src/features/auth/useAuth.ts`, `src/features/auth/useAuth.test.tsx`, `src/features/auth/LoginPage.tsx`, `src/routes/root-route.tsx`, `src/routes/app-route.tsx`
 - Modify: `src/main.tsx`, `src/App.tsx`
 - Test: `src/test/setup.ts`, `vitest.config.ts`
 
@@ -779,7 +778,7 @@ export function App() {
 }
 ```
 
-Note: `router.tsx` (TanStack Router instance) is deferred to Task 5, once there's a second real route (Settings) to route between — a single-route app doesn't need a router yet, and adding one now would be unused scaffolding (YAGNI).
+Note: this plan does not add TanStack Router at all — Settings ends up as a Tab inside `CategoryTabs` (Task 5), not a separate route, so the app only ever has the one auth-gated screen in this phase. `@tanstack/react-router` is deliberately not installed here; adopt it in whichever future phase first introduces a real second route, rather than scaffolding an unused router now (YAGNI).
 
 - [ ] **Step 8: Verify manually**
 
@@ -801,7 +800,7 @@ git commit -m "feat: add Firebase auth hook, login page, and root route gate"
 ### Task 5: Categories (read + default creation) and tab shell
 
 **Files:**
-- Create: `src/features/categories/useCategories.ts`, `src/features/categories/useCategories.test.tsx`, `src/features/categories/CategoryTabs.tsx`, `src/routes/router.tsx`
+- Create: `src/features/categories/useCategories.ts`, `src/features/categories/useCategories.test.tsx`, `src/features/categories/CategoryTabs.tsx`
 - Modify: `src/routes/app-route.tsx`
 
 **Interfaces:**
