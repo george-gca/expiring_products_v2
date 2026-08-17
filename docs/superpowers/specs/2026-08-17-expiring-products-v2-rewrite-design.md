@@ -39,6 +39,10 @@ creep risk on any rebuild needs active management.
 - Installable PWA + offline app shell.
 - Bilingual UI (pt-br default, en-us) at launch.
 - Barcode scanning on the add-item flow (new capability, the core adoption fix).
+- Synced cross-device settings (language, hide-distant threshold, notifications) — fixes a
+  verified v1 gap where these lived only in per-device `localStorage`.
+- Server-side daily push notifications for items nearing expiry (new capability, targets the
+  "we forgot the app exists" failure mode directly, unlike v1's client-only local checks).
 
 ## Architecture
 
@@ -79,12 +83,35 @@ Fresh start, same top-level shape as v1, tightened where useful now that nothing
 stay backward-compatible:
 
 ```
+users/{uid}                    # NEW — root doc, synced cross-device settings
 users/{uid}/
   categories/          # unchanged shape from v1
   items/                # purchase-instance data
   item_history/         # autocomplete suggestions, unchanged from v1
   barcode_products/{barcode}   # NEW — product-metadata cache, keyed by barcode
+  fcm_tokens/{deviceId}        # NEW — one doc per registered device, for push notifications
 ```
+
+**`users/{uid}`** (NEW, root doc) — settings that previously lived only in v1's per-device
+`localStorage` (`hideDistantItems`, `expiryThresholdMonths`, `notificationsEnabled`),
+confirmed via v1's code to never sync across devices. Moving them to Firestore means both
+household members' devices see the same language, hidden-items threshold, and notification
+setting:
+
+```javascript
+{
+  language: "pt-br" | "en-us",
+  hideDistantThresholdMonths: 3,
+  notificationsEnabled: true,
+  notifyDaysBeforeExpiry: 3    // used by the daily push job, see below
+}
+```
+
+**`fcm_tokens/{deviceId}`** (NEW) — one doc per device that has granted notification
+permission, `{ token: <FCM registration token>, updatedAt: <Timestamp> }`. Written
+client-side when permission is granted; read by the daily notification job to know where to
+send pushes. Keyed by device rather than a single field because the shared login means
+multiple devices (both phones) must each get notified independently.
 
 **`items/{itemId}`** — same fields as v1, with two changes:
 - `expiring_date` / `date_opened` become native Firestore `Timestamp` (was ISO string),
@@ -130,6 +157,49 @@ Camera-based scan button in the Add Item modal (native `BarcodeDetector` API wit
 Scan/lookup failure at any step degrades silently to manual entry — it never blocks adding
 an item.
 
+## Server-side push notifications
+
+v1 already has an unused `FIREBASE_VAPID_KEY` sitting in its `.env` — confirmed via grep
+that no `getMessaging`/`vapidKey` call exists anywhere in v1's code, so this credential was
+provisioned but never wired up. v1's actual notification code (`utils.js.liquid`) is
+client-side only (`Notification.requestPermission()` + a local check), meaning it can only
+fire while the app is open or being actively checked — it doesn't address "we forgot the
+app exists," the core adoption failure mode this rebuild targets.
+
+**Design goal:** a real daily digest push, delivered independent of whether either
+household member opens the app, using only Firebase's free Spark plan (no billing account)
+and infrastructure already in this stack.
+
+**Why not Firebase Cloud Functions + Cloud Scheduler:** both require the Blaze
+(pay-as-you-go) plan attached to a credit card. Usage here would cost $0, but "requires a
+billing account to be enabled" doesn't meet the free/FOSS-friendly bar this was scoped for.
+
+**Chosen design — GitHub Actions as the scheduler and compute layer:**
+
+1. A scheduled workflow (`on: schedule: cron:`) in `.github/workflows/`, alongside the
+   existing `prettier.yml` and `copilot-setup-steps.yml` — genuinely free (GitHub Actions
+   free-tier minutes comfortably cover one daily job that runs in seconds), and reuses
+   tooling already present in this repo rather than adding a new service.
+2. The workflow runs a small Node.js script authenticated via the Firebase Admin SDK, using
+   a service-account credential stored as a GitHub Actions secret (never committed).
+3. The script queries `items` for `expiring_date` within `notifyDaysBeforeExpiry` (from the
+   new `users/{uid}` settings doc) — a direct server-side range query, made possible by
+   storing `expiring_date` as a Firestore `Timestamp` rather than a string.
+4. For each matching item, the script reads all docs in `fcm_tokens/` and sends one push per
+   registered device via the Firebase Cloud Messaging HTTP v1 API — free regardless of plan.
+
+**On "open source" specifically:** Web Push (VAPID) is an open W3C standard, but FCM itself
+— the delivery mechanism here — is Google's free, proprietary implementation of it, not
+open-source software. A fully FOSS alternative (self-hosting a Web Push server) is possible
+but requires an always-on service to maintain, which works against the "don't let this
+stall again" goal underlying the whole rebuild. FCM is the pragmatic choice: free, and the
+VAPID key for it already exists in the project.
+
+Client-side: on first launch (or in Settings), the app requests notification permission and,
+if granted, registers an FCM token via the Firebase Messaging Web SDK and writes it to
+`fcm_tokens/{deviceId}`. This only requires the PWA's existing HTTPS + service worker setup
+— no new client infrastructure.
+
 ## i18n, PWA, error handling, testing
 
 - **i18n**: `react-i18next`, `en-us.json`/`pt-br.json` resource files (mirroring v1's
@@ -167,6 +237,13 @@ an item.
 - Exact barcode-scanning library choice and its offline/permission-denied UX.
 - Netlify build configuration for a Vite SPA (adapting from v1's Jekyll `netlify.toml`,
   if one exists).
-- Whether `barcode_products` needs any Firestore security-rule changes beyond the existing
-  `users/{uid}/{document=**}` isolation rule (it shouldn't, since it lives under the same
-  per-user path).
+- Whether `barcode_products` (or any new collection) needs Firestore security-rule changes
+  beyond the existing `users/{uid}/{document=**}` isolation rule (shouldn't, since
+  everything new still lives under the same per-user path).
+- Default value for `notifyDaysBeforeExpiry` and the daily cron time (e.g. morning, local
+  timezone) for the GitHub Actions push job.
+- Dedup logic for the daily push (avoid re-notifying about the same item every single day
+  until it's dealt with — e.g. notify once when it crosses the threshold, and again only if
+  still unresolved after N days).
+- Service-account credential setup: generating the Firebase Admin SDK key and storing it as
+  a GitHub Actions secret.
