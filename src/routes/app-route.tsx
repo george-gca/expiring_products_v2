@@ -1,3 +1,3 @@
 export function AppRoute() {
-  return <div id="app-shell" />;
+	return <div id="app-shell" />;
 }
