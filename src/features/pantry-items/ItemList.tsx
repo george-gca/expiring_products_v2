@@ -8,6 +8,7 @@ import { EditItemModal } from "./EditItemModal";
 import { ItemListItem } from "./ItemListItem";
 import type { PantryItem } from "./schema";
 import { sortItems } from "./sortItems";
+import { useUiPreferencesStore } from "./store";
 import { usePantryItems } from "./usePantryItems";
 
 export function ItemList({
@@ -24,7 +25,17 @@ export function ItemList({
 
 	if (loading) return null;
 
-	const sorted = sortItems(items);
+	const { getSortDirection, getFilter } = useUiPreferencesStore();
+	const direction = getSortDirection(category.key);
+	const filter = getFilter(category.key);
+
+	const filtered = items.filter((item) => {
+		if (filter === "opened") return item.opened;
+		if (filter === "unopened") return !item.opened;
+		return true;
+	});
+	const sorted = sortItems(filtered);
+	if (direction === "desc") sorted.reverse();
 
 	return (
 		<>
