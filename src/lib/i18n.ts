@@ -14,6 +14,7 @@ i18n
 		},
 		fallbackLng: "pt-br",
 		interpolation: { escapeValue: false },
+		initImmediate: false,
 	});
 
 export default i18n;
