@@ -1,0 +1,16 @@
+{
+  "auth": { "title": "Expiring Products", "signIn": "Entrar", "signUp": "Cadastrar", "email": "E-mail", "password": "Senha" },
+  "items": {
+    "empty": "Nenhum item aqui.",
+    "addTitle": "Adicionar item",
+    "name": "Nome",
+    "quantity": "Quantidade",
+    "expiringDate": "Data de validade",
+    "duration": "Duração após aberto (dias)",
+    "recurring": "Compra recorrente",
+    "expiresOn": "vence em {{date}}",
+    "openedItems": "Itens abertos",
+    "consumedItems": "Itens consumidos",
+    "discardedItems": "Itens descartados"
+  }
+}
