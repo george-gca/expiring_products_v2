@@ -1,6 +1,6 @@
 import { Timestamp } from "firebase/firestore";
 import { describe, expect, it } from "vitest";
-import { parseItemDoc, toItemDoc } from "./schema";
+import { parseItemDoc, parseItemHistoryDoc, toItemDoc } from "./schema";
 
 describe("parseItemDoc", () => {
 	it("parses a valid item document, converting Timestamps to Dates", () => {
@@ -54,5 +54,38 @@ describe("toItemDoc", () => {
 		});
 		expect(doc.expiring_date).toBeInstanceOf(Timestamp);
 		expect(doc.name).toBe("Whole Milk");
+	});
+});
+
+describe("parseItemHistoryDoc", () => {
+	it("parses a valid item_history document", () => {
+		const result = parseItemHistoryDoc({
+			name: "Whole Milk",
+			category: "foods",
+			duration: "7",
+			recurring: true,
+		});
+		expect(result).toEqual({
+			name: "Whole Milk",
+			category: "foods",
+			duration: "7",
+			recurring: true,
+		});
+	});
+
+	it("parses a document with an empty duration string", () => {
+		const result = parseItemHistoryDoc({
+			name: "Aspirin",
+			category: "medicines",
+			duration: "",
+			recurring: false,
+		});
+		expect(result.duration).toBe("");
+	});
+
+	it("throws on a missing recurring field", () => {
+		expect(() =>
+			parseItemHistoryDoc({ name: "X", category: "foods", duration: "" }),
+		).toThrow();
 	});
 });

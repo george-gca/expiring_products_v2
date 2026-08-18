@@ -63,3 +63,21 @@ export function toItemDoc(item: Omit<PantryItem, "id">) {
 		source: item.source,
 	};
 }
+
+export const itemHistoryDocSchema = z.object({
+	name: z.string().min(1),
+	category: z.string().min(1),
+	duration: z.string(),
+	recurring: z.boolean(),
+});
+
+export interface ItemHistoryEntry {
+	name: string;
+	category: string;
+	duration: string;
+	recurring: boolean;
+}
+
+export function parseItemHistoryDoc(data: unknown): ItemHistoryEntry {
+	return itemHistoryDocSchema.parse(data);
+}
