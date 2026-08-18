@@ -4,15 +4,16 @@ import { initReactI18next } from "react-i18next";
 import enUs from "../locales/en-us.json";
 import ptBr from "../locales/pt-br.json";
 
+// Initialize with LanguageDetector and initReactI18next first, then init
 i18n
 	.use(LanguageDetector)
 	.use(initReactI18next)
 	.init({
 		resources: {
-			"pt-br": { translation: ptBr },
-			"en-us": { translation: enUs },
+			"pt-BR": { translation: ptBr },
+			"en-US": { translation: enUs },
 		},
-		fallbackLng: "pt-br",
+		fallbackLng: "pt-BR",
 		interpolation: { escapeValue: false },
 		initImmediate: false,
 	} as Record<string, unknown>);
