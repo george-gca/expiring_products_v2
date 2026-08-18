@@ -65,4 +65,37 @@ describe("updateItemQuantities", () => {
 		const snapshot = await getDocs(itemsRef);
 		expect(snapshot.size).toBe(0);
 	});
+
+	it("keeps the original expiry date when opening an already-expired item, even with duration set", async () => {
+		const itemsRef = collection(db, "users", uid, "items");
+		const pastExpiringDate = new Date("2020-01-01");
+		const original = await addDoc(itemsRef, {
+			name: "Old Yogurt",
+			category: "foods",
+			quantity: 3,
+			expiring_date: Timestamp.fromDate(pastExpiringDate),
+			duration: 7,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+
+		await updateItemQuantities(uid, original.id, {
+			opened: 1,
+			consumed: 0,
+			discarded: 0,
+		});
+
+		const snapshot = await getDocs(itemsRef);
+		expect(snapshot.size).toBe(2);
+		const openedItem = snapshot.docs.find((d) => d.id !== original.id);
+		if (!openedItem) throw new Error("opened item not found");
+		const openedItemData = openedItem.data();
+		expect(openedItemData.opened).toBe(true);
+		expect((openedItemData.expiring_date as Timestamp).toDate()).toEqual(
+			pastExpiringDate,
+		);
+	});
 });
