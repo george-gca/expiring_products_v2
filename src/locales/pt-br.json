@@ -2,6 +2,8 @@
   "auth": { "title": "Expiring Products", "signIn": "Entrar", "signUp": "Cadastrar", "email": "E-mail", "password": "Senha" },
   "items": {
     "empty": "Nenhum item aqui.",
+    "shoppingListEmpty": "Nada para comprar por aqui.",
+    "shoppingMode": "Modo de compras",
     "addTitle": "Adicionar item",
     "name": "Nome",
     "quantity": "Quantidade",

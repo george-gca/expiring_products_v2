@@ -8,6 +8,7 @@ import {
 	Switch,
 } from "antd";
 import type { Dayjs } from "dayjs";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import type { Category } from "../categories/schema";
 import { addItem } from "./firestoreWrites";
@@ -25,14 +26,28 @@ export function AddItemModal({
 	category,
 	open,
 	onClose,
+	initialName,
 }: {
 	uid: string;
 	category: Category;
 	open: boolean;
 	onClose: () => void;
+	initialName?: string;
 }) {
 	const { t } = useTranslation();
 	const [form] = Form.useForm<AddItemFormValues>();
+
+	// `form` is a single instance shared across the modal's open/close cycles
+	// (declared in this component, not recreated by `destroyOnHidden`), so its
+	// internal field store persists even though the <Form> element itself
+	// unmounts. Ant Design's `initialValues` only seeds fields the store has
+	// never held a value for, so a stale `name` from an earlier open survives
+	// remounts unless explicitly overwritten here.
+	useEffect(() => {
+		if (open) {
+			form.setFieldsValue({ name: initialName ?? "" });
+		}
+	}, [open, initialName, form]);
 
 	const handleOk = async () => {
 		const values = await form.validateFields();
@@ -67,7 +82,11 @@ export function AddItemModal({
 			<Form
 				form={form}
 				layout="vertical"
-				initialValues={{ quantity: 1, recurring: false }}
+				initialValues={{
+					name: initialName ?? "",
+					quantity: 1,
+					recurring: false,
+				}}
 			>
 				<Form.Item
 					name="name"

@@ -14,7 +14,13 @@ export function AppRoute({ user }: { user: User }) {
 	return (
 		<CategoryTabs
 			categories={categories}
-			renderPane={(category) => <ItemList uid={user.uid} category={category} />}
+			renderPane={(category) => (
+				<ItemList
+					uid={user.uid}
+					category={category}
+					lowStockThreshold={settings.lowStockThreshold}
+				/>
+			)}
 			settingsPane={<SettingsPane uid={user.uid} settings={settings} />}
 		/>
 	);

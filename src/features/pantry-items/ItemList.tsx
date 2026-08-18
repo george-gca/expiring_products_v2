@@ -1,11 +1,12 @@
 import { PlusOutlined } from "@ant-design/icons";
-import { Empty, FloatButton, Listy } from "antd";
+import { Empty, FloatButton, Listy, Switch } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Category } from "../categories/schema";
 import { AddItemModal } from "./AddItemModal";
 import { EditItemModal } from "./EditItemModal";
 import { ItemListItem } from "./ItemListItem";
+import { ShoppingList } from "./ShoppingList";
 import type { PantryItem } from "./schema";
 import { sortItems } from "./sortItems";
 import { useUiPreferencesStore } from "./store";
@@ -14,18 +15,25 @@ import { usePantryItems } from "./usePantryItems";
 export function ItemList({
 	uid,
 	category,
+	lowStockThreshold,
 }: {
 	uid: string;
 	category: Category;
+	lowStockThreshold: number;
 }) {
 	const { t } = useTranslation();
 	const { items, loading } = usePantryItems(uid, category.key);
 	const [addOpen, setAddOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<PantryItem | null>(null);
+	const [addInitialName, setAddInitialName] = useState<string | undefined>(
+		undefined,
+	);
 
-	const { getSortDirection, getFilter } = useUiPreferencesStore();
+	const { getSortDirection, getFilter, isShoppingModeOn, setShoppingModeOn } =
+		useUiPreferencesStore();
 	const direction = getSortDirection(category.key);
 	const filter = getFilter(category.key);
+	const shoppingModeOn = isShoppingModeOn(category.key);
 
 	const filtered = items.filter((item) => {
 		if (filter === "opened") return item.opened;
@@ -39,7 +47,25 @@ export function ItemList({
 
 	return (
 		<>
-			{sorted.length === 0 ? (
+			<Switch
+				checked={shoppingModeOn}
+				onChange={(checked) => setShoppingModeOn(category.key, checked)}
+				checkedChildren={t("items.shoppingMode")}
+				unCheckedChildren={t("items.shoppingMode")}
+				style={{ marginBottom: 12 }}
+			/>
+			{shoppingModeOn ? (
+				<ShoppingList
+					uid={uid}
+					category={category}
+					pantryItems={items}
+					threshold={lowStockThreshold}
+					onAddItem={(name) => {
+						setAddInitialName(name);
+						setAddOpen(true);
+					}}
+				/>
+			) : sorted.length === 0 ? (
 				<Empty description={t("items.empty")} />
 			) : (
 				<Listy
@@ -58,7 +84,11 @@ export function ItemList({
 				uid={uid}
 				category={category}
 				open={addOpen}
-				onClose={() => setAddOpen(false)}
+				onClose={() => {
+					setAddOpen(false);
+					setAddInitialName(undefined);
+				}}
+				initialName={addInitialName}
 			/>
 			{editingItem && (
 				<EditItemModal
