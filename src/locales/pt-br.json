@@ -12,5 +12,8 @@
     "openedItems": "Itens abertos",
     "consumedItems": "Itens consumidos",
     "discardedItems": "Itens descartados"
+  },
+  "settings": {
+    "lowStockThreshold": "Aviso de estoque baixo"
   }
 }

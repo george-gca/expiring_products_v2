@@ -12,5 +12,8 @@
     "openedItems": "Opened items",
     "consumedItems": "Consumed items",
     "discardedItems": "Discarded items"
+  },
+  "settings": {
+    "lowStockThreshold": "Low stock warning threshold"
   }
 }
