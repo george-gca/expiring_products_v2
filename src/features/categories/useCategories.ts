@@ -1,10 +1,12 @@
+import { message } from "antd";
 import {
-	addDoc,
 	collection,
+	doc,
 	getDocs,
 	onSnapshot,
 	orderBy,
 	query,
+	setDoc,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { db } from "../../lib/firebase";
@@ -20,7 +22,9 @@ async function ensureDefaultCategories(uid: string) {
 	const existing = await getDocs(categoriesRef);
 	if (!existing.empty) return;
 	await Promise.all(
-		DEFAULT_CATEGORIES.map((category) => addDoc(categoriesRef, category)),
+		DEFAULT_CATEGORIES.map((category) =>
+			setDoc(doc(categoriesRef, category.key), category),
+		),
 	);
 }
 
@@ -33,18 +37,30 @@ export function useCategories(uid: string): {
 
 	useEffect(() => {
 		let unsubscribe = () => {};
-		ensureDefaultCategories(uid).then(() => {
-			const categoriesQuery = query(
-				collection(db, "users", uid, "categories"),
-				orderBy("order"),
-			);
-			unsubscribe = onSnapshot(categoriesQuery, (snapshot) => {
-				setCategories(
-					snapshot.docs.map((d) => parseCategoryDoc(d.id, d.data())),
+		ensureDefaultCategories(uid)
+			.then(() => {
+				const categoriesQuery = query(
+					collection(db, "users", uid, "categories"),
+					orderBy("order"),
 				);
+				unsubscribe = onSnapshot(
+					categoriesQuery,
+					(snapshot) => {
+						setCategories(
+							snapshot.docs.map((d) => parseCategoryDoc(d.id, d.data())),
+						);
+						setLoading(false);
+					},
+					() => {
+						message.error("Something went wrong, please try again");
+						setLoading(false);
+					},
+				);
+			})
+			.catch(() => {
+				message.error("Something went wrong, please try again");
 				setLoading(false);
 			});
-		});
 		return () => unsubscribe();
 	}, [uid]);
 

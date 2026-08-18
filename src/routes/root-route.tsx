@@ -1,9 +1,14 @@
 import { Spin } from "antd";
+import type { User } from "firebase/auth";
 import type { ReactNode } from "react";
 import { LoginPage } from "../features/auth/LoginPage";
 import { useAuth } from "../features/auth/useAuth";
 
-export function RootRoute({ children }: { children: ReactNode }) {
+export function RootRoute({
+	children,
+}: {
+	children: (user: User) => ReactNode;
+}) {
 	const { user, loading } = useAuth();
 
 	if (loading) {
@@ -12,5 +17,5 @@ export function RootRoute({ children }: { children: ReactNode }) {
 	if (!user) {
 		return <LoginPage />;
 	}
-	return <>{children}</>;
+	return <>{children(user)}</>;
 }

@@ -1,13 +1,12 @@
-import { useAuth } from "../features/auth/useAuth";
+import type { User } from "firebase/auth";
 import { CategoryTabs } from "../features/categories/CategoryTabs";
 import { useCategories } from "../features/categories/useCategories";
 import { ItemList } from "../features/pantry-items/ItemList";
 
-export function AppRoute() {
-	const { user } = useAuth();
-	const { categories, loading } = useCategories(user?.uid ?? "");
+export function AppRoute({ user }: { user: User }) {
+	const { categories, loading } = useCategories(user.uid);
 
-	if (!user || loading) return null;
+	if (loading) return null;
 
 	return (
 		<CategoryTabs
