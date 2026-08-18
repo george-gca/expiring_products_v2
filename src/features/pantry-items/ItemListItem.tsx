@@ -1,4 +1,4 @@
-import { List, Tag, Typography } from "antd";
+import { Flex, Tag, Typography } from "antd";
 import { useTranslation } from "react-i18next";
 import type { PantryItem } from "./schema";
 import { getExpiryWarningColor } from "./sortItems";
@@ -21,17 +21,21 @@ export function ItemListItem({
 	const color = getExpiryWarningColor(item, new Date());
 
 	return (
-		<List.Item
+		<Flex
+			justify="space-between"
+			align="center"
 			onClick={onClick}
 			style={{ cursor: "pointer", ...COLOR_STYLES[color] }}
 		>
-			<List.Item.Meta
-				title={<Typography.Text strong>{item.name}</Typography.Text>}
-				description={t("items.expiresOn", {
-					date: item.expiringDate.toLocaleDateString(),
-				})}
-			/>
+			<Flex vertical>
+				<Typography.Text strong>{item.name}</Typography.Text>
+				<Typography.Text type="secondary">
+					{t("items.expiresOn", {
+						date: item.expiringDate.toLocaleDateString(),
+					})}
+				</Typography.Text>
+			</Flex>
 			<Tag color="blue">{item.quantity}</Tag>
-		</List.Item>
+		</Flex>
 	);
 }

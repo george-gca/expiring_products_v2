@@ -1,5 +1,5 @@
 import { PlusOutlined } from "@ant-design/icons";
-import { Empty, FloatButton, List } from "antd";
+import { Empty, FloatButton, Listy } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Category } from "../categories/schema";
@@ -42,14 +42,14 @@ export function ItemList({
 			{sorted.length === 0 ? (
 				<Empty description={t("items.empty")} />
 			) : (
-				<List
-					dataSource={sorted}
-					renderItem={(item) => (
-						<ItemListItem
-							key={item.id}
-							item={item}
-							onClick={() => setEditingItem(item)}
-						/>
+				<Listy
+					items={sorted}
+					rowKey="id"
+					styles={{
+						item: { padding: "12px 0", borderBottom: "1px solid #f0f0f0" },
+					}}
+					itemRender={(item) => (
+						<ItemListItem item={item} onClick={() => setEditingItem(item)} />
 					)}
 				/>
 			)}
