@@ -1,4 +1,4 @@
-import { Form, InputNumber, Modal } from "antd";
+import { Form, InputNumber, Modal, message } from "antd";
 import { useTranslation } from "react-i18next";
 import { updateItemQuantities } from "./firestoreWrites";
 import type { PantryItem } from "./schema";
@@ -23,8 +23,12 @@ export function EditItemModal({
 
 	const handleOk = async () => {
 		const values = await form.validateFields();
-		await updateItemQuantities(uid, item.id, values);
-		onClose();
+		try {
+			await updateItemQuantities(uid, item.id, values);
+			onClose();
+		} catch {
+			message.error("Something went wrong, please try again");
+		}
 	};
 
 	return (

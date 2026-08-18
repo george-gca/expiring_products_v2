@@ -30,10 +30,43 @@ describe("addItem", () => {
 		expect(itemsSnapshot.docs[0].data().name).toBe("Whole Milk");
 
 		const historyDoc = await getDoc(
-			doc(db, "users", uid, "item_history", "foods_Whole Milk"),
+			doc(
+				db,
+				"users",
+				uid,
+				"item_history",
+				encodeURIComponent("foods_Whole Milk"),
+			),
 		);
 		expect(historyDoc.exists()).toBe(true);
 		expect(historyDoc.data()?.duration).toBe("7");
 		expect(historyDoc.data()?.recurring).toBe(true);
+	});
+
+	it("sanitizes item names containing a slash into a valid history doc id", async () => {
+		await addItem(uid, {
+			name: "Milk 1/2 gal",
+			category: "foods",
+			quantity: 1,
+			expiringDate: new Date("2026-09-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+
+		const historyDoc = await getDoc(
+			doc(
+				db,
+				"users",
+				uid,
+				"item_history",
+				encodeURIComponent("foods_Milk 1/2 gal"),
+			),
+		);
+		expect(historyDoc.exists()).toBe(true);
+		expect(historyDoc.data()?.name).toBe("Milk 1/2 gal");
 	});
 });

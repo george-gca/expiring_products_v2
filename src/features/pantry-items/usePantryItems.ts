@@ -1,3 +1,4 @@
+import { message } from "antd";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { db } from "../../lib/firebase";
@@ -15,10 +16,17 @@ export function usePantryItems(
 			collection(db, "users", uid, "items"),
 			where("category", "==", categoryKey),
 		);
-		const unsubscribe = onSnapshot(itemsQuery, (snapshot) => {
-			setItems(snapshot.docs.map((d) => parseItemDoc(d.id, d.data())));
-			setLoading(false);
-		});
+		const unsubscribe = onSnapshot(
+			itemsQuery,
+			(snapshot) => {
+				setItems(snapshot.docs.map((d) => parseItemDoc(d.id, d.data())));
+				setLoading(false);
+			},
+			() => {
+				message.error("Something went wrong, please try again");
+				setLoading(false);
+			},
+		);
 		return unsubscribe;
 	}, [uid, categoryKey]);
 

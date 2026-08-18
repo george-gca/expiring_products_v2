@@ -2,7 +2,6 @@ import {
 	addDoc,
 	collection,
 	doc,
-	doc as docRef,
 	runTransaction,
 	setDoc,
 } from "firebase/firestore";
@@ -15,7 +14,7 @@ export async function addItem(
 ): Promise<void> {
 	await addDoc(collection(db, "users", uid, "items"), toItemDoc(item));
 
-	const historyId = `${item.category}_${item.name}`;
+	const historyId = encodeURIComponent(`${item.category}_${item.name}`);
 	await setDoc(doc(db, "users", uid, "item_history", historyId), {
 		name: item.name,
 		category: item.category,
@@ -35,7 +34,7 @@ export async function updateItemQuantities(
 	itemId: string,
 	changes: QuantityChanges,
 ): Promise<void> {
-	const itemRef = docRef(db, "users", uid, "items", itemId);
+	const itemRef = doc(db, "users", uid, "items", itemId);
 
 	await runTransaction(db, async (transaction) => {
 		const snapshot = await transaction.get(itemRef);
@@ -64,7 +63,7 @@ export async function updateItemQuantities(
 					? new Date(now.getTime() + item.duration * 24 * 60 * 60 * 1000)
 					: item.expiringDate;
 
-			const openedItemDocRef = docRef(collection(db, "users", uid, "items"));
+			const openedItemDocRef = doc(collection(db, "users", uid, "items"));
 			transaction.set(
 				openedItemDocRef,
 				toItemDoc({

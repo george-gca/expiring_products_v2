@@ -1,4 +1,12 @@
-import { DatePicker, Form, Input, InputNumber, Modal, Switch } from "antd";
+import {
+	DatePicker,
+	Form,
+	Input,
+	InputNumber,
+	Modal,
+	message,
+	Switch,
+} from "antd";
 import type { Dayjs } from "dayjs";
 import { useTranslation } from "react-i18next";
 import type { Category } from "../categories/schema";
@@ -28,20 +36,24 @@ export function AddItemModal({
 
 	const handleOk = async () => {
 		const values = await form.validateFields();
-		await addItem(uid, {
-			name: values.name.trim(),
-			category: category.key,
-			quantity: values.quantity,
-			expiringDate: values.expiringDate.toDate(),
-			duration: values.duration ?? null,
-			dateOpened: null,
-			opened: false,
-			recurring: values.recurring,
-			barcode: null,
-			source: "manual",
-		});
-		form.resetFields();
-		onClose();
+		try {
+			await addItem(uid, {
+				name: values.name.trim(),
+				category: category.key,
+				quantity: values.quantity,
+				expiringDate: values.expiringDate.toDate(),
+				duration: values.duration ?? null,
+				dateOpened: null,
+				opened: false,
+				recurring: values.recurring,
+				barcode: null,
+				source: "manual",
+			});
+			form.resetFields();
+			onClose();
+		} catch {
+			message.error("Something went wrong, please try again");
+		}
 	};
 
 	return (
