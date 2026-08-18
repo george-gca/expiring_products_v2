@@ -7,7 +7,7 @@ import { useAuth } from "./useAuth";
 
 afterEach(async () => {
 	await firebaseSignOut(auth);
-	await clearFirestoreEmulator("demo-expiring-products");
+	await clearFirestoreEmulator(import.meta.env.VITE_FIREBASE_PROJECT_ID);
 });
 
 describe("useAuth", () => {

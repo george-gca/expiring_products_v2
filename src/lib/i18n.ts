@@ -5,9 +5,7 @@ import { initReactI18next } from "react-i18next";
 import enUs from "../locales/en-us.json";
 import ptBr from "../locales/pt-br.json";
 
-// Use LanguageDetector to auto-detect user's language from browser settings,
-// then use initReactI18next to enable React component integration (useTranslation hook).
-// Note: `initImmediate: false` forces synchronous initialization instead of deferring
+// `initImmediate: false` forces synchronous initialization instead of deferring
 // to next tick via setTimeout, which is necessary for resources to be immediately
 // accessible via t() in this module scope before tests/components run.
 i18n
