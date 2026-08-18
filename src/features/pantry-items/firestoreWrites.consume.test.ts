@@ -1,8 +1,15 @@
-import { addDoc, collection, getDocs, Timestamp } from "firebase/firestore";
+import {
+	addDoc,
+	collection,
+	doc,
+	getDoc,
+	getDocs,
+	Timestamp,
+} from "firebase/firestore";
 import { afterEach, describe, expect, it } from "vitest";
 import { db } from "../../lib/firebase";
 import { clearFirestoreEmulator } from "../../test/emulator";
-import { updateItemQuantities } from "./firestoreWrites";
+import { setItemRecurring, updateItemQuantities } from "./firestoreWrites";
 
 const uid = "test-user-4";
 
@@ -97,5 +104,95 @@ describe("updateItemQuantities", () => {
 		expect((openedItemData.expiring_date as Timestamp).toDate()).toEqual(
 			pastExpiringDate,
 		);
+	});
+
+	it("does not throw when setItemRecurring runs before an edit that fully consumes the item (EditItemModal's call order)", async () => {
+		const itemsRef = collection(db, "users", uid, "items");
+		const original = await addDoc(itemsRef, {
+			name: "Yogurt",
+			category: "foods",
+			quantity: 1,
+			expiring_date: Timestamp.fromDate(new Date("2027-01-01")),
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		const item = {
+			id: original.id,
+			name: "Yogurt",
+			category: "foods",
+			quantity: 1,
+			expiringDate: new Date("2027-01-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual" as const,
+		};
+
+		// Mirrors EditItemModal's handleOk: setItemRecurring must run before
+		// updateItemQuantities, since a fully-consuming edit deletes the item
+		// doc and a subsequent setItemRecurring's updateDoc against a deleted
+		// doc would throw.
+		await setItemRecurring(uid, item, true);
+		await updateItemQuantities(uid, original.id, {
+			opened: 0,
+			consumed: 1,
+			discarded: 0,
+		});
+
+		const snapshot = await getDocs(itemsRef);
+		expect(snapshot.size).toBe(0);
+
+		const historyDoc = await getDoc(
+			doc(db, "users", uid, "item_history", encodeURIComponent("foods_Yogurt")),
+		);
+		expect(historyDoc.data()?.recurring).toBe(true);
+	});
+
+	it("updates recurring on a partial-consumption edit without deleting the item (regression check)", async () => {
+		const itemsRef = collection(db, "users", uid, "items");
+		const original = await addDoc(itemsRef, {
+			name: "Cheese",
+			category: "foods",
+			quantity: 3,
+			expiring_date: Timestamp.fromDate(new Date("2027-01-01")),
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		const item = {
+			id: original.id,
+			name: "Cheese",
+			category: "foods",
+			quantity: 3,
+			expiringDate: new Date("2027-01-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual" as const,
+		};
+
+		await setItemRecurring(uid, item, true);
+		await updateItemQuantities(uid, original.id, {
+			opened: 0,
+			consumed: 1,
+			discarded: 0,
+		});
+
+		const snapshot = await getDocs(itemsRef);
+		expect(snapshot.size).toBe(1);
+		const itemAfter = snapshot.docs.find((d) => d.id === original.id);
+		expect(itemAfter?.data().quantity).toBe(2);
+		expect(itemAfter?.data().recurring).toBe(true);
 	});
 });

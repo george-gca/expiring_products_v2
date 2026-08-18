@@ -25,8 +25,11 @@ export function EditItemModal({
 	const handleOk = async () => {
 		const values = await form.validateFields();
 		try {
-			await updateItemQuantities(uid, item.id, values);
+			// setItemRecurring must run first: updateItemQuantities can delete the
+			// item doc (full consumption/discard), and setItemRecurring's updateDoc
+			// against that doc would then throw "document not found".
 			await setItemRecurring(uid, item, values.recurring);
+			await updateItemQuantities(uid, item.id, values);
 			onClose();
 		} catch {
 			message.error("Something went wrong, please try again");
