@@ -1,12 +1,13 @@
-import { Form, InputNumber, Modal, message } from "antd";
+import { Form, InputNumber, Modal, message, Switch } from "antd";
 import { useTranslation } from "react-i18next";
-import { updateItemQuantities } from "./firestoreWrites";
+import { setItemRecurring, updateItemQuantities } from "./firestoreWrites";
 import type { PantryItem } from "./schema";
 
 interface EditFormValues {
 	opened: number;
 	consumed: number;
 	discarded: number;
+	recurring: boolean;
 }
 
 export function EditItemModal({
@@ -25,6 +26,7 @@ export function EditItemModal({
 		const values = await form.validateFields();
 		try {
 			await updateItemQuantities(uid, item.id, values);
+			await setItemRecurring(uid, item, values.recurring);
 			onClose();
 		} catch {
 			message.error("Something went wrong, please try again");
@@ -42,7 +44,12 @@ export function EditItemModal({
 			<Form
 				form={form}
 				layout="vertical"
-				initialValues={{ opened: 0, consumed: 0, discarded: 0 }}
+				initialValues={{
+					opened: 0,
+					consumed: 0,
+					discarded: 0,
+					recurring: item.recurring,
+				}}
 			>
 				<Form.Item name="opened" label={t("items.openedItems")}>
 					<InputNumber min={0} max={item.quantity} style={{ width: "100%" }} />
@@ -52,6 +59,13 @@ export function EditItemModal({
 				</Form.Item>
 				<Form.Item name="discarded" label={t("items.discardedItems")}>
 					<InputNumber min={0} max={item.quantity} style={{ width: "100%" }} />
+				</Form.Item>
+				<Form.Item
+					name="recurring"
+					label={t("items.recurring")}
+					valuePropName="checked"
+				>
+					<Switch />
 				</Form.Item>
 			</Form>
 		</Modal>
