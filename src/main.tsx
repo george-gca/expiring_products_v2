@@ -1,4 +1,5 @@
 import "./lib/i18n";
+import "./index.css";
 import { ConfigProvider } from "antd";
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
