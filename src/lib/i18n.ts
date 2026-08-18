@@ -15,6 +15,6 @@ i18n
 		fallbackLng: "pt-br",
 		interpolation: { escapeValue: false },
 		initImmediate: false,
-	});
+	} as Record<string, unknown>);
 
 export default i18n;
