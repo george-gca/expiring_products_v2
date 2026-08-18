@@ -24,6 +24,15 @@ export function EditItemModal({
 
 	const handleOk = async () => {
 		const values = await form.validateFields();
+		// Each InputNumber is individually capped at item.quantity, but there's
+		// no cross-field check, so opened+consumed+discarded can still exceed
+		// it (e.g. 2+2 on a quantity-3 item). updateItemQuantities also rejects
+		// this, but only after setItemRecurring has already committed its
+		// writes — check here first so an invalid edit makes no writes at all.
+		if (values.opened + values.consumed + values.discarded > item.quantity) {
+			message.error("Something went wrong, please try again");
+			return;
+		}
 		try {
 			// setItemRecurring must run first: updateItemQuantities can delete the
 			// item doc (full consumption/discard), and setItemRecurring's updateDoc
