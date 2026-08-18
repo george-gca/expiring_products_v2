@@ -4,6 +4,7 @@ import {
 	doc,
 	runTransaction,
 	setDoc,
+	updateDoc,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { type PantryItem, parseItemDoc, toItemDoc } from "./schema";
@@ -81,4 +82,20 @@ export async function updateItemQuantities(
 			);
 		}
 	});
+}
+
+export async function setItemRecurring(
+	uid: string,
+	item: PantryItem,
+	recurring: boolean,
+): Promise<void> {
+	const historyId = encodeURIComponent(`${item.category}_${item.name}`);
+	await setDoc(doc(db, "users", uid, "item_history", historyId), {
+		name: item.name,
+		category: item.category,
+		duration: item.duration !== null ? String(item.duration) : "",
+		recurring,
+	});
+
+	await updateDoc(doc(db, "users", uid, "items", item.id), { recurring });
 }

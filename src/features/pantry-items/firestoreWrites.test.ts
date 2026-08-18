@@ -2,7 +2,7 @@ import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { afterEach, describe, expect, it } from "vitest";
 import { db } from "../../lib/firebase";
 import { clearFirestoreEmulator } from "../../test/emulator";
-import { addItem } from "./firestoreWrites";
+import { addItem, setItemRecurring } from "./firestoreWrites";
 
 const uid = "test-user-3";
 
@@ -68,5 +68,50 @@ describe("addItem", () => {
 		);
 		expect(historyDoc.exists()).toBe(true);
 		expect(historyDoc.data()?.name).toBe("Milk 1/2 gal");
+	});
+});
+
+describe("setItemRecurring", () => {
+	it("updates item_history and the item doc's own recurring field", async () => {
+		await addItem(uid, {
+			name: "Coffee",
+			category: "foods",
+			quantity: 1,
+			expiringDate: new Date("2027-01-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		const itemsSnapshot = await getDocs(collection(db, "users", uid, "items"));
+		const itemId = itemsSnapshot.docs[0].id;
+
+		await setItemRecurring(
+			uid,
+			{
+				id: itemId,
+				name: "Coffee",
+				category: "foods",
+				quantity: 1,
+				expiringDate: new Date("2027-01-01"),
+				duration: null,
+				dateOpened: null,
+				opened: false,
+				recurring: false,
+				barcode: null,
+				source: "manual",
+			},
+			true,
+		);
+
+		const historyDoc = await getDoc(
+			doc(db, "users", uid, "item_history", encodeURIComponent("foods_Coffee")),
+		);
+		expect(historyDoc.data()?.recurring).toBe(true);
+
+		const itemDoc = await getDoc(doc(db, "users", uid, "items", itemId));
+		expect(itemDoc.data()?.recurring).toBe(true);
 	});
 });
