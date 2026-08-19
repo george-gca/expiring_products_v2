@@ -351,7 +351,14 @@ import { lookupBarcode } from "./lookupBarcode";
 const uid = "test-user-barcode-lookup-1";
 
 const server = setupServer();
-beforeAll(() => server.listen({ onUnhandledRequest: "error" }));
+// "bypass" (not "error"): this suite also makes real network calls to the
+// Firestore emulator (both from the SDK itself and from clearFirestoreEmulator's
+// afterEach cleanup) — MSW's node interceptor patches fetch process-wide, so
+// "error" would reject those unmocked emulator requests too, not just an
+// actually-forgotten Open Food Facts mock. Discovered by running this task,
+// not anticipated during planning — the earlier MSW probe only tested a
+// single isolated fetch call, not alongside real Firestore emulator traffic.
+beforeAll(() => server.listen({ onUnhandledRequest: "bypass" }));
 afterEach(() => server.resetHandlers());
 afterEach(() =>
 	clearFirestoreEmulator(import.meta.env.VITE_FIREBASE_PROJECT_ID),
