@@ -8,7 +8,7 @@ import { EditItemModal } from "./EditItemModal";
 import { ItemListItem } from "./ItemListItem";
 import { ShoppingList } from "./ShoppingList";
 import type { PantryItem } from "./schema";
-import { sortItems } from "./sortItems";
+import { filterDistantItems, sortItems } from "./sortItems";
 import { useUiPreferencesStore } from "./store";
 import { usePantryItems } from "./usePantryItems";
 
@@ -16,10 +16,12 @@ export function ItemList({
 	uid,
 	category,
 	lowStockThreshold,
+	hideDistantThresholdMonths,
 }: {
 	uid: string;
 	category: Category;
 	lowStockThreshold: number;
+	hideDistantThresholdMonths: number;
 }) {
 	const { t } = useTranslation();
 	const { items, loading } = usePantryItems(uid, category.key);
@@ -46,7 +48,12 @@ export function ItemList({
 		if (filter === "unopened") return !item.opened;
 		return true;
 	});
-	const sorted = sortItems(filtered);
+	const notDistant = filterDistantItems(
+		filtered,
+		hideDistantThresholdMonths,
+		new Date(),
+	);
+	const sorted = sortItems(notDistant);
 	if (direction === "desc") sorted.reverse();
 
 	if (loading) return null;

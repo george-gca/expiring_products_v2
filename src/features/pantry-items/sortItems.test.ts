@@ -1,6 +1,11 @@
+import dayjs from "dayjs";
 import { describe, expect, it } from "vitest";
 import type { PantryItem } from "./schema";
-import { getExpiryWarningColor, sortItems } from "./sortItems";
+import {
+	filterDistantItems,
+	getExpiryWarningColor,
+	sortItems,
+} from "./sortItems";
 
 function makeItem(overrides: Partial<PantryItem>): PantryItem {
 	return {
@@ -58,5 +63,25 @@ describe("getExpiryWarningColor", () => {
 	it("returns white for items expiring beyond 3 days", () => {
 		const item = makeItem({ expiringDate: new Date("2026-09-01") });
 		expect(getExpiryWarningColor(item, now)).toBe("white");
+	});
+});
+
+describe("filterDistantItems", () => {
+	const now = new Date("2026-08-17T12:00:00Z");
+
+	it("keeps items expiring within the threshold", () => {
+		const item = makeItem({ expiringDate: new Date("2026-09-01") });
+		expect(filterDistantItems([item], 3, now)).toEqual([item]);
+	});
+
+	it("drops items expiring beyond the threshold", () => {
+		const item = makeItem({ expiringDate: new Date("2027-06-01") });
+		expect(filterDistantItems([item], 3, now)).toEqual([]);
+	});
+
+	it("keeps an item exactly at the threshold boundary", () => {
+		const cutoff = dayjs(now).add(3, "month").toDate();
+		const item = makeItem({ expiringDate: cutoff });
+		expect(filterDistantItems([item], 3, now)).toEqual([item]);
 	});
 });

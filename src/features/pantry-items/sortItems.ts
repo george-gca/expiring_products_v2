@@ -1,3 +1,4 @@
+import dayjs from "dayjs";
 import type { PantryItem } from "./schema";
 
 export function sortItems(items: PantryItem[]): PantryItem[] {
@@ -20,4 +21,15 @@ export function getExpiryWarningColor(
 	if (daysUntilExpiry < 0) return "red";
 	if (daysUntilExpiry <= YELLOW_THRESHOLD_DAYS) return "yellow";
 	return "white";
+}
+
+export function filterDistantItems(
+	items: PantryItem[],
+	thresholdMonths: number,
+	now: Date,
+): PantryItem[] {
+	const cutoff = dayjs(now).add(thresholdMonths, "month").toDate();
+	return items.filter(
+		(item) => item.expiringDate.getTime() <= cutoff.getTime(),
+	);
 }
