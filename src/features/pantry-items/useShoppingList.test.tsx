@@ -75,6 +75,34 @@ describe("useShoppingList", () => {
 		]);
 	});
 
+	// Regression test for I3: item_history is legacy v1 data this codebase has
+	// never validated before Phase 2, so a real malformed doc is possible.
+	// Before this fix, `snapshot.docs.map((d) => parseItemHistoryDoc(...))`
+	// would throw inside the onSnapshot success callback (dispatched via a
+	// bare setTimeout with no try/catch, bypassing the error callback) and
+	// wedge `loading` at `true` forever for the whole listener — not just
+	// break the one bad entry. It must instead skip the malformed doc and
+	// still resolve the well-formed ones.
+	it("skips a malformed item_history doc instead of breaking the whole listener", async () => {
+		await seedHistory("Milk", true);
+		await setDoc(
+			doc(db, "users", uid, "item_history", encodeURIComponent("foods_Bad")),
+			// recurring must stay `true` (boolean) to match the listener's own
+			// `where("recurring", "==", true)` query — malformed here means it
+			// fails parseItemHistoryDoc's other fields, specifically `duration`
+			// (which the schema requires to be a string, not a number).
+			{ name: "Bad", category: "foods", duration: 7, recurring: true },
+		);
+
+		const { result } = renderHook(() =>
+			useShoppingList(uid, "foods", [makeItem("Milk", 1)], 3),
+		);
+		await waitFor(() => expect(result.current.loading).toBe(false));
+		expect(result.current.shoppingList).toEqual([
+			{ name: "Milk", quantity: 1 },
+		]);
+	});
+
 	it("aggregates quantity across multiple item docs with the same name", async () => {
 		await seedHistory("Milk", true);
 		const items = [
