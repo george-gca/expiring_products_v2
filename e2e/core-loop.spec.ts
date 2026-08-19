@@ -67,3 +67,52 @@ test("recurring low-stock item appears in the shopping list and round-trips thro
 
 	await expect(page.getByText("Oat Milk")).not.toBeVisible();
 });
+
+test("exports a backup and re-imports it, restoring the pantry to the exported state (round trip)", async ({ page }) => {
+	await page.goto("/");
+
+	await page.getByText("Cadastrar").click();
+	await page.getByLabel("E-mail").fill(`e2e-backup-${Date.now()}@example.com`);
+	await page.getByLabel("Senha").fill("correct-horse-battery");
+	await page.getByRole("button", { name: "Cadastrar" }).click();
+
+	await page.getByRole("tab", { name: /Foods/ }).click();
+	await page.getByRole("button", { name: "plus" }).click();
+	await page.getByLabel("Nome").fill("Whole Milk");
+	await page.getByLabel("Quantidade").fill("2");
+	await page.getByLabel("Data de validade").click();
+	await page.locator(".ant-picker-cell-today").click();
+	await page.getByRole("button", { name: "OK" }).click();
+	await expect(page.getByText("Whole Milk")).toBeVisible();
+
+	await page.getByRole("tab", { name: "⚙️" }).click();
+
+	const downloadPromise = page.waitForEvent("download");
+	await page.getByRole("button", { name: "Exportar backup" }).click();
+	const download = await downloadPromise;
+	const backupPath = await download.path();
+	if (!backupPath) throw new Error("expected a downloaded file path");
+
+	// Add a second item the exported backup does NOT contain, so re-importing
+	// the export proves it actually replaced current state rather than
+	// leaving things as they already were.
+	await page.getByRole("tab", { name: /Foods/ }).click();
+	await page.getByRole("button", { name: "plus" }).click();
+	await page.getByLabel("Nome").fill("Extra Item");
+	await page.getByLabel("Quantidade").fill("1");
+	await page.getByLabel("Data de validade").click();
+	await page.locator(".ant-picker-cell-today").click();
+	await page.getByRole("button", { name: "OK" }).click();
+	await expect(page.getByText("Extra Item")).toBeVisible();
+
+	await page.getByRole("tab", { name: "⚙️" }).click();
+	await page.getByLabel("Importar backup").setInputFiles(backupPath);
+
+	await expect(page.getByText(/substituir todos os dados/i)).toBeVisible();
+	await page.getByLabel("Confirmação").fill("substituir");
+	await page.getByRole("button", { name: "OK" }).click();
+
+	await page.getByRole("tab", { name: /Foods/ }).click();
+	await expect(page.getByText("Whole Milk")).toBeVisible();
+	await expect(page.getByText("Extra Item")).not.toBeVisible();
+});
