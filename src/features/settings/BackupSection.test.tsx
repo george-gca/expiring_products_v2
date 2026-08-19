@@ -4,25 +4,22 @@ import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import * as exportBackupModule from "../backup/exportBackup";
 import * as importBackupModule from "../backup/importBackup";
-import { SettingsPane } from "./SettingsPane";
-import type { Settings } from "./schema";
-
-const settings: Settings = {
-	lowStockThreshold: 3,
-	language: "pt-br",
-	hideDistantThresholdMonths: 3,
-};
+import { BackupSection } from "./BackupSection";
 
 const fixtureBackup = {
 	version: 1 as const,
 	exportedAt: "2026-08-19T00:00:00.000Z",
-	settings,
+	settings: {
+		lowStockThreshold: 3,
+		language: "pt-br" as const,
+		hideDistantThresholdMonths: 3,
+	},
 	categories: [],
 	items: [],
 	itemHistory: [],
 };
 
-describe("SettingsPane export", () => {
+describe("BackupSection export", () => {
 	beforeEach(() => {
 		vi.stubGlobal("URL", {
 			...URL,
@@ -39,7 +36,7 @@ describe("SettingsPane export", () => {
 			.spyOn(HTMLAnchorElement.prototype, "click")
 			.mockImplementation(() => {});
 
-		render(<SettingsPane uid="test-user-export-ui" settings={settings} />);
+		render(<BackupSection uid="test-user-export-ui" />);
 		await userEvent.click(
 			screen.getByRole("button", { name: /export backup/i }),
 		);
@@ -63,9 +60,9 @@ const fixtureImportBackup = {
 	itemHistory: [],
 };
 
-describe("SettingsPane import", () => {
+describe("BackupSection import", () => {
 	it("shows an error for a non-JSON file and does not open the confirm modal", async () => {
-		render(<SettingsPane uid="test-user-import-ui-1" settings={settings} />);
+		render(<BackupSection uid="test-user-import-ui-1" />);
 		const input = screen.getByLabelText(/import backup/i);
 		await userEvent.upload(
 			input,
@@ -79,7 +76,7 @@ describe("SettingsPane import", () => {
 	});
 
 	it("rejects an unsupported backup version without opening the confirm modal", async () => {
-		render(<SettingsPane uid="test-user-import-ui-2" settings={settings} />);
+		render(<BackupSection uid="test-user-import-ui-2" />);
 		const input = screen.getByLabelText(/import backup/i);
 		await userEvent.upload(
 			input,
@@ -101,7 +98,7 @@ describe("SettingsPane import", () => {
 			.spyOn(importBackupModule, "importBackup")
 			.mockResolvedValue(undefined);
 
-		render(<SettingsPane uid="test-user-import-ui-3" settings={settings} />);
+		render(<BackupSection uid="test-user-import-ui-3" />);
 		const input = screen.getByLabelText(/import backup/i);
 		await userEvent.upload(
 			input,
