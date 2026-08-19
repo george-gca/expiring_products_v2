@@ -19,6 +19,16 @@
   "settings": {
     "lowStockThreshold": "Low stock warning threshold",
     "backupTitle": "Backup",
-    "exportBackup": "Export backup"
+    "exportBackup": "Export backup",
+    "importBackup": "Import backup",
+    "invalidBackupFile": "This doesn't look like a valid backup file.",
+    "unsupportedBackupVersion": "This backup file was created by a newer version of the app and can't be imported.",
+    "importConfirmTitle": "Replace all data?",
+    "importConfirmBody": "This will permanently delete your current {{itemCount}} items and {{categoryCount}} categories and replace them with the contents of this backup file. Type \"{{confirmWord}}\" to confirm.",
+    "importConfirmWord": "replace",
+    "importConfirmInputLabel": "Confirmation",
+    "importConfirmPlaceholder": "Type \"{{confirmWord}}\" to confirm",
+    "importSuccess": "Backup imported successfully.",
+    "importPartialFailure": "Something went wrong during import — some data may not have imported. Check your pantry and try again if needed."
   }
 }

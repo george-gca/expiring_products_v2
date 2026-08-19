@@ -19,6 +19,16 @@
   "settings": {
     "lowStockThreshold": "Aviso de estoque baixo",
     "backupTitle": "Backup",
-    "exportBackup": "Exportar backup"
+    "exportBackup": "Exportar backup",
+    "importBackup": "Importar backup",
+    "invalidBackupFile": "Isso não parece ser um arquivo de backup válido.",
+    "unsupportedBackupVersion": "Este arquivo de backup foi criado por uma versão mais nova do aplicativo e não pode ser importado.",
+    "importConfirmTitle": "Substituir todos os dados?",
+    "importConfirmBody": "Isso vai apagar permanentemente seus {{itemCount}} itens e {{categoryCount}} categorias atuais e substituí-los pelo conteúdo deste arquivo de backup. Digite \"{{confirmWord}}\" para confirmar.",
+    "importConfirmWord": "substituir",
+    "importConfirmInputLabel": "Confirmação",
+    "importConfirmPlaceholder": "Digite \"{{confirmWord}}\" para confirmar",
+    "importSuccess": "Backup importado com sucesso.",
+    "importPartialFailure": "Algo deu errado durante a importação — alguns dados podem não ter sido importados. Verifique sua despensa e tente novamente se necessário."
   }
 }
