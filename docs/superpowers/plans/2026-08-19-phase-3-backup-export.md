@@ -1,6 +1,6 @@
 # Phase 3: Backup/Export & Import Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Let a signed-in user download a full JSON backup of their account (settings, categories, items, recurring-item history) and restore an account from a previously downloaded backup file, replacing whatever is currently there.
 
@@ -64,7 +64,7 @@ e2e/
   - `parseBackup(data: unknown): Backup` — throws on invalid input.
   - `safeParseBackup(data: unknown): Backup | null` — returns `null` on invalid input instead of throwing (mirrors `safeParseItemHistoryDoc`'s existing convention in `src/features/pantry-items/schema.ts`).
 
-- [ ] **Step 1: Write failing tests for the schema**
+- [x] **Step 1: Write failing tests for the schema**
 
 `src/features/backup/schema.test.ts`:
 
@@ -135,7 +135,7 @@ describe("safeParseBackup", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/backup/schema.test.ts
@@ -143,7 +143,7 @@ npx vitest run src/features/backup/schema.test.ts
 
 Expected: FAIL with "Cannot find module './schema'" (or similar — the file doesn't exist yet).
 
-- [ ] **Step 3: Implement the schema**
+- [x] **Step 3: Implement the schema**
 
 `src/features/backup/schema.ts`:
 
@@ -204,13 +204,13 @@ export function safeParseBackup(data: unknown): Backup | null {
 
 Note: `backupSettingsSchema`'s `lowStockThreshold` deliberately does **not** use `.catch()` the way `settingsDocSchema` does (see `src/features/settings/schema.ts`) — that `.catch()` exists to keep a live Firestore `onSnapshot` listener from getting stuck on bad data that's already in production. A backup *file* being imported is different: if it's malformed, the right behavior is to reject the whole import loudly (Task 5's "invalid backup file" message), not silently substitute a default and proceed.
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/backup/schema.test.ts
 ```
 
-- [ ] **Step 5: Run full verification and commit**
+- [x] **Step 5: Run full verification and commit**
 
 ```bash
 npm run format
@@ -234,7 +234,7 @@ git commit -m "feat: add backup file schema"
 - Consumes: `Backup` type (Task 1); `db` (`src/lib/firebase.ts`); `parseCategoryDoc` (`src/features/categories/schema.ts`); `parseItemDoc`, `safeParseItemHistoryDoc` (`src/features/pantry-items/schema.ts`); `parseSettingsDoc` (`src/features/settings/schema.ts`).
 - Produces: `buildBackup(uid: string): Promise<Backup>`.
 
-- [ ] **Step 1: Write a failing test**
+- [x] **Step 1: Write a failing test**
 
 `src/features/backup/exportBackup.test.ts`:
 
@@ -319,7 +319,7 @@ describe("buildBackup", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/backup/exportBackup.test.ts"
@@ -327,7 +327,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/b
 
 Expected: FAIL with "Cannot find module './exportBackup'".
 
-- [ ] **Step 3: Implement `buildBackup`**
+- [x] **Step 3: Implement `buildBackup`**
 
 `src/features/backup/exportBackup.ts`:
 
@@ -389,13 +389,13 @@ export async function buildBackup(uid: string): Promise<Backup> {
 }
 ```
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/backup/exportBackup.test.ts"
 ```
 
-- [ ] **Step 5: Run full verification and commit**
+- [x] **Step 5: Run full verification and commit**
 
 ```bash
 npm run format
@@ -419,7 +419,7 @@ git commit -m "feat: add buildBackup export function"
 - Consumes: `Backup` type (Task 1); `db`; `toItemDoc` (`src/features/pantry-items/schema.ts`).
 - Produces: `importBackup(uid: string, backup: Backup): Promise<void>`.
 
-- [ ] **Step 1: Write a failing test**
+- [x] **Step 1: Write a failing test**
 
 `src/features/backup/importBackup.test.ts`:
 
@@ -531,7 +531,7 @@ describe("importBackup", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/backup/importBackup.test.ts"
@@ -539,7 +539,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/b
 
 Expected: FAIL with "Cannot find module './importBackup'".
 
-- [ ] **Step 3: Implement `importBackup`**
+- [x] **Step 3: Implement `importBackup`**
 
 `src/features/backup/importBackup.ts`:
 
@@ -606,13 +606,13 @@ export async function importBackup(
 
 Note the two-phase structure (delete everything, *then* write everything) is deliberate — see the design spec's Approach section for why this isn't wrapped in a single atomic transaction, and the accepted partial-failure risk that follows from that.
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/backup/importBackup.test.ts"
 ```
 
-- [ ] **Step 5: Run full verification and commit**
+- [x] **Step 5: Run full verification and commit**
 
 ```bash
 npm run format
@@ -637,7 +637,7 @@ git commit -m "feat: add importBackup function"
 - Consumes: `buildBackup` (Task 2).
 - Produces: `SettingsPane` gains a "Backup" section with an Export button. No prop-signature change (`SettingsPane` still takes `{ uid: string; settings: Settings }`).
 
-- [ ] **Step 1: Write a failing test**
+- [x] **Step 1: Write a failing test**
 
 `src/features/settings/SettingsPane.test.tsx`:
 
@@ -690,7 +690,7 @@ describe("SettingsPane export", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/settings/SettingsPane.test.tsx
@@ -698,7 +698,7 @@ npx vitest run src/features/settings/SettingsPane.test.tsx
 
 Expected: FAIL — no button with an accessible name matching `/export backup/i` exists yet.
 
-- [ ] **Step 3: Add locale keys**
+- [x] **Step 3: Add locale keys**
 
 Add to the `"settings"` object in **both** `src/locales/en-us.json` and `src/locales/pt-br.json`:
 
@@ -714,7 +714,7 @@ pt-br.json:
 "exportBackup": "Exportar backup"
 ```
 
-- [ ] **Step 4: Add the Export button to `SettingsPane`**
+- [x] **Step 4: Add the Export button to `SettingsPane`**
 
 Modify `src/features/settings/SettingsPane.tsx`. Run `antd info Button` first to confirm current props. Add, below the existing `lowStockThreshold` `Form.Item`, a new `Form.Item label={t("settings.backupTitle")}` containing a `Button` with `icon={<DownloadOutlined />}` (from `@ant-design/icons`, already a project dependency — see `ItemList.tsx`/`ShoppingList.tsx` for existing `@ant-design/icons` import examples) whose visible text is `{t("settings.exportBackup")}`, and an `onClick` handler doing exactly this (plain DOM APIs, no antd verification needed):
 
@@ -741,13 +741,13 @@ const handleExport = async () => {
 
 Import `buildBackup` from `../backup/exportBackup`.
 
-- [ ] **Step 5: Run it, verify it passes**
+- [x] **Step 5: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/settings/SettingsPane.test.tsx
 ```
 
-- [ ] **Step 6: Verify manually**
+- [x] **Step 6: Verify manually**
 
 ```bash
 npm run dev
@@ -755,7 +755,7 @@ npm run dev
 
 Sign in, open the Settings tab, click "Export backup" (or "Exportar backup"), confirm a `.json` file downloads and its contents look like a `Backup` object with your actual data.
 
-- [ ] **Step 7: Run full verification and commit**
+- [x] **Step 7: Run full verification and commit**
 
 ```bash
 npm run format
@@ -781,7 +781,7 @@ git commit -m "feat: add backup export to Settings"
 - Consumes: `safeParseBackup`, `Backup` type (Task 1); `importBackup` (Task 3).
 - Produces: `SettingsPane`'s Backup section gains an Import button, a hidden file input, and a typed-confirmation `Modal`. No prop-signature change.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Append to `src/features/settings/SettingsPane.test.tsx` (add these imports alongside the existing ones, and this new `describe` block after the existing one):
 
@@ -862,7 +862,7 @@ describe("SettingsPane import", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/settings/SettingsPane.test.tsx
@@ -870,7 +870,7 @@ npx vitest run src/features/settings/SettingsPane.test.tsx
 
 Expected: FAIL — no element with accessible name matching `/import backup/i` exists yet.
 
-- [ ] **Step 3: Add locale keys**
+- [x] **Step 3: Add locale keys**
 
 Add to the `"settings"` object in **both** locale files, alongside the Task 4 keys:
 
@@ -902,7 +902,7 @@ pt-br.json:
 "importPartialFailure": "Algo deu errado durante a importação — alguns dados podem não ter sido importados. Verifique sua despensa e tente novamente se necessário."
 ```
 
-- [ ] **Step 4: Add the Import button, file input, and confirm modal**
+- [x] **Step 4: Add the Import button, file input, and confirm modal**
 
 Modify `src/features/settings/SettingsPane.tsx`. Run `antd info Modal` and `antd info Input` first to confirm current props (you already have `antd info Button` from Task 4).
 
@@ -980,13 +980,13 @@ const handleImportCancel = () => {
 
 Import `safeParseBackup`/`Backup` from `../backup/schema` and `importBackup` from `../backup/importBackup`.
 
-- [ ] **Step 5: Run it, verify it passes**
+- [x] **Step 5: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/settings/SettingsPane.test.tsx
 ```
 
-- [ ] **Step 6: Verify manually**
+- [x] **Step 6: Verify manually**
 
 ```bash
 npm run dev
@@ -994,7 +994,7 @@ npm run dev
 
 Sign in, export a backup (Task 4's button), add another item, then import the file you just exported. Confirm the modal shows correct item/category counts, that OK stays disabled until you type the exact confirmation word, and that after confirming, the pantry reflects the imported file's contents (the extra item you added after exporting should be gone).
 
-- [ ] **Step 7: Run full verification and commit**
+- [x] **Step 7: Run full verification and commit**
 
 ```bash
 npm run format
@@ -1019,7 +1019,7 @@ git commit -m "feat: add backup import to Settings"
 **Interfaces:**
 - Consumes: the full feature built in Tasks 1–5.
 
-- [ ] **Step 1: Add an export/import round-trip e2e case**
+- [x] **Step 1: Add an export/import round-trip e2e case**
 
 Add a new `test(...)` to `e2e/core-loop.spec.ts`, following its established conventions (pt-br button/label text, the `.ant-picker-cell-today` date-picker workaround, `page.getByRole("tab", { name: ... })` for tab switching). The Settings tab's accessible tab name is the literal emoji `"⚙️"` (see `src/features/categories/CategoryTabs.tsx`).
 
@@ -1076,7 +1076,7 @@ test("exports a backup and re-imports it, restoring the pantry to the exported s
 
 Verify every selector empirically against the real running app rather than trusting this brief blindly — check the actual rendered DOM/accessible names before assuming they match (Phase 1's and Phase 2's e2e tasks both found brief-guessed selectors needed small adjustments after checking reality).
 
-- [ ] **Step 2: Run it against the emulator**
+- [x] **Step 2: Run it against the emulator**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=true npm run test:e2e"
@@ -1084,7 +1084,7 @@ npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=t
 
 Expected: PASS (all existing cases plus the new round-trip case).
 
-- [ ] **Step 3: Run the full verification suite one more time**
+- [x] **Step 3: Run the full verification suite one more time**
 
 ```bash
 npm run format
@@ -1096,7 +1096,7 @@ npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=t
 
 All five must be clean before this task is considered done.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add e2e/core-loop.spec.ts
