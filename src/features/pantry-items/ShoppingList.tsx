@@ -20,7 +20,7 @@ export function ShoppingList({
 	onAddItem: (name: string) => void;
 }) {
 	const { t } = useTranslation();
-	const { shoppingList } = useShoppingList(
+	const { shoppingList, loading } = useShoppingList(
 		uid,
 		category.key,
 		pantryItems,
@@ -28,6 +28,8 @@ export function ShoppingList({
 	);
 	const { getSkippedNames, skipItem } = useUiPreferencesStore();
 	const skippedNames = getSkippedNames(category.key);
+
+	if (loading) return null;
 
 	const sorted = shoppingList
 		.filter((entry) => !skippedNames.has(entry.name))
