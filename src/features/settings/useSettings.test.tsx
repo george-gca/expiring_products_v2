@@ -12,10 +12,14 @@ afterEach(() =>
 );
 
 describe("useSettings", () => {
-	it("bootstraps the default threshold when no settings doc exists", async () => {
+	it("bootstraps default settings when no settings doc exists", async () => {
 		const { result } = renderHook(() => useSettings(uid));
 		await waitFor(() => expect(result.current.loading).toBe(false));
-		expect(result.current.settings.lowStockThreshold).toBe(3);
+		expect(result.current.settings).toEqual({
+			lowStockThreshold: 3,
+			language: "pt-br",
+			hideDistantThresholdMonths: 3,
+		});
 	});
 
 	it("does not overwrite an existing settings doc", async () => {

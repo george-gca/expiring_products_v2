@@ -4,11 +4,17 @@ import { useEffect, useState } from "react";
 import { db } from "../../lib/firebase";
 import { parseSettingsDoc, type Settings } from "./schema";
 
+const DEFAULT_SETTINGS: Settings = {
+	lowStockThreshold: 3,
+	language: "pt-br",
+	hideDistantThresholdMonths: 3,
+};
+
 async function ensureSettingsDoc(uid: string) {
 	const userDoc = doc(db, "users", uid);
 	const existing = await getDoc(userDoc);
 	if (!existing.exists()) {
-		await setDoc(userDoc, { lowStockThreshold: 3 });
+		await setDoc(userDoc, DEFAULT_SETTINGS);
 	}
 }
 
@@ -16,9 +22,7 @@ export function useSettings(uid: string): {
 	settings: Settings;
 	loading: boolean;
 } {
-	const [settings, setSettings] = useState<Settings>({
-		lowStockThreshold: 3,
-	});
+	const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {

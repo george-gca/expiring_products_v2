@@ -7,7 +7,11 @@ import * as importBackupModule from "../backup/importBackup";
 import { SettingsPane } from "./SettingsPane";
 import type { Settings } from "./schema";
 
-const settings: Settings = { lowStockThreshold: 3 };
+const settings: Settings = {
+	lowStockThreshold: 3,
+	language: "pt-br",
+	hideDistantThresholdMonths: 3,
+};
 
 const fixtureBackup = {
 	version: 1 as const,
@@ -49,7 +53,11 @@ describe("SettingsPane export", () => {
 const fixtureImportBackup = {
 	version: 1 as const,
 	exportedAt: "2026-08-19T00:00:00.000Z",
-	settings: { lowStockThreshold: 5 },
+	settings: {
+		lowStockThreshold: 5,
+		language: "en-us" as const,
+		hideDistantThresholdMonths: 3,
+	},
 	categories: [{ key: "foods", name: "Foods", emoji: "🍎", order: 0 }],
 	items: [],
 	itemHistory: [],

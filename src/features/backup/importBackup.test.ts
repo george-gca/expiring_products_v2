@@ -22,7 +22,11 @@ afterEach(() =>
 const backup: Backup = {
 	version: 1,
 	exportedAt: "2026-08-19T00:00:00.000Z",
-	settings: { lowStockThreshold: 5 },
+	settings: {
+		lowStockThreshold: 5,
+		language: "en-us",
+		hideDistantThresholdMonths: 3,
+	},
 	categories: [{ key: "foods", name: "Foods", emoji: "🍎", order: 0 }],
 	items: [
 		{
@@ -78,7 +82,11 @@ describe("importBackup", () => {
 		await importBackup(uid, backup);
 
 		const settingsSnap = await getDoc(doc(db, "users", uid));
-		expect(settingsSnap.data()).toEqual({ lowStockThreshold: 5 });
+		expect(settingsSnap.data()).toEqual({
+			lowStockThreshold: 5,
+			language: "en-us",
+			hideDistantThresholdMonths: 3,
+		});
 
 		const categoriesSnap = await getDocs(
 			collection(db, "users", uid, "categories"),

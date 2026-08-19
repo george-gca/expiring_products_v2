@@ -12,7 +12,11 @@ afterEach(() =>
 
 describe("buildBackup", () => {
 	it("assembles settings, categories, items, and item_history into a versioned backup", async () => {
-		await setDoc(doc(db, "users", uid), { lowStockThreshold: 5 });
+		await setDoc(doc(db, "users", uid), {
+			lowStockThreshold: 5,
+			language: "en-us",
+			hideDistantThresholdMonths: 6,
+		});
 		await setDoc(doc(db, "users", uid, "categories", "foods"), {
 			key: "foods",
 			name: "Foods",
@@ -39,7 +43,11 @@ describe("buildBackup", () => {
 		const backup = await buildBackup(uid);
 
 		expect(backup.version).toBe(1);
-		expect(backup.settings).toEqual({ lowStockThreshold: 5 });
+		expect(backup.settings).toEqual({
+			lowStockThreshold: 5,
+			language: "en-us",
+			hideDistantThresholdMonths: 6,
+		});
 		expect(backup.categories).toEqual([
 			{ key: "foods", name: "Foods", emoji: "🍎", order: 0 },
 		]);
@@ -64,7 +72,11 @@ describe("buildBackup", () => {
 
 	it("defaults settings to the standard threshold when no settings doc exists yet", async () => {
 		const backup = await buildBackup(uid);
-		expect(backup.settings).toEqual({ lowStockThreshold: 3 });
+		expect(backup.settings).toEqual({
+			lowStockThreshold: 3,
+			language: "pt-br",
+			hideDistantThresholdMonths: 3,
+		});
 	});
 
 	it("skips a malformed item_history doc rather than throwing", async () => {

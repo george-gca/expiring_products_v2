@@ -4,7 +4,11 @@ import { parseBackup, safeParseBackup } from "./schema";
 const validBackup = {
 	version: 1,
 	exportedAt: "2026-08-19T00:00:00.000Z",
-	settings: { lowStockThreshold: 3 },
+	settings: {
+		lowStockThreshold: 3,
+		language: "pt-br" as const,
+		hideDistantThresholdMonths: 3,
+	},
 	categories: [{ key: "foods", name: "Foods", emoji: "🍎", order: 0 }],
 	items: [
 		{

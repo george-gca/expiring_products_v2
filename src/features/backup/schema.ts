@@ -2,6 +2,8 @@ import { z } from "zod";
 
 const backupSettingsSchema = z.object({
 	lowStockThreshold: z.number().int().positive(),
+	language: z.enum(["pt-br", "en-us"]),
+	hideDistantThresholdMonths: z.number().int().positive(),
 });
 
 const backupCategorySchema = z.object({
