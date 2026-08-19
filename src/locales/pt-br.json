@@ -17,6 +17,8 @@
     "quantityExceedsStock": "Abertos + consumidos + descartados não podem exceder a quantidade atual"
   },
   "settings": {
-    "lowStockThreshold": "Aviso de estoque baixo"
+    "lowStockThreshold": "Aviso de estoque baixo",
+    "backupTitle": "Backup",
+    "exportBackup": "Exportar backup"
   }
 }

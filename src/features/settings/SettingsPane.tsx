@@ -1,7 +1,9 @@
-import { Form, InputNumber, message } from "antd";
+import { DownloadOutlined } from "@ant-design/icons";
+import { Button, Form, InputNumber, message } from "antd";
 import type { FocusEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { buildBackup } from "../backup/exportBackup";
 import { updateLowStockThreshold } from "./firestoreWrites";
 import type { Settings } from "./schema";
 
@@ -60,6 +62,25 @@ export function SettingsPane({
 		}
 	};
 
+	const handleExport = async () => {
+		try {
+			const backup = await buildBackup(uid);
+			const blob = new Blob([JSON.stringify(backup, null, 2)], {
+				type: "application/json",
+			});
+			const url = URL.createObjectURL(blob);
+			const link = document.createElement("a");
+			link.href = url;
+			link.download = `expiring-products-backup-${new Date().toISOString().slice(0, 10)}.json`;
+			document.body.appendChild(link);
+			link.click();
+			document.body.removeChild(link);
+			URL.revokeObjectURL(url);
+		} catch {
+			message.error("Something went wrong, please try again");
+		}
+	};
+
 	return (
 		<Form layout="vertical">
 			<Form.Item label={t("settings.lowStockThreshold")}>
@@ -71,6 +92,11 @@ export function SettingsPane({
 					onBlur={handleBlur}
 					style={{ width: "100%" }}
 				/>
+			</Form.Item>
+			<Form.Item label={t("settings.backupTitle")}>
+				<Button icon={<DownloadOutlined />} onClick={handleExport}>
+					{t("settings.exportBackup")}
+				</Button>
 			</Form.Item>
 		</Form>
 	);

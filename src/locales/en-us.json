@@ -17,6 +17,8 @@
     "quantityExceedsStock": "Opened + consumed + discarded can't exceed the current quantity"
   },
   "settings": {
-    "lowStockThreshold": "Low stock warning threshold"
+    "lowStockThreshold": "Low stock warning threshold",
+    "backupTitle": "Backup",
+    "exportBackup": "Export backup"
   }
 }
