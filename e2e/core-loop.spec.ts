@@ -116,3 +116,53 @@ test("exports a backup and re-imports it, restoring the pantry to the exported s
 	await expect(page.getByText("Whole Milk")).toBeVisible();
 	await expect(page.getByText("Extra Item")).not.toBeVisible();
 });
+
+test("items expiring beyond the hide-distant threshold are not shown", async ({ page }) => {
+	await page.goto("/");
+
+	await page.getByText("Cadastrar").click();
+	await page.getByLabel("E-mail").fill(`e2e-distant-${Date.now()}@example.com`);
+	await page.getByLabel("Senha").fill("correct-horse-battery");
+	await page.getByRole("button", { name: "Cadastrar" }).click();
+
+	await page.getByRole("tab", { name: /Foods/ }).click();
+	await page.getByRole("button", { name: "plus" }).click();
+	await page.getByLabel("Nome").fill("Near Item");
+	await page.getByLabel("Quantidade").fill("1");
+	await page.getByLabel("Data de validade").click();
+	await page.locator(".ant-picker-cell-today").click();
+	await page.getByRole("button", { name: "OK" }).click();
+	await expect(page.getByText("Near Item")).toBeVisible();
+
+	// A far-future date beyond the default 3-month hide-distant threshold.
+	const farDate = new Date();
+	farDate.setMonth(farDate.getMonth() + 8);
+	const farDateStr = farDate.toISOString().slice(0, 10);
+
+	await page.getByRole("button", { name: "plus" }).click();
+	await page.getByLabel("Nome").fill("Far Item");
+	await page.getByLabel("Quantidade").fill("1");
+	await page.getByLabel("Data de validade").fill(farDateStr);
+	await page.getByLabel("Data de validade").press("Enter");
+	await page.getByRole("button", { name: "OK" }).click();
+
+	await expect(page.getByText("Near Item")).toBeVisible();
+	await expect(page.getByText("Far Item")).not.toBeVisible();
+});
+
+test("switching language updates the rendered UI immediately", async ({ page }) => {
+	await page.goto("/");
+
+	await page.getByText("Cadastrar").click();
+	await page.getByLabel("E-mail").fill(`e2e-lang-${Date.now()}@example.com`);
+	await page.getByLabel("Senha").fill("correct-horse-battery");
+	await page.getByRole("button", { name: "Cadastrar" }).click();
+
+	await page.getByRole("tab", { name: "⚙️" }).click();
+	await expect(page.getByText("Aviso de estoque baixo")).toBeVisible();
+
+	await page.getByRole("combobox").click();
+	await page.getByText("English", { exact: true }).click();
+
+	await expect(page.getByText("Low stock warning threshold")).toBeVisible();
+});
