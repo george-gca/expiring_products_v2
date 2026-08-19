@@ -1,3 +1,4 @@
+import "barcode-detector/polyfill";
 import "./lib/i18n";
 import "./index.css";
 import { ConfigProvider } from "antd";

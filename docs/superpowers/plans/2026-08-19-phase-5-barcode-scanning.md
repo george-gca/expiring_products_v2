@@ -668,13 +668,20 @@ export function BarcodeScanner({
 	const [error, setError] = useState(false);
 
 	// Latest callbacks are read via refs rather than listed as effect deps:
-	// this effect must run exactly once per mount (acquire the camera once,
-	// release it once) regardless of how many times the parent re-renders
-	// with a new inline onDetect/onCancel function identity.
+	// the camera-acquisition effect below must run exactly once per mount
+	// (acquire the camera once, release it once) regardless of how many
+	// times the parent re-renders with a new inline onDetect/onCancel
+	// function identity. The refs are synced in their own effect (not
+	// written during render) since eslint-plugin-react-hooks's `refs` rule
+	// forbids writing ref.current outside an effect/event handler — this
+	// was discovered by running `npm run lint` while implementing this
+	// task, not anticipated during planning.
 	const onDetectRef = useRef(onDetect);
-	onDetectRef.current = onDetect;
 	const onCancelRef = useRef(onCancel);
-	onCancelRef.current = onCancel;
+	useEffect(() => {
+		onDetectRef.current = onDetect;
+		onCancelRef.current = onCancel;
+	});
 
 	useEffect(() => {
 		let stream: MediaStream | null = null;

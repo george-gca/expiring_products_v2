@@ -17,6 +17,7 @@
   "dependencies": {
     "@ant-design/icons": "^6.3.2",
     "antd": "^6.6.1",
+    "barcode-detector": "^3.2.2",
     "dayjs": "^1.11.23",
     "firebase": "^12.17.1",
     "i18next": "^26.3.6",

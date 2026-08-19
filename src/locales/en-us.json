@@ -14,7 +14,10 @@
     "openedItems": "Opened items",
     "consumedItems": "Consumed items",
     "discardedItems": "Discarded items",
-    "quantityExceedsStock": "Opened + consumed + discarded can't exceed the current quantity"
+    "quantityExceedsStock": "Opened + consumed + discarded can't exceed the current quantity",
+    "scanBarcode": "Scan barcode",
+    "cancelScan": "Cancel scan",
+    "cameraUnavailable": "Camera unavailable. Enter the item manually below."
   },
   "settings": {
     "lowStockThreshold": "Low stock warning threshold",

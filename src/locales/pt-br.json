@@ -14,7 +14,10 @@
     "openedItems": "Itens abertos",
     "consumedItems": "Itens consumidos",
     "discardedItems": "Itens descartados",
-    "quantityExceedsStock": "Abertos + consumidos + descartados não podem exceder a quantidade atual"
+    "quantityExceedsStock": "Abertos + consumidos + descartados não podem exceder a quantidade atual",
+    "scanBarcode": "Escanear código de barras",
+    "cancelScan": "Cancelar escaneamento",
+    "cameraUnavailable": "Câmera indisponível. Preencha os campos manualmente abaixo."
   },
   "settings": {
     "lowStockThreshold": "Aviso de estoque baixo",
