@@ -18,6 +18,10 @@
   },
   "settings": {
     "lowStockThreshold": "Aviso de estoque baixo",
+    "language": "Idioma",
+    "languagePtBr": "Português",
+    "languageEnUs": "English",
+    "hideDistantThresholdMonths": "Ocultar itens que vencem daqui a mais de (meses)",
     "backupTitle": "Backup",
     "exportBackup": "Exportar backup",
     "importBackup": "Importar backup",

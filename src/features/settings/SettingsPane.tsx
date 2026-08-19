@@ -1,12 +1,18 @@
-import { Form, InputNumber, message } from "antd";
+import { Form, InputNumber, message, Select } from "antd";
 import type { FocusEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import i18n from "../../lib/i18n";
 import { BackupSection } from "./BackupSection";
-import { updateLowStockThreshold } from "./firestoreWrites";
+import {
+	updateHideDistantThresholdMonths,
+	updateLanguage,
+	updateLowStockThreshold,
+} from "./firestoreWrites";
 import type { Settings } from "./schema";
 
 const MIN_LOW_STOCK_THRESHOLD = 1;
+const MIN_HIDE_DISTANT_THRESHOLD_MONTHS = 1;
 
 export function SettingsPane({
 	uid,
@@ -32,6 +38,16 @@ export function SettingsPane({
 	if (prevThreshold !== settings.lowStockThreshold) {
 		setPrevThreshold(settings.lowStockThreshold);
 		setValue(settings.lowStockThreshold);
+	}
+
+	const [hideDistantValue, setHideDistantValue] = useState(
+		settings.hideDistantThresholdMonths,
+	);
+	const [prevHideDistantThresholdMonths, setPrevHideDistantThresholdMonths] =
+		useState(settings.hideDistantThresholdMonths);
+	if (prevHideDistantThresholdMonths !== settings.hideDistantThresholdMonths) {
+		setPrevHideDistantThresholdMonths(settings.hideDistantThresholdMonths);
+		setHideDistantValue(settings.hideDistantThresholdMonths);
 	}
 
 	const handleBlur = async (event: FocusEvent<HTMLInputElement>) => {
@@ -61,8 +77,42 @@ export function SettingsPane({
 		}
 	};
 
+	const handleHideDistantBlur = async (event: FocusEvent<HTMLInputElement>) => {
+		const parsed = Number(event.target.value);
+		const committed = Number.isNaN(parsed)
+			? hideDistantValue
+			: Math.max(MIN_HIDE_DISTANT_THRESHOLD_MONTHS, Math.round(parsed));
+		setHideDistantValue(committed);
+		if (committed === settings.hideDistantThresholdMonths) return;
+		try {
+			await updateHideDistantThresholdMonths(uid, committed);
+		} catch {
+			message.error("Something went wrong, please try again");
+		}
+	};
+
+	const handleLanguageChange = async (language: Settings["language"]) => {
+		try {
+			await updateLanguage(uid, language);
+			i18n.changeLanguage(language);
+		} catch {
+			message.error("Something went wrong, please try again");
+		}
+	};
+
 	return (
 		<Form layout="vertical">
+			<Form.Item label={t("settings.language")}>
+				<Select
+					value={settings.language}
+					onChange={handleLanguageChange}
+					options={[
+						{ value: "pt-br", label: t("settings.languagePtBr") },
+						{ value: "en-us", label: t("settings.languageEnUs") },
+					]}
+					style={{ width: "100%" }}
+				/>
+			</Form.Item>
 			<Form.Item label={t("settings.lowStockThreshold")}>
 				<InputNumber
 					min={MIN_LOW_STOCK_THRESHOLD}
@@ -70,6 +120,17 @@ export function SettingsPane({
 					value={value}
 					onChange={(newValue) => setValue(newValue ?? 1)}
 					onBlur={handleBlur}
+					style={{ width: "100%" }}
+				/>
+			</Form.Item>
+			<Form.Item label={t("settings.hideDistantThresholdMonths")}>
+				<InputNumber
+					min={MIN_HIDE_DISTANT_THRESHOLD_MONTHS}
+					precision={0}
+					value={hideDistantValue}
+					onChange={(newValue) => setHideDistantValue(newValue ?? 1)}
+					onBlur={handleHideDistantBlur}
+					aria-label={t("settings.hideDistantThresholdMonths")}
 					style={{ width: "100%" }}
 				/>
 			</Form.Item>

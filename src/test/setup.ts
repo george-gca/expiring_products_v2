@@ -14,3 +14,13 @@ if (!window.matchMedia) {
 		dispatchEvent: () => false,
 	});
 }
+
+// jsdom doesn't implement ResizeObserver; antd's Select (and other
+// components) subscribe to it on mount via @rc-component/resize-observer.
+if (!window.ResizeObserver) {
+	window.ResizeObserver = class {
+		observe() {}
+		unobserve() {}
+		disconnect() {}
+	};
+}

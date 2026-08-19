@@ -18,6 +18,10 @@
   },
   "settings": {
     "lowStockThreshold": "Low stock warning threshold",
+    "language": "Language",
+    "languagePtBr": "Português",
+    "languageEnUs": "English",
+    "hideDistantThresholdMonths": "Hide items expiring more than this many months away",
     "backupTitle": "Backup",
     "exportBackup": "Export backup",
     "importBackup": "Import backup",
