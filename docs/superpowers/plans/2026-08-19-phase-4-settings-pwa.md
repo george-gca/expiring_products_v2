@@ -1,6 +1,6 @@
 # Phase 4: Remaining Settings + PWA Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Add cross-device-synced `language` and `hideDistantThresholdMonths` settings (wired into an actual language switcher and expiry-distance filtering), and make the app an installable PWA with an offline-cached app shell.
 
@@ -76,7 +76,7 @@ e2e/
 - Consumes: nothing new.
 - Produces: `interface Settings { lowStockThreshold: number; language: "pt-br" | "en-us"; hideDistantThresholdMonths: number }`. `parseSettingsDoc(data: unknown): Settings` unchanged in signature, now returns the two new fields too. `useSettings(uid)`'s returned `settings` always has all three fields populated (bootstrapped or read).
 
-- [ ] **Step 1: Update the schema tests (they will fail against the current schema)**
+- [x] **Step 1: Update the schema tests (they will fail against the current schema)**
 
 Replace the full contents of `src/features/settings/schema.test.ts`:
 
@@ -203,7 +203,7 @@ describe("parseSettingsDoc", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/settings/schema.test.ts
@@ -211,7 +211,7 @@ npx vitest run src/features/settings/schema.test.ts
 
 Expected: FAIL — the new assertions expect `language`/`hideDistantThresholdMonths` fields the current schema doesn't produce yet.
 
-- [ ] **Step 3: Update the schema**
+- [x] **Step 3: Update the schema**
 
 Replace the full contents of `src/features/settings/schema.ts`:
 
@@ -257,13 +257,13 @@ export function parseSettingsDoc(data: unknown): Settings {
 }
 ```
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/settings/schema.test.ts
 ```
 
-- [ ] **Step 5: Update useSettings's bootstrap + default state, and its tests**
+- [x] **Step 5: Update useSettings's bootstrap + default state, and its tests**
 
 Replace the full contents of `src/features/settings/useSettings.ts`:
 
@@ -341,13 +341,13 @@ In `src/features/settings/useSettings.test.tsx`, update the `"bootstraps the def
 
 Leave the other two existing tests (`"does not overwrite an existing settings doc"`, `"does not get stuck loading when the settings doc has a non-integer threshold"`) unchanged — they only assert on `result.current.settings.lowStockThreshold`, which is unaffected by this change.
 
-- [ ] **Step 6: Run it, verify it passes**
+- [x] **Step 6: Run it, verify it passes**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/settings/useSettings.test.tsx"
 ```
 
-- [ ] **Step 7: Run full verification and commit**
+- [x] **Step 7: Run full verification and commit**
 
 ```bash
 npm run format
@@ -372,7 +372,7 @@ git commit -m "feat: add language and hideDistantThresholdMonths to settings sch
 - Consumes: `Settings["language"]` type (Task 1).
 - Produces: `updateLanguage(uid: string, language: Settings["language"]): Promise<void>`; `updateHideDistantThresholdMonths(uid: string, value: number): Promise<void>`.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Append to `src/features/settings/firestoreWrites.test.ts` (add these two `describe` blocks after the existing `updateLowStockThreshold` one, and add `updateLanguage, updateHideDistantThresholdMonths` to the existing import from `./firestoreWrites`):
 
@@ -396,7 +396,7 @@ describe("updateHideDistantThresholdMonths", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/settings/firestoreWrites.test.ts"
@@ -404,7 +404,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/s
 
 Expected: FAIL — `updateLanguage`/`updateHideDistantThresholdMonths` are not exported yet.
 
-- [ ] **Step 3: Implement the write functions**
+- [x] **Step 3: Implement the write functions**
 
 Replace the full contents of `src/features/settings/firestoreWrites.ts`:
 
@@ -443,13 +443,13 @@ export async function updateHideDistantThresholdMonths(
 }
 ```
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/settings/firestoreWrites.test.ts"
 ```
 
-- [ ] **Step 5: Run full verification and commit**
+- [x] **Step 5: Run full verification and commit**
 
 ```bash
 npm run format
@@ -478,11 +478,11 @@ git commit -m "feat: add updateLanguage and updateHideDistantThresholdMonths"
 - Consumes: `buildBackup` (`../backup/exportBackup`), `importBackup` (`../backup/importBackup`), `safeParseBackup`/`Backup` (`../backup/schema`) — all unchanged from Phase 3.
 - Produces: `BackupSection({ uid: string })` — a self-contained component rendering its own `Form.Item` (backup buttons) and `Modal` (import confirmation). Must be rendered as a child of a `<Form>` (it does not render its own `<Form>` wrapper) so its `Form.Item` picks up the parent's `layout="vertical"` styling.
 
-- [ ] **Step 1: Move the backup tests to a new file (they will fail — the component doesn't exist yet)**
+- [x] **Step 1: Move the backup tests to a new file (they will fail — the component doesn't exist yet)**
 
 Read the current `src/features/settings/SettingsPane.test.tsx` first. Move its two `describe` blocks, `"SettingsPane export"` and `"SettingsPane import"`, into a **new** file `src/features/settings/BackupSection.test.tsx`, renaming both describes to `"BackupSection export"`/`"BackupSection import"`, changing every `render(<SettingsPane uid="..." settings={settings} />)` to `render(<BackupSection uid="..." />)` (drop the `settings` prop — `BackupSection` doesn't take one), and changing the import from `import { SettingsPane } from "./SettingsPane";` to `import { BackupSection } from "./BackupSection";`. Keep every other line (mocks, spies, assertions, the `fixtureBackup`/`fixtureImportBackup` fixtures) exactly as-is. The `settings` fixture object at the top of the file is no longer needed in this new file — remove it along with its `Settings` type import, since nothing in the moved tests references it once the `settings` prop is dropped.
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/settings/BackupSection.test.tsx
@@ -490,23 +490,23 @@ npx vitest run src/features/settings/BackupSection.test.tsx
 
 Expected: FAIL — `./BackupSection` doesn't exist yet.
 
-- [ ] **Step 3: Create `BackupSection.tsx` by moving code out of `SettingsPane.tsx`**
+- [x] **Step 3: Create `BackupSection.tsx` by moving code out of `SettingsPane.tsx`**
 
 Read the current `src/features/settings/SettingsPane.tsx` first (you'll need its exact current contents to do this extraction precisely). Create `src/features/settings/BackupSection.tsx` containing:
 - The imports specific to backup functionality: `DownloadOutlined`, `UploadOutlined` from `@ant-design/icons`; `Button`, `Form`, `Input`, `Modal`, `message` from `antd`; `type ChangeEvent` from `react`; `useRef`, `useState` from `react`; `useTranslation` from `react-i18next`; `buildBackup`; `importBackup`; `type Backup, safeParseBackup`.
 - A `BackupSection({ uid }: { uid: string })` component containing exactly the state (`fileInputRef`, `pendingBackup`, `confirmText`, `importModalOpen`), handlers (`handleExport`, `handleFileChange`, `handleImportConfirm`, `handleImportCancel`), and JSX (the `Form.Item` with the Export/Import buttons and hidden file input, plus the confirmation `Modal`) currently living in `SettingsPane.tsx` — copied verbatim, no logic changes. The JSX returns a fragment (`<>...</>`) containing the `Form.Item` and `Modal` as siblings (not wrapped in a `<Form>` — `SettingsPane` still owns the single `<Form>` element).
 
-- [ ] **Step 4: Shrink `SettingsPane.tsx`**
+- [x] **Step 4: Shrink `SettingsPane.tsx`**
 
 Remove everything that moved to `BackupSection.tsx`: the now-unused imports (`DownloadOutlined`, `UploadOutlined`, `Input`, `Modal`, `ChangeEvent`, `useRef`, `buildBackup`, `importBackup`, `Backup`, `safeParseBackup`), the moved state/handlers, and the moved JSX. Add `import { BackupSection } from "./BackupSection";`. Replace the removed backup `Form.Item` + `Modal` JSX with `<BackupSection uid={uid} />`, placed where the backup `Form.Item` used to be, still inside the outer `<Form>`.
 
-- [ ] **Step 5: Run both test files, verify everything passes**
+- [x] **Step 5: Run both test files, verify everything passes**
 
 ```bash
 npx vitest run src/features/settings/BackupSection.test.tsx src/features/settings/SettingsPane.test.tsx
 ```
 
-- [ ] **Step 6: Run full verification and commit**
+- [x] **Step 6: Run full verification and commit**
 
 ```bash
 npm run format
@@ -532,7 +532,7 @@ git commit -m "refactor: extract BackupSection out of SettingsPane"
 - Consumes: `updateLanguage`, `updateHideDistantThresholdMonths` (Task 2); `i18n` default export (`src/lib/i18n.ts`).
 - Produces: `SettingsPane` renders two more `Form.Item`s. No prop-signature change (`{ uid: string; settings: Settings }` unchanged).
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Read the current `src/features/settings/SettingsPane.test.tsx` (post-Task-3 shrink) first. Add these two `describe` blocks to it, and add `import i18n from "../../lib/i18n";` to its imports:
 
@@ -585,7 +585,7 @@ const settings: Settings = {
 };
 ```
 
-- [ ] **Step 2: Add a `ResizeObserver` polyfill to the test setup**
+- [x] **Step 2: Add a `ResizeObserver` polyfill to the test setup**
 
 This codebase's `src/test/setup.ts` currently polyfills only `window.matchMedia` (needed by antd's `Modal`, per the existing comment there). `Select` additionally subscribes to `ResizeObserver` on mount, which jsdom doesn't implement either — confirmed during planning: rendering a bare antd `Select` in this project's current test setup throws `ReferenceError: ResizeObserver is not defined` from `@rc-component/resize-observer` before any query even runs. Without this polyfill, Step 5 below (and Task 5's `AppRoute` test, which renders `SettingsPane` transitively) fail with that error instead of passing. Add to `src/test/setup.ts`, after the existing `matchMedia` block, following the same "polyfill with a no-op stub" style:
 
@@ -601,7 +601,7 @@ if (!window.ResizeObserver) {
 }
 ```
 
-- [ ] **Step 3: Run it, verify it fails**
+- [x] **Step 3: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/settings/SettingsPane.test.tsx
@@ -609,7 +609,7 @@ npx vitest run src/features/settings/SettingsPane.test.tsx
 
 Expected: FAIL — no combobox or "hide items expiring" labeled input exists yet (with the Step 2 polyfill in place, this should be a normal "element not found" failure, not a `ResizeObserver` crash).
 
-- [ ] **Step 4: Add locale keys**
+- [x] **Step 4: Add locale keys**
 
 Add to the `"settings"` object in **both** locale files, alongside the existing keys:
 
@@ -629,7 +629,7 @@ pt-br.json:
 "hideDistantThresholdMonths": "Ocultar itens que vencem daqui a mais de (meses)"
 ```
 
-- [ ] **Step 5: Add the two controls to `SettingsPane`**
+- [x] **Step 5: Add the two controls to `SettingsPane`**
 
 Run `antd info Select` to confirm the current API before writing this (it was verified during planning against `antd@6.6.1`, but re-verify — versions can drift).
 
@@ -716,13 +716,13 @@ And its `Form.Item`, placed after the low-stock-threshold one:
 
 (The explicit `aria-label` is required here: this codebase's `Form.Item`s don't use antd's `name` prop / form-instance field registry — just a bare `label` — so there's no automatic `htmlFor`/id association between the rendered `<label>` and the `InputNumber`'s input. `aria-label` sidesteps that entirely and is self-sufficient for `getByLabelText` to find it, independent of how the existing low-stock-threshold field happens to be wired. No need to touch that existing field.)
 
-- [ ] **Step 6: Run it, verify it passes**
+- [x] **Step 6: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/settings/SettingsPane.test.tsx
 ```
 
-- [ ] **Step 7: Verify manually**
+- [x] **Step 7: Verify manually**
 
 ```bash
 npm run dev
@@ -730,7 +730,7 @@ npm run dev
 
 Sign in, open Settings, switch the language and confirm the whole UI (including the Settings tab's own labels) re-renders in the new language immediately. Change the hide-distant threshold and confirm it persists across a reload.
 
-- [ ] **Step 8: Run full verification and commit**
+- [x] **Step 8: Run full verification and commit**
 
 ```bash
 npm run format
@@ -757,7 +757,7 @@ git commit -m "feat: add language and hide-distant-threshold controls to Setting
 - Consumes: `settings.language` (Task 1); `i18n` default export. Also relies on Task 4's `ResizeObserver` polyfill in `src/test/setup.ts` — `AppRoute` renders `SettingsPane` (with its now-present `Select`) as part of its own tree, so this task's test would hit the same jsdom gap Task 4 fixed if run before Task 4 lands.
 - Produces: no new exports — `AppRoute`'s existing `{ user: User }` prop signature is unchanged; this task adds an internal effect only.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Create `src/routes/app-route.test.tsx`:
 
@@ -820,7 +820,7 @@ describe("AppRoute language propagation", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run src/routes/app-route.test.tsx
@@ -828,7 +828,7 @@ npx vitest run src/routes/app-route.test.tsx
 
 Expected: FAIL — `changeLanguage` is never called yet.
 
-- [ ] **Step 3: Add the propagation effect**
+- [x] **Step 3: Add the propagation effect**
 
 Read the current `src/routes/app-route.tsx` first. Add `import { useEffect } from "react";` and `import i18n from "../lib/i18n";`, and this effect, placed after the two hook calls but **before** the `if (categoriesLoading || settingsLoading) return null;` line (hooks must run unconditionally before any early return):
 
@@ -853,7 +853,7 @@ Then thread `hideDistantThresholdMonths` through to `ItemList` (this line will n
 />
 ```
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx vitest run src/routes/app-route.test.tsx
@@ -861,7 +861,7 @@ npx vitest run src/routes/app-route.test.tsx
 
 Note: `tsc` will report an error on the `ItemList` prop until Task 6 lands — this is expected; don't skip it, but don't try to fix `ItemList.tsx` from this task either. `npm run typecheck`/`npm run build` will not be run as part of this task's own verification for that reason (Task 6 verifies the whole tree builds again).
 
-- [ ] **Step 5: Run test/lint verification and commit**
+- [x] **Step 5: Run test/lint verification and commit**
 
 ```bash
 npm run format
@@ -886,7 +886,7 @@ git commit -m "feat: propagate language changes across devices in AppRoute"
 - Consumes: `hideDistantThresholdMonths` prop, already threaded from `AppRoute` in Task 5.
 - Produces: `filterDistantItems(items: PantryItem[], thresholdMonths: number, now: Date): PantryItem[]`. `ItemList` gains a `hideDistantThresholdMonths: number` prop (this task makes the Task-5-added JSX prop actually valid — `tsc`/`npm run build` become clean again after this task).
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Add to `src/features/pantry-items/sortItems.test.ts` (add `import dayjs from "dayjs";` and `filterDistantItems` to the existing `./sortItems` import):
 
@@ -912,7 +912,7 @@ describe("filterDistantItems", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/pantry-items/sortItems.test.ts
@@ -920,7 +920,7 @@ npx vitest run src/features/pantry-items/sortItems.test.ts
 
 Expected: FAIL — `filterDistantItems` is not exported yet.
 
-- [ ] **Step 3: Implement `filterDistantItems`**
+- [x] **Step 3: Implement `filterDistantItems`**
 
 Add to `src/features/pantry-items/sortItems.ts` (add `import dayjs from "dayjs";` at the top):
 
@@ -935,13 +935,13 @@ export function filterDistantItems(
 }
 ```
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/pantry-items/sortItems.test.ts
 ```
 
-- [ ] **Step 5: Wire it into `ItemList`**
+- [x] **Step 5: Wire it into `ItemList`**
 
 Read the current `src/features/pantry-items/ItemList.tsx` first. Add `hideDistantThresholdMonths: number` to its props destructuring and type, add `filterDistantItems` to the import from `./sortItems`, and change:
 
@@ -968,7 +968,7 @@ const sorted = sortItems(notDistant);
 
 `ShoppingList` (rendered in the `shoppingModeOn` branch) already receives raw `items`, not `sorted`/`filtered` — leave that untouched, satisfying "never runs in Shopping Mode."
 
-- [ ] **Step 6: Verify the whole tree builds and tests pass**
+- [x] **Step 6: Verify the whole tree builds and tests pass**
 
 ```bash
 npm run format
@@ -979,7 +979,7 @@ npm test
 
 This is the point where Task 5's `ItemList` prop and this task's new prop finally match — `npm run build`/`npm run lint` should be clean now.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/features/pantry-items/sortItems.ts src/features/pantry-items/sortItems.test.ts \
@@ -1000,13 +1000,13 @@ git commit -m "feat: add filterDistantItems and wire it into ItemList"
 - Consumes: nothing from earlier tasks.
 - Produces: nothing consumed by later tasks — this is a self-contained build-config change.
 
-- [ ] **Step 1: Install `vite-plugin-pwa`**
+- [x] **Step 1: Install `vite-plugin-pwa`**
 
 ```bash
 npm install --save-dev vite-plugin-pwa
 ```
 
-- [ ] **Step 2: Generate the icon assets**
+- [x] **Step 2: Generate the icon assets**
 
 v1's existing 512×512 source icon lives at `/home/gca/repos/expiring_products/assets/img/favicon.png` on this machine (confirmed during planning — a different local checkout of the v1 repo, not part of this git repository). `imagemagick`'s `convert` is already installed. Run:
 
@@ -1019,7 +1019,7 @@ rm public/favicon.svg
 
 If the v1 source file isn't present at that exact path in your environment (e.g. a different machine than the one this plan was written on), ask for the correct path to v1's icon before proceeding — do not substitute a placeholder.
 
-- [ ] **Step 3: Configure the plugin**
+- [x] **Step 3: Configure the plugin**
 
 Replace the full contents of `vite.config.ts`:
 
@@ -1054,7 +1054,7 @@ export default defineConfig({
 
 (This exact config shape was verified during planning against the installed `vite-plugin-pwa@1.3.0`'s own TypeScript type declarations — `registerType`, `manifest.icons` as `{ src, sizes, type }[]`, and `includeAssets` for public-dir files not already in the manifest icon list, like the apple-touch icon. `injectRegister` defaults to `'auto'`, which handles both the service-worker registration script and the `<link rel="manifest">` tag automatically — no manual index.html changes needed for either of those.)
 
-- [ ] **Step 4: Update `index.html`**
+- [x] **Step 4: Update `index.html`**
 
 Read the current `index.html` first. Replace the `<link rel="icon" type="image/svg+xml" href="/favicon.svg" />` line with:
 
@@ -1065,7 +1065,7 @@ Read the current `index.html` first. Replace the `<link rel="icon" type="image/s
 
 (The `apple-touch-icon` link is required regardless of the web manifest — iOS Safari does not read the manifest for its home-screen icon, only this tag.)
 
-- [ ] **Step 5: Build and verify the manifest/service-worker output**
+- [x] **Step 5: Build and verify the manifest/service-worker output**
 
 ```bash
 npm run build
@@ -1075,7 +1075,7 @@ ls dist/sw.js dist/pwa-192x192.png dist/pwa-512x512.png dist/apple-touch-icon.pn
 
 Expected: `dist/manifest.webmanifest` contains `"name":"Produtos a vencer"`, `"theme_color":"#6e6197"`, and both icon entries; `dist/sw.js` and all four asset files exist.
 
-- [ ] **Step 6: Manual installability check**
+- [x] **Step 6: Manual installability check**
 
 ```bash
 npm run preview
@@ -1083,7 +1083,7 @@ npm run preview
 
 Open the printed local URL in Chrome, open DevTools → Application → Manifest, and confirm it loads without errors and shows both icon sizes. Optionally run a Lighthouse PWA audit from the same DevTools panel. This step can't be scripted — it's the one piece of this task that needs an actual human (or you, interactively) looking at a real browser.
 
-- [ ] **Step 7: Run full verification and commit**
+- [x] **Step 7: Run full verification and commit**
 
 ```bash
 npm run format
@@ -1108,7 +1108,7 @@ git commit -m "feat: add PWA manifest, icons, and offline app-shell caching"
 **Interfaces:**
 - Consumes: the full feature set built in Tasks 1–7.
 
-- [ ] **Step 1: Add a hide-distant-items e2e case**
+- [x] **Step 1: Add a hide-distant-items e2e case**
 
 Add to `e2e/core-loop.spec.ts`, following its established conventions (pt-br button/label text, the `.ant-picker-cell-today` workaround for a near/today date). For the far date, clicking through the calendar's month navigation is impractical (the `.ant-picker-cell-today` cell simply isn't present once you've navigated to a month grid that doesn't include today's real date, so that selector can't be reused) — instead, type the date directly into the picker's input and confirm with Enter, using a date computed at test-run time (`new Date()` inside the test executes when the test actually runs, so this is always "8 months from whenever the suite runs," not a stale hardcoded date). The default `hideDistantThresholdMonths` is 3, so an item expiring next month stays visible and one expiring 8 months out should not.
 
@@ -1150,7 +1150,7 @@ test("items expiring beyond the hide-distant threshold are not shown", async ({ 
 });
 ```
 
-- [ ] **Step 2: Add a language-switch e2e case**
+- [x] **Step 2: Add a language-switch e2e case**
 
 ```typescript
 test("switching language updates the rendered UI immediately", async ({ page }) => {
@@ -1173,7 +1173,7 @@ test("switching language updates the rendered UI immediately", async ({ page }) 
 
 Verify every selector in both new cases empirically against the real running app (`npm run dev`) rather than trusting this brief blindly — check the actual rendered DOM/accessible names before assuming they match. Every prior phase's e2e task has found at least one brief-guessed selector needed adjusting after checking reality.
 
-- [ ] **Step 3: Run the e2e suite against the emulator**
+- [x] **Step 3: Run the e2e suite against the emulator**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=true npm run test:e2e"
@@ -1181,7 +1181,7 @@ npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=t
 
 Expected: PASS (all existing cases plus the two new ones).
 
-- [ ] **Step 4: Run the full verification suite one more time**
+- [x] **Step 4: Run the full verification suite one more time**
 
 ```bash
 npm run format
@@ -1193,7 +1193,7 @@ npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=t
 
 All five must be clean before this task is considered done.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add e2e/core-loop.spec.ts
