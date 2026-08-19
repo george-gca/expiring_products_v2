@@ -1,7 +1,14 @@
 import "../../lib/i18n";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { addDoc, collection, doc, getDoc, Timestamp } from "firebase/firestore";
+import {
+	addDoc,
+	collection,
+	doc,
+	getDoc,
+	setDoc,
+	Timestamp,
+} from "firebase/firestore";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../lib/firebase";
 import { clearFirestoreEmulator } from "../../test/emulator";
@@ -75,5 +82,49 @@ describe("EditItemModal", () => {
 			doc(db, "users", uid, "item_history", encodeURIComponent("foods_Butter")),
 		);
 		expect(historyDoc.exists()).toBe(false);
+	});
+
+	// Regression test for I1: item_history.recurring is the authoritative
+	// per-item-type flag and can disagree with a given purchase instance's own
+	// `recurring` field (e.g. an earlier non-recurring purchase of an item
+	// type that was later marked recurring). The switch must seed from
+	// item_history, not from item.recurring.
+	it("seeds the recurring switch from item_history rather than the item's own recurring field", async () => {
+		const itemsRef = collection(db, "users", uid, "items");
+		const original = await addDoc(itemsRef, {
+			name: "Yogurt",
+			category: "foods",
+			quantity: 2,
+			expiring_date: Timestamp.fromDate(new Date("2027-01-01")),
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		await setDoc(
+			doc(db, "users", uid, "item_history", encodeURIComponent("foods_Yogurt")),
+			{ name: "Yogurt", category: "foods", duration: "", recurring: true },
+		);
+		const item: PantryItem = {
+			id: original.id,
+			name: "Yogurt",
+			category: "foods",
+			quantity: 2,
+			expiringDate: new Date("2027-01-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		};
+
+		render(<EditItemModal uid={uid} item={item} onClose={vi.fn()} />);
+
+		await waitFor(() =>
+			expect(screen.getByRole("switch", { name: /recurring/i })).toBeChecked(),
+		);
 	});
 });

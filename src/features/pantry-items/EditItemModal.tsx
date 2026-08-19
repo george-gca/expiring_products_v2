@@ -1,7 +1,10 @@
 import { Form, InputNumber, Modal, message, Switch } from "antd";
+import { doc, getDoc } from "firebase/firestore";
+import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
+import { db } from "../../lib/firebase";
 import { setItemRecurring, updateItemQuantities } from "./firestoreWrites";
-import type { PantryItem } from "./schema";
+import { type PantryItem, safeParseItemHistoryDoc } from "./schema";
 
 interface EditFormValues {
 	opened: number;
@@ -22,6 +25,34 @@ export function EditItemModal({
 	const { t } = useTranslation();
 	const [form] = Form.useForm<EditFormValues>();
 
+	// item.recurring reflects this purchase instance's own recurring field,
+	// which can disagree with item_history's authoritative per-item-type flag
+	// (see firestoreWrites.ts's addItem doc comment for why the two can drift).
+	// Seed the switch from item_history instead, falling back to the
+	// initialValues default of item.recurring (left untouched below) if the
+	// history doc doesn't exist or fails to parse. One-shot read on modal
+	// open — this modal opens fresh each time, matching its existing
+	// one-shot interaction model; no subscription needed.
+	useEffect(() => {
+		let cancelled = false;
+		const historyId = encodeURIComponent(`${item.category}_${item.name}`);
+		getDoc(doc(db, "users", uid, "item_history", historyId))
+			.then((snapshot) => {
+				if (cancelled || !snapshot.exists()) return;
+				const parsed = safeParseItemHistoryDoc(snapshot.data());
+				if (parsed) {
+					form.setFieldsValue({ recurring: parsed.recurring });
+				}
+			})
+			.catch(() => {
+				// Best-effort seed only — item.recurring (already the initial
+				// value) stands in on any read/parse failure.
+			});
+		return () => {
+			cancelled = true;
+		};
+	}, [uid, item.category, item.name, form]);
+
 	const handleOk = async () => {
 		const values = await form.validateFields();
 		// Each InputNumber is individually capped at item.quantity, but there's
@@ -30,7 +61,7 @@ export function EditItemModal({
 		// this, but only after setItemRecurring has already committed its
 		// writes — check here first so an invalid edit makes no writes at all.
 		if (values.opened + values.consumed + values.discarded > item.quantity) {
-			message.error("Something went wrong, please try again");
+			message.error(t("items.quantityExceedsStock"));
 			return;
 		}
 		try {

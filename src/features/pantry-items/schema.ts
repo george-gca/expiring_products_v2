@@ -81,3 +81,18 @@ export interface ItemHistoryEntry {
 export function parseItemHistoryDoc(data: unknown): ItemHistoryEntry {
 	return itemHistoryDocSchema.parse(data);
 }
+
+// `item_history` is legacy v1 data this codebase has never validated before
+// Phase 2 — a real production doc could be malformed in a shape we don't
+// control. Firestore's onSnapshot dispatches its success callback via a bare
+// setTimeout with no try/catch, so a throw from parseItemHistoryDoc inside a
+// snapshot handler bypasses the error callback entirely and can wedge a
+// listener's `loading` state at `true` forever. Callers that map over a whole
+// snapshot (useShoppingList) should use this safe variant and skip entries
+// that fail to parse rather than let one bad doc break the whole listener.
+export function safeParseItemHistoryDoc(
+	data: unknown,
+): ItemHistoryEntry | null {
+	const result = itemHistoryDocSchema.safeParse(data);
+	return result.success ? result.data : null;
+}

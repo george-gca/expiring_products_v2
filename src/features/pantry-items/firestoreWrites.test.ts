@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { afterEach, describe, expect, it } from "vitest";
 import { db } from "../../lib/firebase";
 import { clearFirestoreEmulator } from "../../test/emulator";
@@ -40,6 +40,43 @@ describe("addItem", () => {
 		);
 		expect(historyDoc.exists()).toBe(true);
 		expect(historyDoc.data()?.duration).toBe("7");
+		expect(historyDoc.data()?.recurring).toBe(true);
+	});
+
+	// Regression test for C1: the shopping list's cart-icon flow pre-fills
+	// Add Item with the clicked entry's name but leaves the recurring switch
+	// at its default false. Before this fix, addItem's item_history write was
+	// a full non-merge setDoc that always included `recurring: item.recurring`
+	// — so re-buying a recurring item via that flow silently un-marked it as
+	// recurring, and it could vanish from the shopping list on the very next
+	// render. addItem must never clobber an existing `recurring: true` down to
+	// `false`; only setItemRecurring (the Edit modal's deliberate action) may
+	// do that.
+	it("does not clobber an existing item_history.recurring=true when re-added with recurring=false", async () => {
+		const historyId = encodeURIComponent("foods_Oat Milk");
+		await setDoc(doc(db, "users", uid, "item_history", historyId), {
+			name: "Oat Milk",
+			category: "foods",
+			duration: "",
+			recurring: true,
+		});
+
+		await addItem(uid, {
+			name: "Oat Milk",
+			category: "foods",
+			quantity: 3,
+			expiringDate: new Date("2026-09-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false, // e.g. AddItemModal's default, unset by the cart-icon flow
+			barcode: null,
+			source: "manual",
+		});
+
+		const historyDoc = await getDoc(
+			doc(db, "users", uid, "item_history", historyId),
+		);
 		expect(historyDoc.data()?.recurring).toBe(true);
 	});
 

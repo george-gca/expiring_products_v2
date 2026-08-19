@@ -28,6 +28,12 @@ export function ItemList({
 	const [addInitialName, setAddInitialName] = useState<string | undefined>(
 		undefined,
 	);
+	// Whether the Add Item modal's recurring switch should default on. Only
+	// ShoppingList's cart-icon flow sets this true — an entry only appears on
+	// the shopping list because item_history already marked that item type
+	// recurring, so we don't need ShoppingList to explicitly pass a boolean
+	// through its onAddItem callback; which callback fired already tells us.
+	const [addInitialRecurring, setAddInitialRecurring] = useState(false);
 
 	const { getSortDirection, getFilter, isShoppingModeOn, setShoppingModeOn } =
 		useUiPreferencesStore();
@@ -62,6 +68,7 @@ export function ItemList({
 					threshold={lowStockThreshold}
 					onAddItem={(name) => {
 						setAddInitialName(name);
+						setAddInitialRecurring(true);
 						setAddOpen(true);
 					}}
 				/>
@@ -79,7 +86,13 @@ export function ItemList({
 					)}
 				/>
 			)}
-			<FloatButton icon={<PlusOutlined />} onClick={() => setAddOpen(true)} />
+			<FloatButton
+				icon={<PlusOutlined />}
+				onClick={() => {
+					setAddInitialRecurring(false);
+					setAddOpen(true);
+				}}
+			/>
 			<AddItemModal
 				uid={uid}
 				category={category}
@@ -87,8 +100,10 @@ export function ItemList({
 				onClose={() => {
 					setAddOpen(false);
 					setAddInitialName(undefined);
+					setAddInitialRecurring(false);
 				}}
 				initialName={addInitialName}
+				initialRecurring={addInitialRecurring}
 			/>
 			{editingItem && (
 				<EditItemModal

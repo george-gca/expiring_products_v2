@@ -27,12 +27,18 @@ export function AddItemModal({
 	open,
 	onClose,
 	initialName,
+	initialRecurring = false,
 }: {
 	uid: string;
 	category: Category;
 	open: boolean;
 	onClose: () => void;
 	initialName?: string;
+	// Whether the recurring switch should default on. ItemList passes `true`
+	// when this modal is opened from the shopping list's cart-icon flow (an
+	// entry only appears there because item_history already marked that item
+	// type recurring) and `false` from the ordinary "+" button.
+	initialRecurring?: boolean;
 }) {
 	const { t } = useTranslation();
 	const [form] = Form.useForm<AddItemFormValues>();
@@ -41,13 +47,16 @@ export function AddItemModal({
 	// (declared in this component, not recreated by `destroyOnHidden`), so its
 	// internal field store persists even though the <Form> element itself
 	// unmounts. Ant Design's `initialValues` only seeds fields the store has
-	// never held a value for, so a stale `name` from an earlier open survives
-	// remounts unless explicitly overwritten here.
+	// never held a value for, so stale `name`/`recurring` from an earlier open
+	// survive remounts unless explicitly overwritten here.
 	useEffect(() => {
 		if (open) {
-			form.setFieldsValue({ name: initialName ?? "" });
+			form.setFieldsValue({
+				name: initialName ?? "",
+				recurring: initialRecurring,
+			});
 		}
-	}, [open, initialName, form]);
+	}, [open, initialName, initialRecurring, form]);
 
 	const handleOk = async () => {
 		const values = await form.validateFields();
@@ -85,7 +94,7 @@ export function AddItemModal({
 				initialValues={{
 					name: initialName ?? "",
 					quantity: 1,
-					recurring: false,
+					recurring: initialRecurring,
 				}}
 			>
 				<Form.Item

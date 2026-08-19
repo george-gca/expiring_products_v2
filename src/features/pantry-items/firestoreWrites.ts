@@ -9,6 +9,24 @@ import {
 import { db } from "../../lib/firebase";
 import { type PantryItem, parseItemDoc, toItemDoc } from "./schema";
 
+// Shared `item_history/{category_name}` doc shape used by both addItem and
+// setItemRecurring. `recurring` is optional here on purpose: addItem passes
+// `undefined` when the form's recurring value is false so that field is
+// omitted from the write entirely (see addItem below for why), while
+// setItemRecurring always passes an explicit true/false for its deliberate
+// full overwrite.
+function toItemHistoryDoc(
+	item: { name: string; category: string; duration: number | null },
+	recurring?: boolean,
+) {
+	return {
+		name: item.name,
+		category: item.category,
+		duration: item.duration !== null ? String(item.duration) : "",
+		...(recurring !== undefined ? { recurring } : {}),
+	};
+}
+
 export async function addItem(
 	uid: string,
 	item: Omit<PantryItem, "id">,
@@ -16,12 +34,20 @@ export async function addItem(
 	await addDoc(collection(db, "users", uid, "items"), toItemDoc(item));
 
 	const historyId = encodeURIComponent(`${item.category}_${item.name}`);
-	await setDoc(doc(db, "users", uid, "item_history", historyId), {
-		name: item.name,
-		category: item.category,
-		duration: item.duration !== null ? String(item.duration) : "",
-		recurring: item.recurring,
-	});
+	// Merge, and only include `recurring: true` when the form actually says
+	// so — never write `recurring: false` here. item_history.recurring is the
+	// authoritative "is this item type recurring" flag (read by
+	// useShoppingList), keyed by name+category rather than per purchase. A
+	// non-merge write, or one that always includes `recurring: item.recurring`
+	// (which defaults to false, including when pre-filled from the shopping
+	// list's cart-icon flow), would silently un-mark an existing recurring
+	// item every time it's bought again. Unmarking recurring stays the
+	// deliberate job of setItemRecurring (EditItemModal's switch) below.
+	await setDoc(
+		doc(db, "users", uid, "item_history", historyId),
+		toItemHistoryDoc(item, item.recurring ? true : undefined),
+		{ merge: true },
+	);
 }
 
 interface QuantityChanges {
@@ -90,12 +116,10 @@ export async function setItemRecurring(
 	recurring: boolean,
 ): Promise<void> {
 	const historyId = encodeURIComponent(`${item.category}_${item.name}`);
-	await setDoc(doc(db, "users", uid, "item_history", historyId), {
-		name: item.name,
-		category: item.category,
-		duration: item.duration !== null ? String(item.duration) : "",
-		recurring,
-	});
+	await setDoc(
+		doc(db, "users", uid, "item_history", historyId),
+		toItemHistoryDoc(item, recurring),
+	);
 
 	await updateDoc(doc(db, "users", uid, "items", item.id), { recurring });
 }

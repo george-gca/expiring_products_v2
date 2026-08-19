@@ -13,7 +13,8 @@
     "expiresOn": "expires on {{date}}",
     "openedItems": "Opened items",
     "consumedItems": "Consumed items",
-    "discardedItems": "Discarded items"
+    "discardedItems": "Discarded items",
+    "quantityExceedsStock": "Opened + consumed + discarded can't exceed the current quantity"
   },
   "settings": {
     "lowStockThreshold": "Low stock warning threshold"
