@@ -19,6 +19,10 @@ describe("useSettings", () => {
 			lowStockThreshold: 3,
 			language: "pt-br",
 			hideDistantThresholdMonths: 3,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
 		});
 	});
 

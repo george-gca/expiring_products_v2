@@ -26,6 +26,10 @@ const backup: Backup = {
 		lowStockThreshold: 5,
 		language: "en-us",
 		hideDistantThresholdMonths: 3,
+		notificationsEnabled: true,
+		notifyDaysBeforeExpiry: 5,
+		notifyHourLocal: 20,
+		notifyTimezone: "America/New_York",
 	},
 	categories: [{ key: "foods", name: "Foods", emoji: "🍎", order: 0 }],
 	items: [
@@ -86,6 +90,10 @@ describe("importBackup", () => {
 			lowStockThreshold: 5,
 			language: "en-us",
 			hideDistantThresholdMonths: 3,
+			notificationsEnabled: true,
+			notifyDaysBeforeExpiry: 5,
+			notifyHourLocal: 20,
+			notifyTimezone: "America/New_York",
 		});
 
 		const categoriesSnap = await getDocs(

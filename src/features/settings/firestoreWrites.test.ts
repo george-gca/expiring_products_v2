@@ -6,6 +6,9 @@ import {
 	updateHideDistantThresholdMonths,
 	updateLanguage,
 	updateLowStockThreshold,
+	updateNotificationsEnabled,
+	updateNotifyDaysBeforeExpiry,
+	updateNotifyHourLocal,
 } from "./firestoreWrites";
 
 const uid = "test-user-settings-2";
@@ -38,5 +41,33 @@ describe("updateHideDistantThresholdMonths", () => {
 		await updateHideDistantThresholdMonths(uid, 6);
 		const snapshot = await getDoc(doc(db, "users", uid));
 		expect(snapshot.data()?.hideDistantThresholdMonths).toBe(6);
+	});
+});
+
+describe("updateNotificationsEnabled", () => {
+	it("updates an existing settings doc's notificationsEnabled", async () => {
+		await setDoc(doc(db, "users", uid), { lowStockThreshold: 3 });
+		await updateNotificationsEnabled(uid, true);
+		const snapshot = await getDoc(doc(db, "users", uid));
+		expect(snapshot.data()?.notificationsEnabled).toBe(true);
+	});
+});
+
+describe("updateNotifyDaysBeforeExpiry", () => {
+	it("updates an existing settings doc's notifyDaysBeforeExpiry", async () => {
+		await setDoc(doc(db, "users", uid), { lowStockThreshold: 3 });
+		await updateNotifyDaysBeforeExpiry(uid, 5);
+		const snapshot = await getDoc(doc(db, "users", uid));
+		expect(snapshot.data()?.notifyDaysBeforeExpiry).toBe(5);
+	});
+});
+
+describe("updateNotifyHourLocal", () => {
+	it("updates an existing settings doc's notifyHourLocal and notifyTimezone together", async () => {
+		await setDoc(doc(db, "users", uid), { lowStockThreshold: 3 });
+		await updateNotifyHourLocal(uid, 20, "America/New_York");
+		const snapshot = await getDoc(doc(db, "users", uid));
+		expect(snapshot.data()?.notifyHourLocal).toBe(20);
+		expect(snapshot.data()?.notifyTimezone).toBe("America/New_York");
 	});
 });

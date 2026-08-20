@@ -4,6 +4,10 @@ const backupSettingsSchema = z.object({
 	lowStockThreshold: z.number().int().positive(),
 	language: z.enum(["pt-br", "en-us"]),
 	hideDistantThresholdMonths: z.number().int().positive(),
+	notificationsEnabled: z.boolean(),
+	notifyDaysBeforeExpiry: z.number().int().positive(),
+	notifyHourLocal: z.number().int().min(0).max(23),
+	notifyTimezone: z.string().min(1),
 });
 
 const backupCategorySchema = z.object({

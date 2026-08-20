@@ -26,6 +26,10 @@ describe("AppRoute language propagation", () => {
 				lowStockThreshold: 3,
 				language: "en-us",
 				hideDistantThresholdMonths: 3,
+				notificationsEnabled: false,
+				notifyDaysBeforeExpiry: 3,
+				notifyHourLocal: 8,
+				notifyTimezone: "America/Sao_Paulo",
 			},
 			loading: false,
 		});
@@ -48,6 +52,10 @@ describe("AppRoute language propagation", () => {
 				lowStockThreshold: 3,
 				language: "pt-br",
 				hideDistantThresholdMonths: 3,
+				notificationsEnabled: false,
+				notifyDaysBeforeExpiry: 3,
+				notifyHourLocal: 8,
+				notifyTimezone: "America/Sao_Paulo",
 			},
 			loading: true,
 		});

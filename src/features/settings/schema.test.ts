@@ -16,11 +16,19 @@ describe("parseSettingsDoc", () => {
 				lowStockThreshold: 7,
 				language: "en-us",
 				hideDistantThresholdMonths: 6,
+				notificationsEnabled: true,
+				notifyDaysBeforeExpiry: 5,
+				notifyHourLocal: 20,
+				notifyTimezone: "America/New_York",
 			}),
 		).toEqual({
 			lowStockThreshold: 7,
 			language: "en-us",
 			hideDistantThresholdMonths: 6,
+			notificationsEnabled: true,
+			notifyDaysBeforeExpiry: 5,
+			notifyHourLocal: 20,
+			notifyTimezone: "America/New_York",
 		});
 	});
 
@@ -29,6 +37,10 @@ describe("parseSettingsDoc", () => {
 			lowStockThreshold: 3,
 			language: "pt-br",
 			hideDistantThresholdMonths: 3,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
 		});
 	});
 
@@ -43,6 +55,10 @@ describe("parseSettingsDoc", () => {
 			lowStockThreshold: 3,
 			language: "pt-br",
 			hideDistantThresholdMonths: 3,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
 		});
 	});
 
@@ -57,6 +73,10 @@ describe("parseSettingsDoc", () => {
 			lowStockThreshold: 3,
 			language: "pt-br",
 			hideDistantThresholdMonths: 3,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
 		});
 	});
 
@@ -71,6 +91,10 @@ describe("parseSettingsDoc", () => {
 			lowStockThreshold: 3,
 			language: "pt-br",
 			hideDistantThresholdMonths: 3,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
 		});
 	});
 
@@ -81,6 +105,10 @@ describe("parseSettingsDoc", () => {
 			lowStockThreshold: 3,
 			language: "pt-br",
 			hideDistantThresholdMonths: 3,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
 		});
 
 		expect(
@@ -93,6 +121,10 @@ describe("parseSettingsDoc", () => {
 			lowStockThreshold: 3,
 			language: "pt-br",
 			hideDistantThresholdMonths: 3,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
 		});
 	});
 
@@ -103,6 +135,10 @@ describe("parseSettingsDoc", () => {
 			lowStockThreshold: 3,
 			language: "en-us",
 			hideDistantThresholdMonths: 3,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
 		});
 
 		expect(
@@ -115,6 +151,32 @@ describe("parseSettingsDoc", () => {
 			lowStockThreshold: 3,
 			language: "en-us",
 			hideDistantThresholdMonths: 3,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
+		});
+	});
+
+	it("falls back to defaults when notification fields are missing or malformed", () => {
+		expect(
+			parseSettingsDoc({
+				lowStockThreshold: 3,
+				language: "en-us",
+				hideDistantThresholdMonths: 3,
+				notificationsEnabled: "yes",
+				notifyDaysBeforeExpiry: -1,
+				notifyHourLocal: 24,
+				notifyTimezone: "",
+			}),
+		).toEqual({
+			lowStockThreshold: 3,
+			language: "en-us",
+			hideDistantThresholdMonths: 3,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
 		});
 	});
 });

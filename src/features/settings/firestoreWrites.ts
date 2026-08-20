@@ -30,3 +30,37 @@ export async function updateHideDistantThresholdMonths(
 		{ merge: true },
 	);
 }
+
+export async function updateNotificationsEnabled(
+	uid: string,
+	value: boolean,
+): Promise<void> {
+	await setDoc(
+		doc(db, "users", uid),
+		{ notificationsEnabled: value },
+		{ merge: true },
+	);
+}
+
+export async function updateNotifyDaysBeforeExpiry(
+	uid: string,
+	value: number,
+): Promise<void> {
+	await setDoc(
+		doc(db, "users", uid),
+		{ notifyDaysBeforeExpiry: value },
+		{ merge: true },
+	);
+}
+
+export async function updateNotifyHourLocal(
+	uid: string,
+	hour: number,
+	timezone: string,
+): Promise<void> {
+	await setDoc(
+		doc(db, "users", uid),
+		{ notifyHourLocal: hour, notifyTimezone: timezone },
+		{ merge: true },
+	);
+}

@@ -47,6 +47,10 @@ describe("buildBackup", () => {
 			lowStockThreshold: 5,
 			language: "en-us",
 			hideDistantThresholdMonths: 6,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
 		});
 		expect(backup.categories).toEqual([
 			{ key: "foods", name: "Foods", emoji: "🍎", order: 0 },
@@ -76,6 +80,10 @@ describe("buildBackup", () => {
 			lowStockThreshold: 3,
 			language: "pt-br",
 			hideDistantThresholdMonths: 3,
+			notificationsEnabled: false,
+			notifyDaysBeforeExpiry: 3,
+			notifyHourLocal: 8,
+			notifyTimezone: "America/Sao_Paulo",
 		});
 	});
 

@@ -8,6 +8,10 @@ const validBackup = {
 		lowStockThreshold: 3,
 		language: "pt-br" as const,
 		hideDistantThresholdMonths: 3,
+		notificationsEnabled: false,
+		notifyDaysBeforeExpiry: 3,
+		notifyHourLocal: 8,
+		notifyTimezone: "America/Sao_Paulo",
 	},
 	categories: [{ key: "foods", name: "Foods", emoji: "🍎", order: 0 }],
 	items: [
