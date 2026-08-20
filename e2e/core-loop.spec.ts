@@ -227,3 +227,27 @@ test("scans a barcode, pre-fills the name from Open Food Facts, and reuses the c
 
 	expect(offCallCount).toBe(1);
 });
+
+test("denies notification permission gracefully, leaving the switch off with an inline message", async ({
+	page,
+}) => {
+	await page.addInitScript(() => {
+		Object.defineProperty(window.Notification, "requestPermission", {
+			value: () => Promise.resolve("denied"),
+			configurable: true,
+		});
+	});
+
+	await page.goto("/");
+	await page.getByText("Cadastrar").click();
+	await page.getByLabel("E-mail").fill(`e2e-notif-${Date.now()}@example.com`);
+	await page.getByLabel("Senha").fill("correct-horse-battery");
+	await page.getByRole("button", { name: "Cadastrar" }).click();
+
+	await page.getByRole("tab", { name: "⚙️" }).click();
+	const notifSwitch = page.getByRole("switch", { name: /notifica/i });
+	await notifSwitch.click();
+
+	await expect(page.getByText(/permiss/i)).toBeVisible();
+	await expect(notifSwitch).not.toBeChecked();
+});
