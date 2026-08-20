@@ -1551,6 +1551,40 @@ export function onForegroundMessage(
 }
 ```
 
+**Real bug found while implementing Task 6 (wiring this into `AppRoute`), not anticipated during planning:** `getMessaging()`/`onMessage()` don't throw synchronously for an unsupported browser — the `messaging/unsupported-browser` error only surfaces once Messaging's internal async support check rejects, as an *unhandled promise rejection* vitest flagged during `app-route.test.tsx`'s run (jsdom has no Messaging support). `AppRoute`'s synchronous `try/catch` around this function's call could never catch that. Fixed by having `onForegroundMessage` itself gate on the async `isSupported()` check (mirroring `requestNotificationPermission`) before ever calling `getMessaging`/`onMessage`, returning a synchronous unsubscribe function regardless of whether the async setup ever completes:
+
+```typescript
+export function onForegroundMessage(
+	callback: (title: string, body: string) => void,
+): () => void {
+	let unsubscribe: (() => void) | undefined;
+	let cancelled = false;
+
+	isSupported()
+		.then((supported) => {
+			if (!supported || cancelled) return;
+			const messaging = getMessaging(app);
+			unsubscribe = onMessage(messaging, (payload) => {
+				callback(
+					payload.notification?.title ?? "",
+					payload.notification?.body ?? "",
+				);
+			});
+		})
+		.catch(() => {
+			// Messaging unsupported or failed to initialize — no foreground
+			// notifications this session, nothing else to do.
+		});
+
+	return () => {
+		cancelled = true;
+		unsubscribe?.();
+	};
+}
+```
+
+This also required a matching test-suite fix: `messaging.test.ts`'s `afterEach` only had `vi.restoreAllMocks()`, which does not reset call history on `vi.mock("firebase/messaging")`'s automocked exports (only spies created via `vi.spyOn`) — a later test's "not called" assertion on `onMessage` saw an earlier test's leftover call. Fixed by adding `vi.clearAllMocks()` alongside it.
+
 - [ ] **Step 5: Run it, verify it passes**
 
 ```bash
