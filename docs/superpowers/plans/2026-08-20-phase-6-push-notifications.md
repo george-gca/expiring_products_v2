@@ -96,7 +96,7 @@ package.json                                    # MODIFY: firebase-admin, tsx, w
 
 This task is unusually wide because a `Settings` field addition ripples into every file that constructs a `Settings`-shaped literal — confirmed exhaustively via `grep -rln "lowStockThreshold\|hideDistantThresholdMonths" src/` before writing this plan (matches the Phase 4 lesson recorded in project memory). Every one of the files listed above was found by that grep or by grepping for `Settings` type usage directly.
 
-- [ ] **Step 1: Update the settings schema**
+- [x] **Step 1: Update the settings schema**
 
 Replace `src/features/settings/schema.ts` in full:
 
@@ -163,7 +163,7 @@ export function parseSettingsDoc(data: unknown): Settings {
 }
 ```
 
-- [ ] **Step 2: Update `settings/schema.test.ts`**
+- [x] **Step 2: Update `settings/schema.test.ts`**
 
 Replace the file in full — every existing `.toEqual(...)` gets the 4 new default fields appended, plus 4 new tests for the new fields' own `.catch()` behavior:
 
@@ -352,7 +352,7 @@ describe("parseSettingsDoc", () => {
 });
 ```
 
-- [ ] **Step 3: Update `useSettings.ts`'s `DEFAULT_SETTINGS`**
+- [x] **Step 3: Update `useSettings.ts`'s `DEFAULT_SETTINGS`**
 
 In `src/features/settings/useSettings.ts`, replace the `DEFAULT_SETTINGS` constant:
 
@@ -370,7 +370,7 @@ const DEFAULT_SETTINGS: Settings = {
 
 Nothing else in this file changes.
 
-- [ ] **Step 4: Update `useSettings.test.tsx`**
+- [x] **Step 4: Update `useSettings.test.tsx`**
 
 In `src/features/settings/useSettings.test.tsx`, the first test's `.toEqual(...)` (currently at line 18) needs the 4 new fields appended:
 
@@ -392,7 +392,7 @@ In `src/features/settings/useSettings.test.tsx`, the first test's `.toEqual(...)
 
 The other two tests in this file only assert `result.current.settings.lowStockThreshold` — unaffected, leave them as-is.
 
-- [ ] **Step 5: Add the 3 new update functions to `settings/firestoreWrites.ts`**
+- [x] **Step 5: Add the 3 new update functions to `settings/firestoreWrites.ts`**
 
 Append to `src/features/settings/firestoreWrites.ts` (existing 3 functions stay unchanged):
 
@@ -432,7 +432,7 @@ export async function updateNotifyHourLocal(
 }
 ```
 
-- [ ] **Step 6: Add tests for the 3 new update functions**
+- [x] **Step 6: Add tests for the 3 new update functions**
 
 Append to `src/features/settings/firestoreWrites.test.ts` (add the 3 new names to the existing import line, then append these `describe` blocks):
 
@@ -477,7 +477,7 @@ describe("updateNotifyHourLocal", () => {
 });
 ```
 
-- [ ] **Step 7: Fix the `SettingsPane.test.tsx` fixture**
+- [x] **Step 7: Fix the `SettingsPane.test.tsx` fixture**
 
 In `src/features/settings/SettingsPane.test.tsx`, the top-level `settings` const needs the 4 new fields:
 
@@ -495,7 +495,7 @@ const settings: Settings = {
 
 Nothing else in this file changes (its two existing tests don't touch the new fields).
 
-- [ ] **Step 8: Fix `app-route.test.tsx`'s two mocked `useSettings` literals**
+- [x] **Step 8: Fix `app-route.test.tsx`'s two mocked `useSettings` literals**
 
 In `src/routes/app-route.test.tsx`, both `vi.spyOn(useSettingsModule, "useSettings").mockReturnValue({ settings: {...} })` calls need the 4 new fields added to their inner `settings` object. First one (currently `language: "en-us"`):
 
@@ -531,7 +531,7 @@ Second one (currently `language: "pt-br"`, `loading: true`):
 		});
 ```
 
-- [ ] **Step 9: Fix the backup feature's ripple — `backupSettingsSchema`**
+- [x] **Step 9: Fix the backup feature's ripple — `backupSettingsSchema`**
 
 Without this fix, exporting a backup while notification settings are configured and then re-importing it silently wipes those settings from Firestore (`importBackup`'s `setDoc` is a full, non-merge replace, and Zod strips fields not declared on `backupSettingsSchema`). In `src/features/backup/schema.ts`, replace `backupSettingsSchema`:
 
@@ -549,7 +549,7 @@ const backupSettingsSchema = z.object({
 
 (Required, no `.catch()` — matches the existing 3 fields' strictness: a malformed backup *file* should fail loudly, unlike a live Firestore doc.)
 
-- [ ] **Step 10: Fix `backup/schema.test.ts`'s `validBackup` fixture**
+- [x] **Step 10: Fix `backup/schema.test.ts`'s `validBackup` fixture**
 
 In `src/features/backup/schema.test.ts`, add the 4 fields to `validBackup.settings`:
 
@@ -589,7 +589,7 @@ const validBackup = {
 
 Every test in this file reuses `validBackup` via spread/reference, so this one fixture edit is sufficient — no other line in this file changes.
 
-- [ ] **Step 11: Fix `backup/exportBackup.test.ts`'s two settings assertions**
+- [x] **Step 11: Fix `backup/exportBackup.test.ts`'s two settings assertions**
 
 In `src/features/backup/exportBackup.test.ts`, the first test's seeded settings doc only writes 3 fields, so `buildBackup`'s output gets the 4 notification defaults via `parseSettingsDoc`'s `.catch()` — update the assertion:
 
@@ -624,7 +624,7 @@ The second test ("defaults settings to the standard threshold when no settings d
 
 The third test (`itemHistory`-focused) is unaffected.
 
-- [ ] **Step 12: Fix `backup/importBackup.test.ts`'s fixture and assertion**
+- [x] **Step 12: Fix `backup/importBackup.test.ts`'s fixture and assertion**
 
 In `src/features/backup/importBackup.test.ts`, the `backup` fixture's `settings` object needs the 4 fields (now required by `backupSettingsSchema`):
 
@@ -677,7 +677,7 @@ And the assertion in the test body:
 		});
 ```
 
-- [ ] **Step 13: Fix `BackupSection.test.tsx`'s two fixtures**
+- [x] **Step 13: Fix `BackupSection.test.tsx`'s two fixtures**
 
 In `src/features/settings/BackupSection.test.tsx`, both `fixtureBackup` and `fixtureImportBackup`'s `settings` objects need the 4 fields. `fixtureBackup`:
 
@@ -721,7 +721,7 @@ const fixtureImportBackup = {
 };
 ```
 
-- [ ] **Step 14: Run the full test suite and verify everything is green**
+- [x] **Step 14: Run the full test suite and verify everything is green**
 
 ```bash
 npm run format
@@ -731,7 +731,7 @@ npm test
 
 Expected: all tests pass, including every file touched above.
 
-- [ ] **Step 15: Commit**
+- [x] **Step 15: Commit**
 
 ```bash
 git add src/features/settings src/features/backup src/routes/app-route.test.tsx
@@ -750,7 +750,7 @@ git commit -m "feat: add notification settings fields, fix backup schema ripple"
 
 **Design note:** `lastNotifiedAt` is made *optional* on the `PantryItem` interface, unlike `barcode`/`source` (which are required). This is deliberate: `barcode`/`source` are user-relevant fields every write call site was updated to set explicitly (Phase 5). `lastNotifiedAt` is pure server-bookkeeping metadata nothing in the client ever reads or needs to set — making it optional means zero ripple into `AddItemModal.tsx`, `EditItemModal.tsx`, `firestoreWrites.ts`'s `setItemRecurring` call site, or any of the half-dozen test files across `pantry-items/` that construct `PantryItem`-shaped literals (confirmed by inspecting `setItemRecurring`'s existing test call site, which passes a full `PantryItem` literal without this field — a required field there would force yet another wide ripple for a field the client never actually needs to reason about).
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 In `src/features/pantry-items/schema.test.ts`, update the first `parseItemDoc` test to include `last_notified_at`, and add one new test:
 
@@ -816,7 +816,7 @@ describe("toItemDoc", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/pantry-items/schema.test.ts
@@ -824,7 +824,7 @@ npx vitest run src/features/pantry-items/schema.test.ts
 
 Expected: FAIL — `last_notified_at` doesn't exist yet on the schema/output.
 
-- [ ] **Step 3: Update `schema.ts`**
+- [x] **Step 3: Update `schema.ts`**
 
 In `src/features/pantry-items/schema.ts`, add `last_notified_at` to `itemDocSchema`, `lastNotifiedAt?: Date | null` to `PantryItem`, and handle both in `parseItemDoc`/`toItemDoc`:
 
@@ -897,13 +897,13 @@ export function toItemDoc(item: Omit<PantryItem, "id">) {
 
 Nothing else in this file (the `item_history` schema/functions below `toItemDoc`) changes.
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/pantry-items/schema.test.ts
 ```
 
-- [ ] **Step 5: Run full verification and commit**
+- [x] **Step 5: Run full verification and commit**
 
 ```bash
 npm run format
@@ -931,7 +931,7 @@ git commit -m "feat: add lastNotifiedAt to PantryItem"
   - `deleteFcmToken(uid: string, deviceId: string): Promise<void>`
   - `getDeviceId(): string`
 
-- [ ] **Step 1: Write failing tests for the schema**
+- [x] **Step 1: Write failing tests for the schema**
 
 `src/features/notifications/schema.test.ts`:
 
@@ -961,7 +961,7 @@ describe("toFcmTokenDoc", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/notifications/schema.test.ts
@@ -969,7 +969,7 @@ npx vitest run src/features/notifications/schema.test.ts
 
 Expected: FAIL — `./schema` doesn't exist yet.
 
-- [ ] **Step 3: Implement the schema**
+- [x] **Step 3: Implement the schema**
 
 `src/features/notifications/schema.ts`:
 
@@ -1002,13 +1002,13 @@ export function toFcmTokenDoc(fcmToken: Omit<FcmToken, "updatedAt">) {
 }
 ```
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/notifications/schema.test.ts
 ```
 
-- [ ] **Step 5: Write failing tests for the write functions**
+- [x] **Step 5: Write failing tests for the write functions**
 
 `src/features/notifications/firestoreWrites.test.ts`:
 
@@ -1060,7 +1060,7 @@ describe("deleteFcmToken", () => {
 });
 ```
 
-- [ ] **Step 6: Run it, verify it fails**
+- [x] **Step 6: Run it, verify it fails**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/notifications/firestoreWrites.test.ts"
@@ -1068,7 +1068,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/n
 
 Expected: FAIL — `./firestoreWrites` doesn't exist yet.
 
-- [ ] **Step 7: Implement the write functions**
+- [x] **Step 7: Implement the write functions**
 
 `src/features/notifications/firestoreWrites.ts`:
 
@@ -1096,13 +1096,13 @@ export async function deleteFcmToken(
 }
 ```
 
-- [ ] **Step 8: Run it, verify it passes**
+- [x] **Step 8: Run it, verify it passes**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/notifications/firestoreWrites.test.ts"
 ```
 
-- [ ] **Step 9: Write a failing test for `getDeviceId`**
+- [x] **Step 9: Write a failing test for `getDeviceId`**
 
 `src/features/notifications/deviceId.test.ts`:
 
@@ -1129,7 +1129,7 @@ describe("getDeviceId", () => {
 });
 ```
 
-- [ ] **Step 10: Run it, verify it fails**
+- [x] **Step 10: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/notifications/deviceId.test.ts
@@ -1137,7 +1137,7 @@ npx vitest run src/features/notifications/deviceId.test.ts
 
 Expected: FAIL — `./deviceId` doesn't exist yet.
 
-- [ ] **Step 11: Implement `getDeviceId`**
+- [x] **Step 11: Implement `getDeviceId`**
 
 `src/features/notifications/deviceId.ts`:
 
@@ -1153,13 +1153,13 @@ export function getDeviceId(): string {
 }
 ```
 
-- [ ] **Step 12: Run it, verify it passes**
+- [x] **Step 12: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/notifications/deviceId.test.ts
 ```
 
-- [ ] **Step 13: Run full verification and commit**
+- [x] **Step 13: Run full verification and commit**
 
 ```bash
 npm run format
@@ -1186,13 +1186,13 @@ git commit -m "feat: add fcm_tokens schema, writes, and device id helper"
 - Consumes: nothing from earlier tasks.
 - Produces: a single service worker that both precaches the app shell (replacing Phase 4's `generateSW`-only behavior) and handles background push via `onBackgroundMessage`. Later tasks (5) rely on `navigator.serviceWorker.ready` resolving to this combined worker.
 
-- [ ] **Step 1: Install the new dependencies**
+- [x] **Step 1: Install the new dependencies**
 
 ```bash
 npm install -D workbox-precaching workbox-core
 ```
 
-- [ ] **Step 2: Switch `vite-plugin-pwa` to `injectManifest` mode**
+- [x] **Step 2: Switch `vite-plugin-pwa` to `injectManifest` mode**
 
 Replace `vite.config.ts` in full:
 
@@ -1228,7 +1228,7 @@ export default defineConfig({
 })
 ```
 
-- [ ] **Step 3: Write the combined service worker**
+- [x] **Step 3: Write the combined service worker**
 
 `src/sw.ts`:
 
@@ -1275,7 +1275,7 @@ onBackgroundMessage(messaging, (payload) => {
 });
 ```
 
-- [ ] **Step 4: Add `tsconfig.sw.json`**
+- [x] **Step 4: Add `tsconfig.sw.json`**
 
 Create `tsconfig.sw.json`:
 
@@ -1304,7 +1304,7 @@ Create `tsconfig.sw.json`:
 }
 ```
 
-- [ ] **Step 5: Exclude `src/sw.ts` from `tsconfig.app.json`**
+- [x] **Step 5: Exclude `src/sw.ts` from `tsconfig.app.json`**
 
 `tsconfig.app.json`'s `lib` is `["ES2023", "DOM"]` — `DOM` and `WebWorker` libs conflict when applied to the same file (both declare incompatible globals like `self`), so `src/sw.ts` must be excluded from the app's own program. Add an `"exclude"` key:
 
@@ -1336,7 +1336,7 @@ Create `tsconfig.sw.json`:
 }
 ```
 
-- [ ] **Step 6: Add the new reference to the root `tsconfig.json`**
+- [x] **Step 6: Add the new reference to the root `tsconfig.json`**
 
 ```json
 {
@@ -1351,7 +1351,7 @@ Create `tsconfig.sw.json`:
 
 (`tsconfig.scripts.json`'s reference is added in Task 8, once that file exists.)
 
-- [ ] **Step 7: Build and verify the service worker output**
+- [x] **Step 7: Build and verify the service worker output**
 
 ```bash
 npm run build
@@ -1366,7 +1366,7 @@ grep -c "import.meta.env" dist/sw.js
 
 Expected: the first command finds workbox-related code (precaching wired in); the second finds `0` — if `import.meta.env` literally appears in the built output, Vite did not replace the env vars in the service worker build and the Firebase config would be `undefined` at runtime. If that happens, this is the one design element flagged in the spec as needing hands-on verification — investigate `injectManifest`'s build options (`VitePWA({ injectManifest: { ... } })`) rather than treating it as unsolvable; do not proceed to Task 5 until `dist/sw.js` contains real config values.
 
-- [ ] **Step 8: Run full verification and commit**
+- [x] **Step 8: Run full verification and commit**
 
 ```bash
 npm run format
@@ -1392,7 +1392,7 @@ git commit -m "feat: combine Workbox precaching and Firebase Messaging into one 
 - Consumes: `upsertFcmToken`, `deleteFcmToken` (Task 3); `getDeviceId` (Task 3); `app` (existing export from `src/lib/firebase.ts`).
 - Produces: `requestNotificationPermission(): Promise<boolean>`, `registerForPush(uid: string): Promise<void>`, `unregisterFromPush(uid: string): Promise<void>`, `onForegroundMessage(callback: (title: string, body: string) => void): () => void`.
 
-- [ ] **Step 1: Add the VAPID key to `.env.example`**
+- [x] **Step 1: Add the VAPID key to `.env.example`**
 
 Append to `.env.example`:
 
@@ -1402,7 +1402,7 @@ VITE_FIREBASE_VAPID_KEY=
 
 (This is the public half of Firebase's Web Push certificate key pair — safe to expose client-side, same as the other `VITE_FIREBASE_*` values.)
 
-- [ ] **Step 2: Write failing tests**
+- [x] **Step 2: Write failing tests**
 
 `src/features/notifications/messaging.test.ts`:
 
@@ -1495,7 +1495,7 @@ describe("onForegroundMessage", () => {
 });
 ```
 
-- [ ] **Step 3: Run it, verify it fails**
+- [x] **Step 3: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/notifications/messaging.test.ts
@@ -1503,7 +1503,7 @@ npx vitest run src/features/notifications/messaging.test.ts
 
 Expected: FAIL — `./messaging` doesn't exist yet.
 
-- [ ] **Step 4: Implement the messaging wrapper**
+- [x] **Step 4: Implement the messaging wrapper**
 
 `src/features/notifications/messaging.ts`:
 
@@ -1585,13 +1585,13 @@ export function onForegroundMessage(
 
 This also required a matching test-suite fix: `messaging.test.ts`'s `afterEach` only had `vi.restoreAllMocks()`, which does not reset call history on `vi.mock("firebase/messaging")`'s automocked exports (only spies created via `vi.spyOn`) — a later test's "not called" assertion on `onMessage` saw an earlier test's leftover call. Fixed by adding `vi.clearAllMocks()` alongside it.
 
-- [ ] **Step 5: Run it, verify it passes**
+- [x] **Step 5: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/notifications/messaging.test.ts
 ```
 
-- [ ] **Step 6: Run full verification and commit**
+- [x] **Step 6: Run full verification and commit**
 
 ```bash
 npm run format
@@ -1616,7 +1616,7 @@ git commit -m "feat: add client-side push registration wrapper"
 - Consumes: `requestNotificationPermission`, `registerForPush`, `unregisterFromPush`, `onForegroundMessage` (Task 5); `updateNotificationsEnabled`, `updateNotifyDaysBeforeExpiry`, `updateNotifyHourLocal` (Task 1); `Settings` (Task 1).
 - Produces: `NotificationSection({ uid, settings }: { uid: string; settings: Settings })`.
 
-- [ ] **Step 1: Add locale keys**
+- [x] **Step 1: Add locale keys**
 
 Add to the `"settings"` object in **both** locale files.
 
@@ -1636,7 +1636,7 @@ Add to the `"settings"` object in **both** locale files.
 "notificationsPermissionDenied": "Permissão de notificação negada. Você pode habilitá-la nas configurações do navegador."
 ```
 
-- [ ] **Step 2: Write failing tests**
+- [x] **Step 2: Write failing tests**
 
 `src/features/settings/NotificationSection.test.tsx`:
 
@@ -1731,7 +1731,7 @@ describe("NotificationSection", () => {
 });
 ```
 
-- [ ] **Step 3: Run it, verify it fails**
+- [x] **Step 3: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/settings/NotificationSection.test.tsx
@@ -1739,7 +1739,7 @@ npx vitest run src/features/settings/NotificationSection.test.tsx
 
 Expected: FAIL — `./NotificationSection` doesn't exist yet.
 
-- [ ] **Step 4: Implement `NotificationSection`**
+- [x] **Step 4: Implement `NotificationSection`**
 
 `src/features/settings/NotificationSection.tsx`:
 
@@ -1895,13 +1895,13 @@ export function NotificationSection({
 }
 ```
 
-- [ ] **Step 5: Run it, verify it passes**
+- [x] **Step 5: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/settings/NotificationSection.test.tsx
 ```
 
-- [ ] **Step 6: Mount `NotificationSection` in `SettingsPane`**
+- [x] **Step 6: Mount `NotificationSection` in `SettingsPane`**
 
 In `src/features/settings/SettingsPane.tsx`, add the import and mount it after the hide-distant threshold field, before `<BackupSection uid={uid} />`:
 
@@ -1914,7 +1914,7 @@ import { NotificationSection } from "./NotificationSection";
 			<BackupSection uid={uid} />
 ```
 
-- [ ] **Step 7: Subscribe to foreground messages in `AppRoute`**
+- [x] **Step 7: Subscribe to foreground messages in `AppRoute`**
 
 In `src/routes/app-route.tsx`, add the import and a mount-time subscription. `getMessaging()` can throw synchronously in browsers without Messaging support (e.g. older Safari), so this is wrapped defensively — matching this codebase's established "degrade silently, never block the app" convention:
 
@@ -1937,7 +1937,7 @@ import { onForegroundMessage } from "../features/notifications/messaging";
 
 Place this as a second `useEffect`, alongside the existing language-propagation one.
 
-- [ ] **Step 8: Run full verification and commit**
+- [x] **Step 8: Run full verification and commit**
 
 ```bash
 npm run format
@@ -1968,7 +1968,7 @@ git commit -m "feat: add notification settings UI and foreground message handlin
 
 These are plain, dependency-free functions — no Firestore, no Admin SDK, no emulator needed for their tests.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 `scripts/notifications/logic.test.ts`:
 
@@ -2024,7 +2024,7 @@ describe("buildDigestBody", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run scripts/notifications/logic.test.ts
@@ -2032,7 +2032,7 @@ npx vitest run scripts/notifications/logic.test.ts
 
 Expected: FAIL — `./logic` doesn't exist yet.
 
-- [ ] **Step 3: Implement `logic.ts`**
+- [x] **Step 3: Implement `logic.ts`**
 
 `scripts/notifications/logic.ts`:
 
@@ -2073,13 +2073,13 @@ export function buildDigestBody(
 }
 ```
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx vitest run scripts/notifications/logic.test.ts
 ```
 
-- [ ] **Step 5: Run full verification and commit**
+- [x] **Step 5: Run full verification and commit**
 
 ```bash
 npm run format
@@ -2111,7 +2111,7 @@ This task does NOT reuse `src/features/settings/schema.ts`'s `parseSettingsDoc`/
 1. `tsconfig.scripts.json`'s `module: "nodenext"` requires explicit `.js` extensions on relative imports even though the source files are `.ts` (e.g. `import { ... } from "./logic.js"`, not `"./logic"`) — `tsc -b` fails with `TS2835` otherwise. This is standard TypeScript-with-Node-ESM behavior; `tsx` (and Vitest, for the test files) both correctly resolve the `.js` specifier back to the real `.ts` source at runtime.
 2. `biome.json`'s `files.includes` was scoped to `["src/**/*.{ts,tsx}"]` only — **not** the whole repo, contrary to this plan's original assumption (wrongly inferred from `npm run lint`'s "Checked NN files" count, which was never actually verified against `scripts/`). `npm run format`/`npm run lint` silently skipped `scripts/` entirely. Fixed by widening `biome.json` to `["src/**/*.{ts,tsx}", "scripts/**/*.ts"]`. This surfaced two more real issues once scripts/ was actually linted: an import-sort violation in `run.ts` (fixed via `npx biome check --write`) and a genuine `lint/correctness/noUnsafeOptionalChaining` bug in the integration test below — `(x.data()?.field as T).method()` defeats the optional chain's short-circuit, so a `?.` short-circuiting to `undefined` still hits `.method()` and throws; fixed by extracting `.data()` into a variable and guarding it explicitly before the cast (see Step 3's final test file).
 
-- [ ] **Step 1: Add `tsconfig.scripts.json`**
+- [x] **Step 1: Add `tsconfig.scripts.json`**
 
 ```json
 {
@@ -2151,13 +2151,13 @@ Add its reference to the root `tsconfig.json`:
 }
 ```
 
-- [ ] **Step 2: Install `firebase-admin` and `tsx`**
+- [x] **Step 2: Install `firebase-admin` and `tsx`**
 
 ```bash
 npm install -D firebase-admin tsx
 ```
 
-- [ ] **Step 3: Write a failing integration test**
+- [x] **Step 3: Write a failing integration test**
 
 `scripts/notifications/run.integration.test.ts`:
 
@@ -2302,7 +2302,7 @@ describe("runDailyNotifications", () => {
 });
 ```
 
-- [ ] **Step 4: Run it, verify it fails**
+- [x] **Step 4: Run it, verify it fails**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run scripts/notifications/run.integration.test.ts"
@@ -2310,7 +2310,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run scripts/notifi
 
 Expected: FAIL — `./run` doesn't exist yet. (This file needs the emulator wrapper: the Firebase Admin SDK auto-connects to the Firestore emulator only when `FIRESTORE_EMULATOR_HOST` is set, which `firebase emulators:exec` sets automatically for the wrapped command — confirmed against Firebase's own emulator docs during planning. Running this file with plain `npx vitest run` will hang or fail trying to reach real GCP.)
 
-- [ ] **Step 5: Implement `run.ts`**
+- [x] **Step 5: Implement `run.ts`**
 
 `scripts/notifications/run.ts`:
 
@@ -2418,7 +2418,7 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
 }
 ```
 
-- [ ] **Step 6: Run it, verify it passes**
+- [x] **Step 6: Run it, verify it passes**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run scripts/notifications/run.integration.test.ts"
@@ -2426,7 +2426,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run scripts/notifi
 
 If `initializeApp({ projectId: "notifications-script-test" })` errors for lacking a `credential`, add `credential: applicationDefault()` from `firebase-admin/app` to the test's `initializeApp` call — this is the one Admin-SDK-against-emulator-only detail this plan couldn't fully pin down without running it (noted here rather than left as a silent assumption).
 
-- [ ] **Step 7: Write the GitHub Actions workflow**
+- [x] **Step 7: Write the GitHub Actions workflow**
 
 `.github/workflows/daily-notifications.yml`:
 
@@ -2463,7 +2463,7 @@ jobs:
 
 This workflow is committed but inert — this repo has no GitHub remote yet, and `secrets.FIREBASE_SERVICE_ACCOUNT_JSON`/`FIREBASE_PROJECT_ID` don't exist. Creating them is Phase 7's job (see this plan's Global Constraints and the spec's Deployment-scope decision).
 
-- [ ] **Step 8: Run full verification and commit**
+- [x] **Step 8: Run full verification and commit**
 
 ```bash
 npm run format
@@ -2491,7 +2491,7 @@ git commit -m "feat: add server-side digest script and GitHub Actions workflow"
 
 **Scope note, decided during planning, not left for discovery mid-task:** Firebase Messaging's `getToken`/`onMessage` are plain ES module imports inside `messaging.ts` — unlike the barcode feature's `window.BarcodeDetector` (a real global), there is no way for Playwright's `page.addInitScript` to intercept these from outside the app's bundle, since it can only touch `window`/`navigator` globals, not a bundled module's internal imports. There is also no Firebase emulator for Cloud Messaging (`firebase.json`'s emulator list only has `auth`/`firestore`/`ui`) — a real `getToken()` round trip cannot be exercised locally at all, in e2e or otherwise. The "permission granted → token registered" path is therefore already covered at the right layer, in Task 6's `NotificationSection.test.tsx` (which mocks the `messaging.ts` module directly, something only possible in Vitest/jsdom). This task's e2e case covers only the permission-denied path, which touches nothing but the real, reachable global `Notification` API.
 
-- [ ] **Step 1: Add the permission-denied e2e case**
+- [x] **Step 1: Add the permission-denied e2e case**
 
 Add to `e2e/core-loop.spec.ts`:
 
@@ -2521,7 +2521,7 @@ test("denies notification permission gracefully, leaving the switch off with an 
 
 Verify the `aria-label`/switch selector empirically against the real running app before trusting this — every prior phase's e2e task has found at least one brief-guessed selector needed adjusting after checking reality (this plan's `NotificationSection`'s `Switch` has `aria-label={t("settings.notificationsEnabled")}`, which resolves to pt-br's "Notificações" — the `/notifica/i` regex matches that).
 
-- [ ] **Step 2: Run it against the emulator**
+- [x] **Step 2: Run it against the emulator**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=true npm run test:e2e"
@@ -2529,7 +2529,7 @@ npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=t
 
 Expected: PASS (all existing cases plus the new one).
 
-- [ ] **Step 3: Run the full verification suite one more time**
+- [x] **Step 3: Run the full verification suite one more time**
 
 ```bash
 npm run format
@@ -2541,7 +2541,7 @@ npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=t
 
 All five must be clean before this task is considered done.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add e2e/core-loop.spec.ts
