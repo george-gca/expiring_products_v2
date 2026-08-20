@@ -5,6 +5,7 @@ import { parseItemDoc, parseItemHistoryDoc, toItemDoc } from "./schema";
 describe("parseItemDoc", () => {
 	it("parses a valid item document, converting Timestamps to Dates", () => {
 		const expiringDate = Timestamp.fromDate(new Date("2026-09-01T23:59:59Z"));
+		const lastNotifiedAt = Timestamp.fromDate(new Date("2026-08-20T08:00:00Z"));
 		const result = parseItemDoc("item1", {
 			name: "Whole Milk",
 			category: "foods",
@@ -16,13 +17,15 @@ describe("parseItemDoc", () => {
 			recurring: true,
 			barcode: null,
 			source: "manual",
+			last_notified_at: lastNotifiedAt,
 		});
 		expect(result.expiringDate).toEqual(expiringDate.toDate());
 		expect(result.name).toBe("Whole Milk");
 		expect(result.source).toBe("manual");
+		expect(result.lastNotifiedAt).toEqual(lastNotifiedAt.toDate());
 	});
 
-	it("defaults source to manual and barcode to null when absent", () => {
+	it("defaults source to manual and barcode/lastNotifiedAt to null when absent", () => {
 		const result = parseItemDoc("item1", {
 			name: "Aspirin",
 			category: "medicines",
@@ -35,6 +38,7 @@ describe("parseItemDoc", () => {
 		});
 		expect(result.source).toBe("manual");
 		expect(result.barcode).toBeNull();
+		expect(result.lastNotifiedAt).toBeNull();
 	});
 });
 
@@ -54,6 +58,7 @@ describe("toItemDoc", () => {
 		});
 		expect(doc.expiring_date).toBeInstanceOf(Timestamp);
 		expect(doc.name).toBe("Whole Milk");
+		expect(doc.last_notified_at).toBeNull();
 	});
 });
 

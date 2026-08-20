@@ -16,6 +16,7 @@ export const itemDocSchema = z.object({
 	recurring: z.boolean(),
 	barcode: z.string().nullable().optional(),
 	source: z.enum(["manual", "barcode"]).optional(),
+	last_notified_at: timestampSchema.nullable().optional(),
 });
 
 export interface PantryItem {
@@ -30,6 +31,7 @@ export interface PantryItem {
 	recurring: boolean;
 	barcode: string | null;
 	source: "manual" | "barcode";
+	lastNotifiedAt?: Date | null;
 }
 
 export function parseItemDoc(id: string, data: unknown): PantryItem {
@@ -46,6 +48,9 @@ export function parseItemDoc(id: string, data: unknown): PantryItem {
 		recurring: parsed.recurring,
 		barcode: parsed.barcode ?? null,
 		source: parsed.source ?? "manual",
+		lastNotifiedAt: parsed.last_notified_at
+			? parsed.last_notified_at.toDate()
+			: null,
 	};
 }
 
@@ -61,6 +66,9 @@ export function toItemDoc(item: Omit<PantryItem, "id">) {
 		recurring: item.recurring,
 		barcode: item.barcode,
 		source: item.source,
+		last_notified_at: item.lastNotifiedAt
+			? Timestamp.fromDate(item.lastNotifiedAt)
+			: null,
 	};
 }
 
