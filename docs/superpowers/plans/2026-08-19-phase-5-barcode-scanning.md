@@ -774,6 +774,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 ```
 
+The existing `import { describe, expect, it, vi } from "vitest";` also needs `afterEach` added (see the mock-leakage fix below).
+
 Then add this import and a module mock, placed after the existing imports:
 
 ```tsx
@@ -792,6 +794,15 @@ Then add this new `describe` block:
 
 ```tsx
 describe("AddItemModal barcode scanning", () => {
+	// Without this, vi.spyOn's call history on the shared lookupBarcode module
+	// export leaks across tests in this file (same pattern as Phase 4's
+	// SettingsPane i18n flake) — the second test's "not called" assertion
+	// would otherwise see the first test's leftover call. Discovered by
+	// running this task, not anticipated during planning.
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
 	it("opens the scanner and pre-fills the name after a successful detect", async () => {
 		vi.spyOn(lookupBarcodeModule, "lookupBarcode").mockResolvedValue({
 			name: "Whole Milk",
@@ -912,14 +923,29 @@ export function AddItemModal({
 	const [scannerOpen, setScannerOpen] = useState(false);
 	const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
 
+	// eslint-plugin-react-hooks's `set-state-in-effect` rule forbids calling
+	// setState synchronously inside an effect body — discovered by running
+	// `npm run lint` while implementing this task, not anticipated during
+	// planning. Fixed with the React-recommended "adjusting state when a prop
+	// changes" render-time-resync pattern (same pattern already used by
+	// SettingsPane's threshold fields), keeping only the imperative
+	// `form.setFieldsValue` call — an external system, not React state — in
+	// its own effect:
+	const [prevOpen, setPrevOpen] = useState(open);
+	if (open !== prevOpen) {
+		setPrevOpen(open);
+		if (open) {
+			setScannedBarcode(null);
+			setScannerOpen(false);
+		}
+	}
+
 	useEffect(() => {
 		if (open) {
 			form.setFieldsValue({
 				name: initialName ?? "",
 				recurring: initialRecurring,
 			});
-			setScannedBarcode(null);
-			setScannerOpen(false);
 		}
 	}, [open, initialName, initialRecurring, form]);
 
