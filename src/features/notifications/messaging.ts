@@ -34,11 +34,33 @@ export async function unregisterFromPush(uid: string): Promise<void> {
 export function onForegroundMessage(
 	callback: (title: string, body: string) => void,
 ): () => void {
-	const messaging = getMessaging(app);
-	return onMessage(messaging, (payload) => {
-		callback(
-			payload.notification?.title ?? "",
-			payload.notification?.body ?? "",
-		);
-	});
+	// getMessaging()/onMessage() don't throw synchronously for an unsupported
+	// browser — the failure only surfaces once Messaging's internal async
+	// support check rejects, as an unhandled rejection a caller's try/catch
+	// around this function's own (synchronous) call can never catch. Gating
+	// on isSupported() first — same as requestNotificationPermission — avoids
+	// that entirely.
+	let unsubscribe: (() => void) | undefined;
+	let cancelled = false;
+
+	isSupported()
+		.then((supported) => {
+			if (!supported || cancelled) return;
+			const messaging = getMessaging(app);
+			unsubscribe = onMessage(messaging, (payload) => {
+				callback(
+					payload.notification?.title ?? "",
+					payload.notification?.body ?? "",
+				);
+			});
+		})
+		.catch(() => {
+			// Messaging unsupported or failed to initialize — no foreground
+			// notifications this session, nothing else to do.
+		});
+
+	return () => {
+		cancelled = true;
+		unsubscribe?.();
+	};
 }

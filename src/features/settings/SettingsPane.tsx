@@ -9,6 +9,7 @@ import {
 	updateLanguage,
 	updateLowStockThreshold,
 } from "./firestoreWrites";
+import { NotificationSection } from "./NotificationSection";
 import type { Settings } from "./schema";
 
 const MIN_LOW_STOCK_THRESHOLD = 1;
@@ -134,6 +135,7 @@ export function SettingsPane({
 					style={{ width: "100%" }}
 				/>
 			</Form.Item>
+			<NotificationSection uid={uid} settings={settings} />
 			<BackupSection uid={uid} />
 		</Form>
 	);

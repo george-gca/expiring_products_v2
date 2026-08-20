@@ -1,7 +1,9 @@
+import { notification } from "antd";
 import type { User } from "firebase/auth";
 import { useEffect } from "react";
 import { CategoryTabs } from "../features/categories/CategoryTabs";
 import { useCategories } from "../features/categories/useCategories";
+import { onForegroundMessage } from "../features/notifications/messaging";
 import { ItemList } from "../features/pantry-items/ItemList";
 import { SettingsPane } from "../features/settings/SettingsPane";
 import { useSettings } from "../features/settings/useSettings";
@@ -23,6 +25,19 @@ export function AppRoute({ user }: { user: User }) {
 			i18n.changeLanguage(settings.language);
 		}
 	}, [settings.language, settingsLoading]);
+
+	// getMessaging() can throw synchronously in browsers without Messaging
+	// support (e.g. older Safari) — degrades silently, matching this
+	// codebase's established "never block the app" convention.
+	useEffect(() => {
+		try {
+			return onForegroundMessage((title, body) => {
+				notification.info({ message: title, description: body });
+			});
+		} catch {
+			return undefined;
+		}
+	}, []);
 
 	if (categoriesLoading || settingsLoading) return null;
 

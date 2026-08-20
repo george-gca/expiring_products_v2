@@ -12,6 +12,11 @@ import {
 vi.mock("firebase/messaging");
 
 afterEach(() => {
+	// clearAllMocks resets call history on vi.mock("firebase/messaging")'s
+	// automocked exports too — restoreAllMocks alone only resets spies
+	// created via vi.spyOn, leaving e.g. onMessage's call count from an
+	// earlier test leaking into a later "not called" assertion.
+	vi.clearAllMocks();
 	vi.restoreAllMocks();
 });
 
@@ -66,7 +71,8 @@ describe("unregisterFromPush", () => {
 });
 
 describe("onForegroundMessage", () => {
-	it("invokes the callback with the notification title and body", () => {
+	it("invokes the callback with the notification title and body", async () => {
+		vi.mocked(messagingSdk.isSupported).mockResolvedValue(true);
 		let capturedHandler: ((payload: unknown) => void) | undefined;
 		vi.mocked(messagingSdk.onMessage).mockImplementation(
 			(_messaging, handler) => {
@@ -77,10 +83,21 @@ describe("onForegroundMessage", () => {
 
 		const callback = vi.fn();
 		onForegroundMessage(callback);
+		await vi.waitFor(() => expect(capturedHandler).toBeDefined());
 		capturedHandler?.({
 			notification: { title: "Milk", body: "Expiring soon" },
 		});
 
 		expect(callback).toHaveBeenCalledWith("Milk", "Expiring soon");
+	});
+
+	it("never subscribes when messaging is not supported", async () => {
+		vi.mocked(messagingSdk.isSupported).mockResolvedValue(false);
+		const onMessageSpy = vi.mocked(messagingSdk.onMessage);
+
+		onForegroundMessage(vi.fn());
+		await vi.waitFor(() => expect(messagingSdk.isSupported).toHaveBeenCalled());
+
+		expect(onMessageSpy).not.toHaveBeenCalled();
 	});
 });
