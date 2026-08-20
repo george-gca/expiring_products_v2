@@ -67,7 +67,7 @@ e2e/
   - `parseBarcodeProductDoc(data: unknown): BarcodeProduct` — throws on invalid input (this is a Firestore document your own code always writes in a known shape, unlike a user-supplied backup file — matching the strictness of every other Firestore-read parse function in this codebase, e.g. `parseItemDoc`).
   - `toBarcodeProductDoc(product: Omit<BarcodeProduct, "updatedAt">): object` — Firestore-write shape, stamping a fresh `updatedAt`.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 `src/features/barcode/schema.test.ts`:
 
@@ -129,7 +129,7 @@ describe("toBarcodeProductDoc", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/barcode/schema.test.ts
@@ -137,7 +137,7 @@ npx vitest run src/features/barcode/schema.test.ts
 
 Expected: FAIL — `./schema` doesn't exist yet.
 
-- [ ] **Step 3: Implement the schema**
+- [x] **Step 3: Implement the schema**
 
 `src/features/barcode/schema.ts`:
 
@@ -188,13 +188,13 @@ export function toBarcodeProductDoc(product: Omit<BarcodeProduct, "updatedAt">) 
 }
 ```
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/barcode/schema.test.ts
 ```
 
-- [ ] **Step 5: Run full verification and commit**
+- [x] **Step 5: Run full verification and commit**
 
 ```bash
 npm run format
@@ -218,7 +218,7 @@ git commit -m "feat: add barcode_products schema"
 - Consumes: `BarcodeProduct`, `toBarcodeProductDoc` (Task 1).
 - Produces: `upsertBarcodeProduct(uid: string, barcode: string, product: Omit<BarcodeProduct, "updatedAt">): Promise<void>`.
 
-- [ ] **Step 1: Write a failing test**
+- [x] **Step 1: Write a failing test**
 
 `src/features/barcode/firestoreWrites.test.ts`:
 
@@ -274,7 +274,7 @@ describe("upsertBarcodeProduct", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/barcode/firestoreWrites.test.ts"
@@ -282,7 +282,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/b
 
 Expected: FAIL — `./firestoreWrites` doesn't exist yet.
 
-- [ ] **Step 3: Implement `upsertBarcodeProduct`**
+- [x] **Step 3: Implement `upsertBarcodeProduct`**
 
 `src/features/barcode/firestoreWrites.ts`:
 
@@ -303,13 +303,13 @@ export async function upsertBarcodeProduct(
 }
 ```
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/barcode/firestoreWrites.test.ts"
 ```
 
-- [ ] **Step 5: Run full verification and commit**
+- [x] **Step 5: Run full verification and commit**
 
 ```bash
 npm run format
@@ -335,7 +335,7 @@ git commit -m "feat: add upsertBarcodeProduct"
 
 This task introduces this codebase's first use of MSW (already an unused dev dependency) — confirmed during planning that `setupServer`/`http`/`HttpResponse` from `msw`/`msw/node` correctly intercept `fetch` in this project's Vitest + jsdom setup.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 `src/features/barcode/lookupBarcode.test.ts`:
 
@@ -440,7 +440,7 @@ describe("lookupBarcode", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/barcode/lookupBarcode.test.ts"
@@ -448,7 +448,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/b
 
 Expected: FAIL — `./lookupBarcode` doesn't exist yet.
 
-- [ ] **Step 3: Implement `lookupBarcode`**
+- [x] **Step 3: Implement `lookupBarcode`**
 
 `src/features/barcode/lookupBarcode.ts`:
 
@@ -507,13 +507,13 @@ export async function lookupBarcode(
 }
 ```
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/barcode/lookupBarcode.test.ts"
 ```
 
-- [ ] **Step 5: Run full verification and commit**
+- [x] **Step 5: Run full verification and commit**
 
 ```bash
 npm run format
@@ -538,13 +538,13 @@ git commit -m "feat: add cache-first barcode lookup with Open Food Facts fallbac
 - Consumes: nothing from earlier tasks.
 - Produces: `BarcodeScanner({ onDetect: (barcode: string) => void; onCancel: () => void })`. Renders a live camera preview and calls `onDetect` once a supported barcode format is recognized; calls `onCancel` (and shows an inline message) if `getUserMedia` fails for any reason. Always stops its media stream on unmount.
 
-- [ ] **Step 1: Install the dependency**
+- [x] **Step 1: Install the dependency**
 
 ```bash
 npm install barcode-detector
 ```
 
-- [ ] **Step 2: Import the polyfill once, at the app entry point**
+- [x] **Step 2: Import the polyfill once, at the app entry point**
 
 Modify `src/main.tsx` — add as the first import:
 
@@ -554,7 +554,7 @@ import "barcode-detector/polyfill";
 
 This registers `BarcodeDetector` on `globalThis` only if the browser doesn't already have a native implementation, and declares its ambient TypeScript type for the whole program — no other file needs to import anything from `barcode-detector` to use the global `BarcodeDetector` class.
 
-- [ ] **Step 3: Add locale keys**
+- [x] **Step 3: Add locale keys**
 
 Add to the `"items"` object in **both** locale files:
 
@@ -572,7 +572,7 @@ pt-br.json:
 "cameraUnavailable": "Câmera indisponível. Preencha os campos manualmente abaixo."
 ```
 
-- [ ] **Step 4: Write failing tests**
+- [x] **Step 4: Write failing tests**
 
 `src/features/barcode/BarcodeScanner.test.tsx`:
 
@@ -638,7 +638,7 @@ describe("BarcodeScanner", () => {
 });
 ```
 
-- [ ] **Step 5: Run it, verify it fails**
+- [x] **Step 5: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/barcode/BarcodeScanner.test.tsx
@@ -646,7 +646,7 @@ npx vitest run src/features/barcode/BarcodeScanner.test.tsx
 
 Expected: FAIL — `./BarcodeScanner` doesn't exist yet.
 
-- [ ] **Step 6: Implement `BarcodeScanner`**
+- [x] **Step 6: Implement `BarcodeScanner`**
 
 `src/features/barcode/BarcodeScanner.tsx`:
 
@@ -731,13 +731,13 @@ export function BarcodeScanner({
 }
 ```
 
-- [ ] **Step 7: Run it, verify it passes**
+- [x] **Step 7: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/barcode/BarcodeScanner.test.tsx
 ```
 
-- [ ] **Step 8: Run full verification and commit**
+- [x] **Step 8: Run full verification and commit**
 
 ```bash
 npm run format
@@ -763,7 +763,7 @@ git commit -m "feat: add BarcodeScanner camera component"
 - Consumes: `BarcodeScanner` (Task 4); `lookupBarcode` (Task 3); `upsertBarcodeProduct` (Task 2).
 - Produces: `AddItemModal`'s existing props are unchanged. `addItem` is now called with real `barcode`/`source` values instead of the hardcoded `null`/`"manual"`.
 
-- [ ] **Step 1: Write failing tests**
+- [x] **Step 1: Write failing tests**
 
 Read the current `src/features/pantry-items/AddItemModal.test.tsx` first — these two new tests get added alongside its existing two (which stay unmodified). Its current imports are just
 `import "../../lib/i18n"; import { render, screen } from "@testing-library/react"; import { describe, expect, it, vi } from "vitest"; import type { Category } from "../categories/schema"; import { AddItemModal } from "./AddItemModal";`
@@ -862,7 +862,7 @@ describe("AddItemModal barcode scanning", () => {
 });
 ```
 
-- [ ] **Step 2: Run it, verify it fails**
+- [x] **Step 2: Run it, verify it fails**
 
 ```bash
 npx vitest run src/features/pantry-items/AddItemModal.test.tsx
@@ -870,7 +870,7 @@ npx vitest run src/features/pantry-items/AddItemModal.test.tsx
 
 Expected: FAIL — no "Scan barcode" button exists yet.
 
-- [ ] **Step 3: Wire scanning into `AddItemModal`**
+- [x] **Step 3: Wire scanning into `AddItemModal`**
 
 Replace the full contents of `src/features/pantry-items/AddItemModal.tsx`:
 
@@ -1071,7 +1071,7 @@ export function AddItemModal({
 }
 ```
 
-- [ ] **Step 4: Run it, verify it passes**
+- [x] **Step 4: Run it, verify it passes**
 
 ```bash
 npx vitest run src/features/pantry-items/AddItemModal.test.tsx
@@ -1079,7 +1079,7 @@ npx vitest run src/features/pantry-items/AddItemModal.test.tsx
 
 All four tests (the original two plus the two new ones) should pass.
 
-- [ ] **Step 5: Verify manually**
+- [x] **Step 5: Verify manually**
 
 ```bash
 npm run dev
@@ -1087,7 +1087,7 @@ npm run dev
 
 Open Add Item, click "Scan barcode" — your browser will prompt for camera permission (grant it if you have a webcam; otherwise confirm the inline "Camera unavailable" message appears and you can still fill the form manually). Point a real barcode at the camera if available, confirm the name field pre-fills.
 
-- [ ] **Step 6: Run full verification and commit**
+- [x] **Step 6: Run full verification and commit**
 
 ```bash
 npm run format
@@ -1111,7 +1111,7 @@ git commit -m "feat: wire barcode scanning into AddItemModal"
 **Interfaces:**
 - Consumes: the full feature built in Tasks 1–5.
 
-- [ ] **Step 1: Add a barcode scan/cache-reuse e2e case**
+- [x] **Step 1: Add a barcode scan/cache-reuse e2e case**
 
 Add to `e2e/core-loop.spec.ts`, following its established conventions (pt-br button/label text, the `.ant-picker-cell-today` date-picker workaround). This test mocks the detector via `page.addInitScript` (which runs before any of the app's own JavaScript, including its `barcode-detector/polyfill` import — the polyfill only registers `BarcodeDetector` if it isn't already present, so setting it here first means the app always uses this fake) and mocks the Open Food Facts response via `page.route`.
 
@@ -1196,7 +1196,7 @@ test("scans a barcode, pre-fills the name from Open Food Facts, and reuses the c
 
 Verify every selector empirically against the real running app rather than trusting this brief blindly — check the actual rendered DOM/accessible names before assuming they match. Every prior phase's e2e task has found at least one brief-guessed selector needed adjusting after checking reality.
 
-- [ ] **Step 2: Run it against the emulator**
+- [x] **Step 2: Run it against the emulator**
 
 ```bash
 npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=true npm run test:e2e"
@@ -1204,7 +1204,7 @@ npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=t
 
 Expected: PASS (all existing cases plus the new one).
 
-- [ ] **Step 3: Run the full verification suite one more time**
+- [x] **Step 3: Run the full verification suite one more time**
 
 ```bash
 npm run format
@@ -1216,7 +1216,7 @@ npx firebase emulators:exec --only auth,firestore "VITE_USE_FIREBASE_EMULATORS=t
 
 All five must be clean before this task is considered done.
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add e2e/core-loop.spec.ts
