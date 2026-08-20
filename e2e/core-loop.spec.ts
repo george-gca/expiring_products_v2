@@ -166,3 +166,64 @@ test("switching language updates the rendered UI immediately", async ({ page }) 
 
 	await expect(page.getByText("Low stock warning threshold")).toBeVisible();
 });
+
+test("scans a barcode, pre-fills the name from Open Food Facts, and reuses the cache on a repeat scan", async ({
+	page,
+}) => {
+	let offCallCount = 0;
+	await page.route(
+		"https://world.openfoodfacts.org/api/v2/product/0123456789012.json*",
+		(route) => {
+			offCallCount++;
+			route.fulfill({ json: { product: { product_name: "Whole Milk" } } });
+		},
+	);
+
+	// getUserMedia itself is real here (see playwright.config.ts's fake-camera
+	// launch flags) — only BarcodeDetector needs a JS-level mock, since no
+	// real barcode is in frame for Chromium's synthetic test-pattern video.
+	await page.addInitScript(() => {
+		class FakeBarcodeDetector {
+			detect() {
+				return Promise.resolve([{ rawValue: "0123456789012" }]);
+			}
+		}
+		(window as unknown as { BarcodeDetector: unknown }).BarcodeDetector =
+			FakeBarcodeDetector;
+	});
+
+	await page.goto("/");
+	await page.getByText("Cadastrar").click();
+	await page.getByLabel("E-mail").fill(`e2e-barcode-${Date.now()}@example.com`);
+	await page.getByLabel("Senha").fill("correct-horse-battery");
+	await page.getByRole("button", { name: "Cadastrar" }).click();
+
+	await page.getByRole("tab", { name: /Foods/ }).click();
+	await page.getByRole("button", { name: "plus" }).click();
+	await page
+		.getByRole("button", { name: "Escanear código de barras" })
+		.click();
+
+	await expect(page.getByLabel("Nome")).toHaveValue("Whole Milk", {
+		timeout: 10000,
+	});
+
+	await page.getByLabel("Quantidade").fill("1");
+	await page.getByLabel("Data de validade").click();
+	await page.locator(".ant-picker-cell-today").click();
+	await page.getByRole("button", { name: "OK" }).click();
+	await expect(page.getByText("Whole Milk")).toBeVisible();
+
+	// Second scan of the SAME barcode, in a fresh Add Item flow — should
+	// resolve from the Firestore cache written by the first scan, without a
+	// second Open Food Facts call.
+	await page.getByRole("button", { name: "plus" }).click();
+	await page
+		.getByRole("button", { name: "Escanear código de barras" })
+		.click();
+	await expect(page.getByLabel("Nome")).toHaveValue("Whole Milk", {
+		timeout: 10000,
+	});
+
+	expect(offCallCount).toBe(1);
+});

@@ -1113,7 +1113,25 @@ git commit -m "feat: wire barcode scanning into AddItemModal"
 
 - [ ] **Step 1: Add a barcode scan/cache-reuse e2e case**
 
-Add to `e2e/core-loop.spec.ts`, following its established conventions (pt-br button/label text, the `.ant-picker-cell-today` date-picker workaround). This test mocks the camera and detector via `page.addInitScript` (which runs before any of the app's own JavaScript, including its `barcode-detector/polyfill` import — the polyfill only registers `BarcodeDetector` if it isn't already present, so setting it here first means the app always uses this fake) and mocks the Open Food Facts response via `page.route`.
+Add to `e2e/core-loop.spec.ts`, following its established conventions (pt-br button/label text, the `.ant-picker-cell-today` date-picker workaround). This test mocks the detector via `page.addInitScript` (which runs before any of the app's own JavaScript, including its `barcode-detector/polyfill` import — the polyfill only registers `BarcodeDetector` if it isn't already present, so setting it here first means the app always uses this fake) and mocks the Open Food Facts response via `page.route`.
+
+**Camera mocking correction, found by running this task, not anticipated during planning:** a plain mock object (`{ getTracks: () => [...] }`) returned from a JS-overridden `getUserMedia` works fine in jsdom (unit tests) but throws when assigned to a real `HTMLVideoElement.srcObject` in actual Chromium — that setter requires a real `MediaStream`/`MediaSource`/`Blob`. The uncaught throw inside `BarcodeScanner`'s `.then()` was swallowed by its own `.catch()`, which set the error state AND called `onCancel()` — so the modal silently snapped back to the empty form with no visible error, no network request, and no console error, making this look like a name-prefill bug rather than a camera-mocking bug. Fixed by NOT overriding `navigator.mediaDevices` in the test at all, and instead adding Chromium fake-camera launch flags to `playwright.config.ts`:
+
+```typescript
+use: {
+	baseURL: "http://localhost:5173",
+	locale: "pt-BR",
+	permissions: ["camera"],
+	launchOptions: {
+		args: [
+			"--use-fake-device-for-media-stream",
+			"--use-fake-ui-for-media-stream",
+		],
+	},
+},
+```
+
+With these flags, Chromium auto-grants camera permission and `getUserMedia` returns a real (synthetic test-pattern) `MediaStream`, satisfying `srcObject`'s type check. Only `BarcodeDetector` still needs mocking (no real barcode is ever in frame).
 
 ```typescript
 test("scans a barcode, pre-fills the name from Open Food Facts, and reuses the cache on a repeat scan", async ({ page }) => {
@@ -1126,15 +1144,10 @@ test("scans a barcode, pre-fills the name from Open Food Facts, and reuses the c
 		},
 	);
 
+	// getUserMedia itself is real here (see playwright.config.ts's fake-camera
+	// launch flags) — only BarcodeDetector needs a JS-level mock, since no
+	// real barcode is in frame for Chromium's synthetic test-pattern video.
 	await page.addInitScript(() => {
-		Object.defineProperty(navigator, "mediaDevices", {
-			value: {
-				getUserMedia: async () => ({
-					getTracks: () => [{ stop: () => {} }],
-				}),
-			},
-			configurable: true,
-		});
 		class FakeBarcodeDetector {
 			detect() {
 				return Promise.resolve([{ rawValue: "0123456789012" }]);
