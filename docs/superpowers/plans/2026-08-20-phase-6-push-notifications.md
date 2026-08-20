@@ -2107,6 +2107,10 @@ git commit -m "feat: add pure dedup/hour-match/digest-wording functions"
 
 This task does NOT reuse `src/features/settings/schema.ts`'s `parseSettingsDoc`/`Settings` type — that file is part of the client app's own TypeScript program (`tsconfig.app.json`), and cross-importing it into the separately-configured `scripts/` program risks a `tsc -b` project-boundary error this plan can't fully verify without running it. Instead, `run.ts` reads the raw settings fields directly with inline defaults, matching `settingsDocSchema`'s own default values (kept in sync manually — both are small, static defaults unlikely to drift).
 
+**Two real findings from actually running this task, not caught during planning:**
+1. `tsconfig.scripts.json`'s `module: "nodenext"` requires explicit `.js` extensions on relative imports even though the source files are `.ts` (e.g. `import { ... } from "./logic.js"`, not `"./logic"`) — `tsc -b` fails with `TS2835` otherwise. This is standard TypeScript-with-Node-ESM behavior; `tsx` (and Vitest, for the test files) both correctly resolve the `.js` specifier back to the real `.ts` source at runtime.
+2. `biome.json`'s `files.includes` was scoped to `["src/**/*.{ts,tsx}"]` only — **not** the whole repo, contrary to this plan's original assumption (wrongly inferred from `npm run lint`'s "Checked NN files" count, which was never actually verified against `scripts/`). `npm run format`/`npm run lint` silently skipped `scripts/` entirely. Fixed by widening `biome.json` to `["src/**/*.{ts,tsx}", "scripts/**/*.ts"]`. This surfaced two more real issues once scripts/ was actually linted: an import-sort violation in `run.ts` (fixed via `npx biome check --write`) and a genuine `lint/correctness/noUnsafeOptionalChaining` bug in the integration test below — `(x.data()?.field as T).method()` defeats the optional chain's short-circuit, so a `?.` short-circuiting to `undefined` still hits `.method()` and throws; fixed by extracting `.data()` into a variable and guarding it explicitly before the cast (see Step 3's final test file).
+
 - [ ] **Step 1: Add `tsconfig.scripts.json`**
 
 ```json
@@ -2162,7 +2166,7 @@ import { deleteApp, initializeApp } from "firebase-admin/app";
 import { getFirestore, Timestamp } from "firebase-admin/firestore";
 import type { Messaging } from "firebase-admin/messaging";
 import { afterAll, describe, expect, it, vi } from "vitest";
-import { runDailyNotifications } from "./run";
+import { runDailyNotifications } from "./run.js";
 
 // A hardcoded, test-only project id — deliberately isolated from the
 // client SDK's VITE_FIREBASE_PROJECT_ID and its clearFirestoreEmulator
@@ -2249,9 +2253,11 @@ describe("runDailyNotifications", () => {
 		expect(updatedDueItem.data()?.last_notified_at).toBeTruthy();
 
 		const updatedRecentItem = await recentItemRef.get();
-		expect(
-			(updatedRecentItem.data()?.last_notified_at as Timestamp).toDate(),
-		).toEqual(new Date("2026-01-14T00:00:00Z")); // unchanged — still within dedup window
+		const recentItemData = updatedRecentItem.data();
+		if (!recentItemData) throw new Error("expected recent-item to exist");
+		expect((recentItemData.last_notified_at as Timestamp).toDate()).toEqual(
+			new Date("2026-01-14T00:00:00Z"),
+		); // unchanged — still within dedup window
 	});
 
 	it("sends nothing when notificationsEnabled is false", async () => {
@@ -2311,9 +2317,13 @@ Expected: FAIL — `./run` doesn't exist yet. (This file needs the emulator wrap
 ```typescript
 import { fileURLToPath } from "node:url";
 import { cert, initializeApp } from "firebase-admin/app";
-import { getFirestore, type Firestore } from "firebase-admin/firestore";
+import { type Firestore, getFirestore } from "firebase-admin/firestore";
 import { getMessaging, type Messaging } from "firebase-admin/messaging";
-import { buildDigestBody, matchesLocalHour, needsNotification } from "./logic";
+import {
+	buildDigestBody,
+	matchesLocalHour,
+	needsNotification,
+} from "./logic.js";
 
 const DEDUP_DAYS = 7;
 

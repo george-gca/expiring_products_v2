@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildDigestBody, matchesLocalHour, needsNotification } from "./logic";
+import {
+	buildDigestBody,
+	matchesLocalHour,
+	needsNotification,
+} from "./logic.js";
 
 describe("matchesLocalHour", () => {
 	it("returns true when the current UTC time is the target local hour", () => {
@@ -16,9 +20,9 @@ describe("matchesLocalHour", () => {
 
 describe("needsNotification", () => {
 	it("returns true when never notified", () => {
-		expect(
-			needsNotification(null, new Date("2026-01-15T00:00:00Z"), 7),
-		).toBe(true);
+		expect(needsNotification(null, new Date("2026-01-15T00:00:00Z"), 7)).toBe(
+			true,
+		);
 	});
 
 	it("returns false within the dedup window", () => {
