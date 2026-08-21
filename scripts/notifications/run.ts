@@ -20,7 +20,10 @@ export async function runDailyNotifications(
 	for (const userDoc of usersSnapshot.docs) {
 		const settings = userDoc.data();
 		const notificationsEnabled = settings.notificationsEnabled === true;
-		if (!notificationsEnabled) continue;
+		if (!notificationsEnabled) {
+			console.log(`[${userDoc.id}] notifications disabled, skipping`);
+			continue;
+		}
 
 		const notifyTimezone =
 			typeof settings.notifyTimezone === "string"
@@ -30,7 +33,12 @@ export async function runDailyNotifications(
 			typeof settings.notifyHourLocal === "number"
 				? settings.notifyHourLocal
 				: 8;
-		if (!matchesLocalHour(now, notifyTimezone, notifyHourLocal)) continue;
+		if (!matchesLocalHour(now, notifyTimezone, notifyHourLocal)) {
+			console.log(
+				`[${userDoc.id}] current hour doesn't match notifyHourLocal=${notifyHourLocal} tz=${notifyTimezone}, skipping`,
+			);
+			continue;
+		}
 
 		const notifyDaysBeforeExpiry =
 			typeof settings.notifyDaysBeforeExpiry === "number"
@@ -59,7 +67,10 @@ export async function runDailyNotifications(
 			return needsNotification(lastNotifiedAt, now, DEDUP_DAYS);
 		});
 
-		if (dueItems.length === 0) continue;
+		if (dueItems.length === 0) {
+			console.log(`[${uid}] no due items, skipping`);
+			continue;
+		}
 
 		const { title, body } = buildDigestBody(
 			dueItems.map((itemDoc) => itemDoc.data().name as string),
@@ -72,6 +83,9 @@ export async function runDailyNotifications(
 			.collection("fcm_tokens")
 			.get();
 
+		console.log(
+			`[${uid}] ${dueItems.length} due item(s), sending to ${tokensSnapshot.docs.length} device(s)`,
+		);
 		for (const tokenDoc of tokensSnapshot.docs) {
 			await messaging.send({
 				token: tokenDoc.data().token as string,
@@ -84,6 +98,7 @@ export async function runDailyNotifications(
 			batch.update(itemDoc.ref, { last_notified_at: now });
 		}
 		await batch.commit();
+		console.log(`[${uid}] sent and marked last_notified_at`);
 	}
 }
 
