@@ -1,6 +1,11 @@
 import { Timestamp } from "firebase/firestore";
 import { describe, expect, it } from "vitest";
-import { parseItemDoc, parseItemHistoryDoc, toItemDoc } from "./schema";
+import {
+	parseItemDoc,
+	parseItemHistoryDoc,
+	safeParseItemDoc,
+	toItemDoc,
+} from "./schema";
 
 describe("parseItemDoc", () => {
 	it("parses a valid item document, converting Timestamps to Dates", () => {
@@ -39,6 +44,37 @@ describe("parseItemDoc", () => {
 		expect(result.source).toBe("manual");
 		expect(result.barcode).toBeNull();
 		expect(result.lastNotifiedAt).toBeNull();
+	});
+});
+
+describe("safeParseItemDoc", () => {
+	it("returns the parsed item for a valid document", () => {
+		const result = safeParseItemDoc("item1", {
+			name: "Whole Milk",
+			category: "foods",
+			quantity: 2,
+			expiring_date: Timestamp.fromDate(new Date("2026-09-01T23:59:59Z")),
+			duration: 7,
+			date_opened: null,
+			opened: false,
+			recurring: true,
+		});
+		expect(result).not.toBeNull();
+		expect(result?.name).toBe("Whole Milk");
+	});
+
+	it("returns null instead of throwing for a malformed document", () => {
+		const result = safeParseItemDoc("item1", {
+			name: "Legacy Item",
+			category: "foods",
+			quantity: "2",
+			expiring_date: "2026-09-01",
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+		});
+		expect(result).toBeNull();
 	});
 });
 

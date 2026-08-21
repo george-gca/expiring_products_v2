@@ -54,6 +54,20 @@ export function parseItemDoc(id: string, data: unknown): PantryItem {
 	};
 }
 
+// items is legacy v1 data this codebase has never validated before — a real
+// production doc could be malformed in a shape we don't control. Firestore's
+// onSnapshot dispatches its success callback via a bare setTimeout with no
+// try/catch, so a throw from parseItemDoc inside a snapshot handler bypasses
+// the error callback entirely and can wedge a listener's `loading` state at
+// `true` forever (same failure mode already fixed for item_history via
+// safeParseItemHistoryDoc). Callers that map over a whole snapshot
+// (usePantryItems) should use this safe variant and skip entries that fail
+// to parse rather than let one bad doc break the whole listener.
+export function safeParseItemDoc(id: string, data: unknown): PantryItem | null {
+	const result = itemDocSchema.safeParse(data);
+	return result.success ? parseItemDoc(id, data) : null;
+}
+
 export function toItemDoc(item: Omit<PantryItem, "id">) {
 	return {
 		name: item.name,

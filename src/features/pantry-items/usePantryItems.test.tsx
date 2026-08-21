@@ -44,4 +44,35 @@ describe("usePantryItems", () => {
 		expect(result.current.items).toHaveLength(1);
 		expect(result.current.items[0].name).toBe("Milk");
 	});
+
+	it("skips a malformed legacy item doc instead of wedging loading forever", async () => {
+		const itemsRef = collection(db, "users", uid, "items");
+		await addDoc(itemsRef, {
+			name: "Milk",
+			category: "foods",
+			quantity: 1,
+			expiring_date: Timestamp.fromDate(new Date("2026-09-01")),
+			duration: 7,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		await addDoc(itemsRef, {
+			name: "Legacy Item",
+			category: "foods",
+			quantity: "1",
+			expiring_date: "2026-09-01",
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+		});
+
+		const { result } = renderHook(() => usePantryItems(uid, "foods"));
+		await waitFor(() => expect(result.current.loading).toBe(false));
+		expect(result.current.items).toHaveLength(1);
+		expect(result.current.items[0].name).toBe("Milk");
+	});
 });
