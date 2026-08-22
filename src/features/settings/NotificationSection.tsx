@@ -2,11 +2,13 @@ import { Col, Form, InputNumber, message, Row, Switch } from "antd";
 import type { FocusEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { hasAnyFcmToken } from "../notifications/firestoreWrites";
 import {
 	registerForPush,
 	requestNotificationPermission,
 	unregisterFromPush,
 } from "../notifications/messaging";
+import { useFcmTokenRegistered } from "../notifications/useFcmTokenRegistered";
 import {
 	updateNotificationsEnabled,
 	updateNotifyDaysBeforeExpiry,
@@ -27,6 +29,7 @@ export function NotificationSection({
 }) {
 	const { t } = useTranslation();
 	const [permissionError, setPermissionError] = useState(false);
+	const { registered } = useFcmTokenRegistered(uid);
 
 	// Render-time resync pattern (see SettingsPane.tsx) — not a useEffect, to
 	// avoid react-hooks/set-state-in-effect and an extra commit.
@@ -49,7 +52,7 @@ export function NotificationSection({
 		if (!checked) {
 			try {
 				await unregisterFromPush(uid);
-				await updateNotificationsEnabled(uid, false);
+				await updateNotificationsEnabled(uid, await hasAnyFcmToken(uid));
 			} catch {
 				message.error("Something went wrong, please try again");
 			}
@@ -113,7 +116,7 @@ export function NotificationSection({
 		<>
 			<Form.Item label={t("settings.notificationsEnabled")}>
 				<Switch
-					checked={settings.notificationsEnabled}
+					checked={registered}
 					onChange={handleToggle}
 					aria-label={t("settings.notificationsEnabled")}
 				/>

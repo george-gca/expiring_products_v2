@@ -2,7 +2,11 @@ import { doc, getDoc, setDoc } from "firebase/firestore";
 import { afterEach, describe, expect, it } from "vitest";
 import { db } from "../../lib/firebase";
 import { clearFirestoreEmulator } from "../../test/emulator";
-import { deleteFcmToken, upsertFcmToken } from "./firestoreWrites";
+import {
+	deleteFcmToken,
+	hasAnyFcmToken,
+	upsertFcmToken,
+} from "./firestoreWrites";
 
 const uid = "test-user-fcm-writes-1";
 
@@ -41,5 +45,19 @@ describe("deleteFcmToken", () => {
 			doc(db, "users", uid, "fcm_tokens", "device-1"),
 		);
 		expect(snapshot.exists()).toBe(false);
+	});
+});
+
+describe("hasAnyFcmToken", () => {
+	it("returns false when the user has no registered devices", async () => {
+		expect(await hasAnyFcmToken(uid)).toBe(false);
+	});
+
+	it("returns true when at least one device is registered", async () => {
+		await setDoc(doc(db, "users", uid, "fcm_tokens", "device-1"), {
+			token: "token-abc",
+			updatedAt: new Date(),
+		});
+		expect(await hasAnyFcmToken(uid)).toBe(true);
 	});
 });

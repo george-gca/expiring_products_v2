@@ -1,7 +1,12 @@
 import "../../lib/i18n";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { doc, setDoc } from "firebase/firestore";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { db } from "../../lib/firebase";
+import { clearFirestoreEmulator } from "../../test/emulator";
+import { getDeviceId } from "../notifications/deviceId";
+import * as notificationsWritesModule from "../notifications/firestoreWrites";
 import * as messagingModule from "../notifications/messaging";
 import * as settingsWritesModule from "./firestoreWrites";
 import { NotificationSection } from "./NotificationSection";
@@ -17,8 +22,10 @@ const settings: Settings = {
 	notifyTimezone: "America/Sao_Paulo",
 };
 
-afterEach(() => {
+afterEach(async () => {
 	vi.restoreAllMocks();
+	localStorage.clear();
+	await clearFirestoreEmulator(import.meta.env.VITE_FIREBASE_PROJECT_ID);
 });
 
 describe("NotificationSection", () => {
@@ -36,6 +43,11 @@ describe("NotificationSection", () => {
 			.mockResolvedValue();
 
 		render(<NotificationSection uid="test-user-notif-1" settings={settings} />);
+		await waitFor(() =>
+			expect(
+				screen.getByRole("switch", { name: /notifica/i }),
+			).not.toBeChecked(),
+		);
 		await userEvent.click(screen.getByRole("switch", { name: /notifica/i }));
 
 		await waitFor(() =>
@@ -54,31 +66,73 @@ describe("NotificationSection", () => {
 			.mockResolvedValue();
 
 		render(<NotificationSection uid="test-user-notif-2" settings={settings} />);
+		await waitFor(() =>
+			expect(
+				screen.getByRole("switch", { name: /notifica/i }),
+			).not.toBeChecked(),
+		);
 		await userEvent.click(screen.getByRole("switch", { name: /notifica/i }));
 
 		expect(await screen.findByText(/permiss/i)).toBeInTheDocument();
 		expect(registerSpy).not.toHaveBeenCalled();
 	});
 
-	it("unregisters and disables notifications when toggled off", async () => {
+	it("unregisters this device and keeps the account enabled when another device is still registered", async () => {
+		const uid = "test-user-notif-3";
+		await setDoc(doc(db, "users", uid, "fcm_tokens", getDeviceId()), {
+			token: "token-this-device",
+			updatedAt: new Date(),
+		});
 		const unregisterSpy = vi
 			.spyOn(messagingModule, "unregisterFromPush")
 			.mockResolvedValue();
-		const disableSpy = vi
+		vi.spyOn(notificationsWritesModule, "hasAnyFcmToken").mockResolvedValue(
+			true,
+		);
+		const updateSpy = vi
 			.spyOn(settingsWritesModule, "updateNotificationsEnabled")
 			.mockResolvedValue();
 
 		render(
 			<NotificationSection
-				uid="test-user-notif-3"
+				uid={uid}
 				settings={{ ...settings, notificationsEnabled: true }}
 			/>,
 		);
+		await waitFor(() =>
+			expect(screen.getByRole("switch", { name: /notifica/i })).toBeChecked(),
+		);
 		await userEvent.click(screen.getByRole("switch", { name: /notifica/i }));
 
-		await waitFor(() =>
-			expect(unregisterSpy).toHaveBeenCalledWith("test-user-notif-3"),
+		await waitFor(() => expect(unregisterSpy).toHaveBeenCalledWith(uid));
+		expect(updateSpy).toHaveBeenCalledWith(uid, true);
+	});
+
+	it("disables the account when unregistering this device leaves no devices registered", async () => {
+		const uid = "test-user-notif-4";
+		await setDoc(doc(db, "users", uid, "fcm_tokens", getDeviceId()), {
+			token: "token-this-device",
+			updatedAt: new Date(),
+		});
+		vi.spyOn(messagingModule, "unregisterFromPush").mockResolvedValue();
+		vi.spyOn(notificationsWritesModule, "hasAnyFcmToken").mockResolvedValue(
+			false,
 		);
-		expect(disableSpy).toHaveBeenCalledWith("test-user-notif-3", false);
+		const updateSpy = vi
+			.spyOn(settingsWritesModule, "updateNotificationsEnabled")
+			.mockResolvedValue();
+
+		render(
+			<NotificationSection
+				uid={uid}
+				settings={{ ...settings, notificationsEnabled: true }}
+			/>,
+		);
+		await waitFor(() =>
+			expect(screen.getByRole("switch", { name: /notifica/i })).toBeChecked(),
+		);
+		await userEvent.click(screen.getByRole("switch", { name: /notifica/i }));
+
+		await waitFor(() => expect(updateSpy).toHaveBeenCalledWith(uid, false));
 	});
 });

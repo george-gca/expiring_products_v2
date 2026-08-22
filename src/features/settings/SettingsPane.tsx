@@ -111,7 +111,7 @@ export function SettingsPane({
 	};
 
 	return (
-		<Space direction="vertical" size="large" style={{ width: "100%" }}>
+		<Space orientation="vertical" size="large" style={{ width: "100%" }}>
 			<Card title={t("settings.sectionPreferences")}>
 				<Form layout="vertical">
 					<Form.Item label={t("settings.language")}>
