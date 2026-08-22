@@ -135,6 +135,30 @@ describe("BarcodeScanner", () => {
 		);
 	});
 
+	it("shows the scan-area guide once the camera is streaming", async () => {
+		const getUserMedia = vi.fn().mockResolvedValue({
+			getTracks: () => [{ stop: vi.fn() }],
+		});
+		Object.defineProperty(navigator, "mediaDevices", {
+			value: { getUserMedia },
+			configurable: true,
+		});
+		class FakeBarcodeDetector {
+			detect() {
+				return Promise.resolve([]);
+			}
+		}
+		vi.stubGlobal("BarcodeDetector", FakeBarcodeDetector);
+
+		const { container } = render(<BarcodeScanner onDetect={vi.fn()} />);
+
+		await waitFor(() =>
+			expect(
+				container.querySelector('[data-testid="scan-guide"]'),
+			).toBeTruthy(),
+		);
+	});
+
 	it("shows an inline error, without bouncing back to the caller, when the camera is unavailable", async () => {
 		const getUserMedia = vi.fn().mockRejectedValue(new Error("denied"));
 		Object.defineProperty(navigator, "mediaDevices", {

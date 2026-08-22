@@ -98,15 +98,56 @@ export function BarcodeScanner({
 			{status === "loading" && (
 				<Spin style={{ display: "block", margin: "24px auto" }} />
 			)}
-			<video
-				ref={videoRef}
-				autoPlay
-				muted
+			<div
 				style={{
-					width: "100%",
+					position: "relative",
 					display: status === "streaming" ? "block" : "none",
 				}}
-			/>
+			>
+				<video
+					ref={videoRef}
+					autoPlay
+					muted
+					style={{ width: "100%", display: "block" }}
+				/>
+				{/* Purely a visual aim guide — detection still scans the full
+				    frame regardless of where the barcode sits relative to it. */}
+				<div
+					data-testid="scan-guide"
+					aria-hidden="true"
+					style={{
+						position: "absolute",
+						inset: 0,
+						display: "flex",
+						alignItems: "center",
+						justifyContent: "center",
+						pointerEvents: "none",
+					}}
+				>
+					<div
+						style={{
+							position: "relative",
+							width: "80%",
+							height: "30%",
+							border: "2px solid rgba(255, 255, 255, 0.8)",
+							borderRadius: 4,
+							boxShadow: "0 0 0 9999px rgba(0, 0, 0, 0.25)",
+						}}
+					>
+						<div
+							style={{
+								position: "absolute",
+								left: 0,
+								right: 0,
+								top: "50%",
+								height: 2,
+								background: "red",
+								transform: "translateY(-50%)",
+							}}
+						/>
+					</div>
+				</div>
+			</div>
 		</>
 	);
 }
