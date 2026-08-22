@@ -1,4 +1,9 @@
 {
+  "app": {
+    "updateAvailable": "New version available",
+    "updateAvailableDescription": "Refresh to get the latest version of the app.",
+    "refresh": "Refresh"
+  },
   "auth": { "title": "Expiring Products", "signIn": "Sign In", "signUp": "Sign Up", "email": "Email", "password": "Password" },
   "items": {
     "empty": "No items here.",

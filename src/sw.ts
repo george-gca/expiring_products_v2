@@ -12,9 +12,13 @@ import { getMessaging, onBackgroundMessage } from "firebase/messaging/sw";
 import { clientsClaim } from "workbox-core";
 import { cleanupOutdatedCaches, precacheAndRoute } from "workbox-precaching";
 
-// injectManifest (unlike generateSW) doesn't auto-wire registerType:
-// 'autoUpdate' behavior — these two calls replicate it manually.
-self.skipWaiting();
+// A new service worker installs and waits rather than activating
+// immediately — the client (src/Root.tsx's useRegisterSW) only sends this
+// message once the user clicks "refresh" on the update prompt, so an
+// already-open tab is never swapped out from under it silently.
+self.addEventListener("message", (event) => {
+	if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
 clientsClaim();
 
 cleanupOutdatedCaches();

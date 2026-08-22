@@ -7,7 +7,11 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // Registered manually via the `virtual:pwa-register/react` hook
+      // (see src/Root.tsx) instead of the plugin's auto-injected script, so
+      // the app can show a "new version available" prompt rather than
+      // silently swapping the service worker underneath an open tab.
+      injectRegister: false,
       strategies: 'injectManifest',
       srcDir: 'src',
       filename: 'sw.ts',
