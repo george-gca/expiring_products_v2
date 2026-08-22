@@ -12,6 +12,7 @@ import type { FocusEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import i18n from "../../lib/i18n";
+import { CategorySection } from "../categories/CategorySection";
 import { BackupSection } from "./BackupSection";
 import {
 	updateHideDistantThresholdMonths,
@@ -161,6 +162,9 @@ export function SettingsPane({
 			</Card>
 			<Card title={t("settings.backupTitle")}>
 				<BackupSection uid={uid} />
+			</Card>
+			<Card title={t("settings.sectionCategories")}>
+				<CategorySection uid={uid} />
 			</Card>
 		</Space>
 	);

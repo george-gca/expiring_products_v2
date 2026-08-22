@@ -1,8 +1,9 @@
 import "../../lib/i18n";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../lib/i18n";
+import { clearFirestoreEmulator } from "../../test/emulator";
 import * as settingsWritesModule from "./firestoreWrites";
 import { SettingsPane } from "./SettingsPane";
 import type { Settings } from "./schema";
@@ -16,6 +17,10 @@ const settings: Settings = {
 	notifyHourLocal: 8,
 	notifyTimezone: "America/Sao_Paulo",
 };
+
+afterEach(() =>
+	clearFirestoreEmulator(import.meta.env.VITE_FIREBASE_PROJECT_ID),
+);
 
 describe("SettingsPane language", () => {
 	it("writes the new language and calls i18n.changeLanguage when changed", async () => {
@@ -56,5 +61,14 @@ describe("SettingsPane hide-distant threshold", () => {
 		await userEvent.tab(); // blur
 
 		expect(updateSpy).toHaveBeenCalledWith("test-user-settings-ui-2", 6);
+	});
+});
+
+describe("SettingsPane categories", () => {
+	it("renders the Categories section with the default categories", async () => {
+		render(<SettingsPane uid="test-user-settings-ui-3" settings={settings} />);
+
+		await screen.findByText("Foods");
+		await screen.findByText("Medicines");
 	});
 });

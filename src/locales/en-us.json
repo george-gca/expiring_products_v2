@@ -49,6 +49,7 @@
     "notifyHourLocal": "Notification time (local hour)",
     "notificationsPermissionDenied": "Notification permission denied. You can enable it in your browser settings.",
     "backupTitle": "Backup",
+    "sectionCategories": "Categories",
     "exportBackup": "Export backup",
     "importBackup": "Import backup",
     "invalidBackupFile": "This doesn't look like a valid backup file.",
