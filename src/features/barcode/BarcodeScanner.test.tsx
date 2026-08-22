@@ -28,8 +28,7 @@ describe("BarcodeScanner", () => {
 		vi.stubGlobal("BarcodeDetector", FakeBarcodeDetector);
 
 		const onDetect = vi.fn();
-		const onCancel = vi.fn();
-		render(<BarcodeScanner onDetect={onDetect} onCancel={onCancel} />);
+		render(<BarcodeScanner onDetect={onDetect} />);
 
 		await waitFor(() => expect(onDetect).toHaveBeenCalledWith("0123456789012"));
 		expect(getUserMedia).toHaveBeenCalledWith({
@@ -37,7 +36,21 @@ describe("BarcodeScanner", () => {
 		});
 	});
 
-	it("shows an inline error and calls onCancel when the camera is unavailable", async () => {
+	it("shows a loading indicator while the camera permission prompt is pending", async () => {
+		const getUserMedia = vi.fn().mockReturnValue(new Promise(() => {})); // never resolves
+		Object.defineProperty(navigator, "mediaDevices", {
+			value: { getUserMedia },
+			configurable: true,
+		});
+
+		const { container } = render(<BarcodeScanner onDetect={vi.fn()} />);
+
+		await waitFor(() =>
+			expect(container.querySelector(".ant-spin-spinning")).toBeTruthy(),
+		);
+	});
+
+	it("shows an inline error, without bouncing back to the caller, when the camera is unavailable", async () => {
 		const getUserMedia = vi.fn().mockRejectedValue(new Error("denied"));
 		Object.defineProperty(navigator, "mediaDevices", {
 			value: { getUserMedia },
@@ -45,13 +58,9 @@ describe("BarcodeScanner", () => {
 		});
 
 		const onDetect = vi.fn();
-		const onCancel = vi.fn();
-		const { findByText } = render(
-			<BarcodeScanner onDetect={onDetect} onCancel={onCancel} />,
-		);
+		const { findByText } = render(<BarcodeScanner onDetect={onDetect} />);
 
 		await findByText(/camera unavailable/i);
-		expect(onCancel).toHaveBeenCalled();
 		expect(onDetect).not.toHaveBeenCalled();
 	});
 });

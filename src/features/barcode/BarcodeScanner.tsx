@@ -1,3 +1,4 @@
+import { Spin } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -5,27 +6,25 @@ const BARCODE_FORMATS: BarcodeFormat[] = ["ean_13", "ean_8", "upc_a", "upc_e"];
 
 export function BarcodeScanner({
 	onDetect,
-	onCancel,
 }: {
 	onDetect: (barcode: string) => void;
-	onCancel: () => void;
 }) {
 	const { t } = useTranslation();
 	const videoRef = useRef<HTMLVideoElement>(null);
-	const [error, setError] = useState(false);
+	const [status, setStatus] = useState<"loading" | "streaming" | "error">(
+		"loading",
+	);
 
-	// Latest callbacks are read via refs rather than listed as effect deps:
+	// Latest callback is read via a ref rather than listed as an effect dep:
 	// the camera-acquisition effect below must run exactly once per mount
 	// (acquire the camera once, release it once) regardless of how many
-	// times the parent re-renders with a new inline onDetect/onCancel
-	// function identity. The refs are synced in their own effect (not
-	// written during render) since eslint-plugin-react-hooks's `refs` rule
-	// forbids writing ref.current outside an effect/event handler.
+	// times the parent re-renders with a new inline onDetect function
+	// identity. The ref is synced in its own effect (not written during
+	// render) since eslint-plugin-react-hooks's `refs` rule forbids writing
+	// ref.current outside an effect/event handler.
 	const onDetectRef = useRef(onDetect);
-	const onCancelRef = useRef(onCancel);
 	useEffect(() => {
 		onDetectRef.current = onDetect;
-		onCancelRef.current = onCancel;
 	});
 
 	useEffect(() => {
@@ -44,6 +43,7 @@ export function BarcodeScanner({
 				if (videoRef.current) {
 					videoRef.current.srcObject = mediaStream;
 				}
+				setStatus("streaming");
 				const detector = new BarcodeDetector({ formats: BARCODE_FORMATS });
 				const loop = async () => {
 					if (cancelled || !videoRef.current) return;
@@ -57,8 +57,7 @@ export function BarcodeScanner({
 				loop();
 			})
 			.catch(() => {
-				setError(true);
-				onCancelRef.current();
+				if (!cancelled) setStatus("error");
 			});
 
 		return () => {
@@ -68,9 +67,24 @@ export function BarcodeScanner({
 		};
 	}, []);
 
-	if (error) {
+	if (status === "error") {
 		return <div>{t("items.cameraUnavailable")}</div>;
 	}
 
-	return <video ref={videoRef} autoPlay muted style={{ width: "100%" }} />;
+	return (
+		<>
+			{status === "loading" && (
+				<Spin style={{ display: "block", margin: "24px auto" }} />
+			)}
+			<video
+				ref={videoRef}
+				autoPlay
+				muted
+				style={{
+					width: "100%",
+					display: status === "streaming" ? "block" : "none",
+				}}
+			/>
+		</>
+	);
 }

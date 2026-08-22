@@ -136,10 +136,7 @@ export function AddItemModal({
 		>
 			{scannerOpen ? (
 				<>
-					<BarcodeScanner
-						onDetect={handleDetect}
-						onCancel={() => setScannerOpen(false)}
-					/>
+					<BarcodeScanner onDetect={handleDetect} />
 					<Button
 						onClick={() => setScannerOpen(false)}
 						style={{ marginTop: 8 }}
