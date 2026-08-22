@@ -1,4 +1,4 @@
-import { Form, InputNumber, message, Switch } from "antd";
+import { Col, Form, InputNumber, message, Row, Switch } from "antd";
 import type { FocusEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -121,33 +121,39 @@ export function NotificationSection({
 					<div>{t("settings.notificationsPermissionDenied")}</div>
 				)}
 			</Form.Item>
-			<Form.Item label={t("settings.notifyDaysBeforeExpiry")}>
-				<InputNumber
-					min={MIN_NOTIFY_DAYS_BEFORE_EXPIRY}
-					precision={0}
-					value={daysValue}
-					onChange={(newValue) =>
-						setDaysValue(newValue ?? MIN_NOTIFY_DAYS_BEFORE_EXPIRY)
-					}
-					onBlur={handleDaysBlur}
-					aria-label={t("settings.notifyDaysBeforeExpiry")}
-					style={{ width: "100%" }}
-				/>
-			</Form.Item>
-			<Form.Item label={t("settings.notifyHourLocal")}>
-				<InputNumber
-					min={MIN_NOTIFY_HOUR_LOCAL}
-					max={MAX_NOTIFY_HOUR_LOCAL}
-					precision={0}
-					value={hourValue}
-					onChange={(newValue) =>
-						setHourValue(newValue ?? MIN_NOTIFY_HOUR_LOCAL)
-					}
-					onBlur={handleHourBlur}
-					aria-label={t("settings.notifyHourLocal")}
-					style={{ width: "100%" }}
-				/>
-			</Form.Item>
+			<Row gutter={16}>
+				<Col xs={24} sm={12}>
+					<Form.Item label={t("settings.notifyDaysBeforeExpiry")}>
+						<InputNumber
+							min={MIN_NOTIFY_DAYS_BEFORE_EXPIRY}
+							precision={0}
+							value={daysValue}
+							onChange={(newValue) =>
+								setDaysValue(newValue ?? MIN_NOTIFY_DAYS_BEFORE_EXPIRY)
+							}
+							onBlur={handleDaysBlur}
+							aria-label={t("settings.notifyDaysBeforeExpiry")}
+							style={{ width: "100%" }}
+						/>
+					</Form.Item>
+				</Col>
+				<Col xs={24} sm={12}>
+					<Form.Item label={t("settings.notifyHourLocal")}>
+						<InputNumber
+							min={MIN_NOTIFY_HOUR_LOCAL}
+							max={MAX_NOTIFY_HOUR_LOCAL}
+							precision={0}
+							value={hourValue}
+							onChange={(newValue) =>
+								setHourValue(newValue ?? MIN_NOTIFY_HOUR_LOCAL)
+							}
+							onBlur={handleHourBlur}
+							aria-label={t("settings.notifyHourLocal")}
+							style={{ width: "100%" }}
+						/>
+					</Form.Item>
+				</Col>
+			</Row>
 		</>
 	);
 }

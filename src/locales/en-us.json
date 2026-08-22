@@ -20,6 +20,8 @@
     "cameraUnavailable": "Camera unavailable. Enter the item manually below."
   },
   "settings": {
+    "sectionPreferences": "Preferences",
+    "sectionNotifications": "Notifications",
     "lowStockThreshold": "Low stock warning threshold",
     "language": "Language",
     "languagePtBr": "Português",

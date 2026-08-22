@@ -1,5 +1,5 @@
 import { DownloadOutlined, UploadOutlined } from "@ant-design/icons";
-import { Button, Form, Input, Modal, message } from "antd";
+import { Button, Input, Modal, message, Space } from "antd";
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -89,14 +89,13 @@ export function BackupSection({ uid }: { uid: string }) {
 
 	return (
 		<>
-			<Form.Item label={t("settings.backupTitle")}>
+			<Space>
 				<Button icon={<DownloadOutlined />} onClick={handleExport}>
 					{t("settings.exportBackup")}
 				</Button>
 				<Button
 					icon={<UploadOutlined />}
 					onClick={() => fileInputRef.current?.click()}
-					style={{ marginLeft: 8 }}
 				>
 					{t("settings.importBackup")}
 				</Button>
@@ -108,7 +107,7 @@ export function BackupSection({ uid }: { uid: string }) {
 					style={{ display: "none" }}
 					onChange={handleFileChange}
 				/>
-			</Form.Item>
+			</Space>
 			<Modal
 				title={t("settings.importConfirmTitle")}
 				open={importModalOpen}

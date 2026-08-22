@@ -1,4 +1,13 @@
-import { Form, InputNumber, message, Select } from "antd";
+import {
+	Card,
+	Col,
+	Form,
+	InputNumber,
+	message,
+	Row,
+	Select,
+	Space,
+} from "antd";
 import type { FocusEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -102,41 +111,57 @@ export function SettingsPane({
 	};
 
 	return (
-		<Form layout="vertical">
-			<Form.Item label={t("settings.language")}>
-				<Select
-					value={settings.language}
-					onChange={handleLanguageChange}
-					options={[
-						{ value: "pt-br", label: t("settings.languagePtBr") },
-						{ value: "en-us", label: t("settings.languageEnUs") },
-					]}
-					style={{ width: "100%" }}
-				/>
-			</Form.Item>
-			<Form.Item label={t("settings.lowStockThreshold")}>
-				<InputNumber
-					min={MIN_LOW_STOCK_THRESHOLD}
-					precision={0}
-					value={value}
-					onChange={(newValue) => setValue(newValue ?? 1)}
-					onBlur={handleBlur}
-					style={{ width: "100%" }}
-				/>
-			</Form.Item>
-			<Form.Item label={t("settings.hideDistantThresholdMonths")}>
-				<InputNumber
-					min={MIN_HIDE_DISTANT_THRESHOLD_MONTHS}
-					precision={0}
-					value={hideDistantValue}
-					onChange={(newValue) => setHideDistantValue(newValue ?? 1)}
-					onBlur={handleHideDistantBlur}
-					aria-label={t("settings.hideDistantThresholdMonths")}
-					style={{ width: "100%" }}
-				/>
-			</Form.Item>
-			<NotificationSection uid={uid} settings={settings} />
-			<BackupSection uid={uid} />
-		</Form>
+		<Space direction="vertical" size="large" style={{ width: "100%" }}>
+			<Card title={t("settings.sectionPreferences")}>
+				<Form layout="vertical">
+					<Form.Item label={t("settings.language")}>
+						<Select
+							value={settings.language}
+							onChange={handleLanguageChange}
+							options={[
+								{ value: "pt-br", label: t("settings.languagePtBr") },
+								{ value: "en-us", label: t("settings.languageEnUs") },
+							]}
+							style={{ width: 280, maxWidth: "100%" }}
+						/>
+					</Form.Item>
+					<Row gutter={16}>
+						<Col xs={24} sm={12}>
+							<Form.Item label={t("settings.lowStockThreshold")}>
+								<InputNumber
+									min={MIN_LOW_STOCK_THRESHOLD}
+									precision={0}
+									value={value}
+									onChange={(newValue) => setValue(newValue ?? 1)}
+									onBlur={handleBlur}
+									style={{ width: "100%" }}
+								/>
+							</Form.Item>
+						</Col>
+						<Col xs={24} sm={12}>
+							<Form.Item label={t("settings.hideDistantThresholdMonths")}>
+								<InputNumber
+									min={MIN_HIDE_DISTANT_THRESHOLD_MONTHS}
+									precision={0}
+									value={hideDistantValue}
+									onChange={(newValue) => setHideDistantValue(newValue ?? 1)}
+									onBlur={handleHideDistantBlur}
+									aria-label={t("settings.hideDistantThresholdMonths")}
+									style={{ width: "100%" }}
+								/>
+							</Form.Item>
+						</Col>
+					</Row>
+				</Form>
+			</Card>
+			<Card title={t("settings.sectionNotifications")}>
+				<Form layout="vertical">
+					<NotificationSection uid={uid} settings={settings} />
+				</Form>
+			</Card>
+			<Card title={t("settings.backupTitle")}>
+				<BackupSection uid={uid} />
+			</Card>
+		</Space>
 	);
 }

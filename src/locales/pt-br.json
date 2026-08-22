@@ -20,6 +20,8 @@
     "cameraUnavailable": "Câmera indisponível. Preencha os campos manualmente abaixo."
   },
   "settings": {
+    "sectionPreferences": "Preferências",
+    "sectionNotifications": "Notificações",
     "lowStockThreshold": "Aviso de estoque baixo",
     "language": "Idioma",
     "languagePtBr": "Português",
