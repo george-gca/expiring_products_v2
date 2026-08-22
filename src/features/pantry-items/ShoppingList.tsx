@@ -1,5 +1,5 @@
 import { EyeOutlined, ShoppingCartOutlined } from "@ant-design/icons";
-import { Button, Empty, Flex, Listy, Typography } from "antd";
+import { Button, Empty, Flex, Listy, Typography, theme } from "antd";
 import { useTranslation } from "react-i18next";
 import type { Category } from "../categories/schema";
 import type { PantryItem } from "./schema";
@@ -20,6 +20,7 @@ export function ShoppingList({
 	onAddItem: (name: string) => void;
 }) {
 	const { t } = useTranslation();
+	const { token } = theme.useToken();
 	const { shoppingList, loading } = useShoppingList(
 		uid,
 		category.key,
@@ -44,7 +45,10 @@ export function ShoppingList({
 			items={sorted}
 			rowKey="name"
 			styles={{
-				item: { padding: "12px 0", borderBottom: "1px solid #f0f0f0" },
+				item: {
+					padding: "12px 0",
+					borderBottom: `1px solid ${token.colorSplit}`,
+				},
 			}}
 			itemRender={(entry) => (
 				<Flex justify="space-between" align="center">

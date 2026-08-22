@@ -1,5 +1,5 @@
 import { PlusOutlined } from "@ant-design/icons";
-import { Empty, FloatButton, Listy, Switch } from "antd";
+import { Empty, FloatButton, Listy, Switch, theme } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Category } from "../categories/schema";
@@ -24,6 +24,7 @@ export function ItemList({
 	hideDistantThresholdMonths: number;
 }) {
 	const { t } = useTranslation();
+	const { token } = theme.useToken();
 	const { items, loading } = usePantryItems(uid, category.key);
 	const [addOpen, setAddOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<PantryItem | null>(null);
@@ -86,7 +87,10 @@ export function ItemList({
 					items={sorted}
 					rowKey="id"
 					styles={{
-						item: { padding: "12px 0", borderBottom: "1px solid #f0f0f0" },
+						item: {
+							padding: "12px 0",
+							borderBottom: `1px solid ${token.colorSplit}`,
+						},
 					}}
 					itemRender={(item) => (
 						<ItemListItem item={item} onClick={() => setEditingItem(item)} />
