@@ -21,10 +21,10 @@ so no data migration was needed. Live at
   marked as recurring purchases that have dropped below your configured
   threshold.
 - **Barcode scanning** — camera-based scan (with a visual aim guide) looks
-  up the product via Open Food Facts, or falls back to manual entry;
-  either way, the barcode gets remembered against that item so the next
-  scan of it auto-fills instantly, building a household-specific barcode
-  database over time.
+  up the product via Open Food Facts, falling back to Open Products Facts
+  for non-food items, or to manual entry; either way, the barcode gets
+  remembered against that item so the next scan of it auto-fills
+  instantly, building a household-specific barcode database over time.
 - **Push notifications** — a daily digest of what's expiring soon, with a
   configurable time and lead time, registered per device.
 - **Backup & restore** — export your whole pantry to a JSON file, import it
@@ -57,7 +57,7 @@ so no data migration was needed. Live at
 | **vite-plugin-pwa + Workbox** | installable PWA, offline app-shell precaching, in-app "new version available" prompt |
 | **Firebase Cloud Messaging** | push notifications, registered per device |
 | **emoji-picker-react** | category icon picker, configured to render native OS emoji glyphs (no image CDN calls, works offline) |
-| **Open Food Facts API** | barcode → product-name lookup, food-only coverage |
+| **Open Food Facts / Open Products Facts APIs** | barcode → product-name lookup, food and general non-food coverage |
 | **Vitest + Testing Library + Playwright** | unit/integration tests run against the real Firebase Local Emulator Suite (not mocks); Playwright covers end-to-end flows |
 | **Biome + a thin ESLint layer** | formatting/linting; ESLint only for the React-specific rules Biome doesn't cover |
 

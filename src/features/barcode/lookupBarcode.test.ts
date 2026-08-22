@@ -90,4 +90,63 @@ describe("lookupBarcode", () => {
 		const result = await lookupBarcode(uid, "0000000000001", "foods");
 		expect(result).toBeNull();
 	});
+
+	it("falls back to Open Products Facts on an Open Food Facts miss, and writes the cache", async () => {
+		server.use(
+			http.get(
+				"https://world.openfoodfacts.org/api/v2/product/0123456789013.json",
+				() => HttpResponse.json({ status: 0 }, { status: 404 }),
+			),
+			http.get(
+				"https://world.openproductsfacts.org/api/v2/product/0123456789013.json",
+				() => HttpResponse.json({ product: { product_name: "Hand Soap" } }),
+			),
+		);
+
+		const result = await lookupBarcode(uid, "0123456789013", "medicines");
+		expect(result).toEqual({ name: "Hand Soap", suggestedDuration: null });
+
+		const cached = await getDoc(
+			doc(db, "users", uid, "barcode_products", "0123456789013"),
+		);
+		expect(cached.data()?.name).toBe("Hand Soap");
+		expect(cached.data()?.source).toBe("openproductsfacts");
+	});
+
+	it("falls back to Open Products Facts when the Open Food Facts request fails outright", async () => {
+		server.use(
+			http.get(
+				"https://world.openfoodfacts.org/api/v2/product/0123456789014.json",
+				() => HttpResponse.error(),
+			),
+			http.get(
+				"https://world.openproductsfacts.org/api/v2/product/0123456789014.json",
+				() => HttpResponse.json({ product: { product_name: "Toothpaste" } }),
+			),
+		);
+
+		const result = await lookupBarcode(uid, "0123456789014", "medicines");
+		expect(result).toEqual({ name: "Toothpaste", suggestedDuration: null });
+	});
+
+	it("returns null and writes nothing when both sources miss", async () => {
+		server.use(
+			http.get(
+				"https://world.openfoodfacts.org/api/v2/product/0000000000002.json",
+				() => HttpResponse.json({ status: 0 }, { status: 404 }),
+			),
+			http.get(
+				"https://world.openproductsfacts.org/api/v2/product/0000000000002.json",
+				() => HttpResponse.json({ status: 0 }, { status: 404 }),
+			),
+		);
+
+		const result = await lookupBarcode(uid, "0000000000002", "medicines");
+		expect(result).toBeNull();
+
+		const cached = await getDoc(
+			doc(db, "users", uid, "barcode_products", "0000000000002"),
+		);
+		expect(cached.exists()).toBe(false);
+	});
 });
