@@ -51,6 +51,23 @@
   }
 }
 
+/* Pushes the Settings tab to the far right, visually separating it from
+   the category tabs it doesn't share importance with. Targeted by its
+   rc-tabs data-node-key (set from CategoryTabs.tsx's items[].key="settings")
+   rather than a positional selector like :last-child, since AntD's
+   ink-bar div is itself a trailing sibling of the tab nodes.
+   .ant-tabs-nav-list shrink-wraps its content by default (it needs to,
+   to support horizontal scrolling when tabs overflow) — stretching it to
+   fill .ant-tabs-nav-wrap is what gives the auto margin below any free
+   space to actually push into. */
+.category-tabs .ant-tabs-nav-list {
+  width: 100%;
+}
+
+.category-tabs .ant-tabs-tab[data-node-key="settings"] {
+  margin-inline-start: auto;
+}
+
 #root {
   width: var(--content-width);
   max-width: 100%;

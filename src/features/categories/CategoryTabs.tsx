@@ -21,5 +21,5 @@ export function CategoryTabs({
 		})),
 		{ key: "settings", label: "⚙️", children: settingsPane },
 	];
-	return <Tabs items={items} />;
+	return <Tabs className="category-tabs" items={items} />;
 }
