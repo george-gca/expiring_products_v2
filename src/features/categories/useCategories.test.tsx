@@ -31,4 +31,42 @@ describe("useCategories", () => {
 		expect(result.current.categories).toHaveLength(1);
 		expect(result.current.categories[0].key).toBe("freezer");
 	});
+
+	it("excludes archived categories from the returned list", async () => {
+		await addDoc(collection(db, "users", uid, "categories"), {
+			key: "foods",
+			name: "Foods",
+			emoji: "🍎",
+			order: 0,
+			archived: false,
+		});
+		await addDoc(collection(db, "users", uid, "categories"), {
+			key: "old-category",
+			name: "Old Category",
+			emoji: "🗑️",
+			order: 1,
+			archived: true,
+		});
+
+		const { result } = renderHook(() => useCategories(uid));
+		await waitFor(() => expect(result.current.loading).toBe(false));
+
+		expect(result.current.categories).toHaveLength(1);
+		expect(result.current.categories[0].key).toBe("foods");
+	});
+
+	it("still includes a category doc that predates the archived field", async () => {
+		await addDoc(collection(db, "users", uid, "categories"), {
+			key: "foods",
+			name: "Foods",
+			emoji: "🍎",
+			order: 0,
+		});
+
+		const { result } = renderHook(() => useCategories(uid));
+		await waitFor(() => expect(result.current.loading).toBe(false));
+
+		expect(result.current.categories).toHaveLength(1);
+		expect(result.current.categories[0].archived).toBe(false);
+	});
 });

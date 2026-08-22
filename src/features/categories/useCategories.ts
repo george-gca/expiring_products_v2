@@ -47,7 +47,9 @@ export function useCategories(uid: string): {
 					categoriesQuery,
 					(snapshot) => {
 						setCategories(
-							snapshot.docs.map((d) => parseCategoryDoc(d.id, d.data())),
+							snapshot.docs
+								.map((d) => parseCategoryDoc(d.id, d.data()))
+								.filter((category) => !category.archived),
 						);
 						setLoading(false);
 					},
