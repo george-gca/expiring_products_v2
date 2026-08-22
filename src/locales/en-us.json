@@ -7,6 +7,7 @@
   "auth": { "title": "Expiring Products", "signIn": "Sign In", "signUp": "Sign Up", "email": "Email", "password": "Password" },
   "items": {
     "empty": "No items here.",
+    "barcode": "Barcode",
     "shoppingListEmpty": "Nothing to shop for.",
     "shoppingMode": "Shopping mode",
     "addTitle": "Add Item",

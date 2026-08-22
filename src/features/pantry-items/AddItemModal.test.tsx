@@ -2,9 +2,11 @@ import "../../lib/i18n";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import * as barcodeWritesModule from "../barcode/firestoreWrites";
 import * as lookupBarcodeModule from "../barcode/lookupBarcode";
 import type { Category } from "../categories/schema";
 import { AddItemModal } from "./AddItemModal";
+import * as itemWritesModule from "./firestoreWrites";
 
 vi.mock("../barcode/BarcodeScanner", () => ({
 	BarcodeScanner: ({ onDetect }: { onDetect: (barcode: string) => void }) => (
@@ -100,6 +102,9 @@ describe("AddItemModal barcode scanning", () => {
 		await waitFor(() =>
 			expect(screen.getByLabelText(/name/i)).toHaveValue("Whole Milk"),
 		);
+		expect(screen.getByRole("textbox", { name: /barcode/i })).toHaveValue(
+			"0123456789012",
+		);
 	});
 
 	it("returns to the form view without looking anything up when scanning is cancelled", async () => {
@@ -121,5 +126,92 @@ describe("AddItemModal barcode scanning", () => {
 
 		expect(screen.getByLabelText(/name/i)).toBeInTheDocument();
 		expect(lookupSpy).not.toHaveBeenCalled();
+	});
+});
+
+describe("AddItemModal manual barcode entry", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it("saves a manually typed barcode with the item and caches it for future lookups", async () => {
+		const addItemSpy = vi
+			.spyOn(itemWritesModule, "addItem")
+			.mockResolvedValue(undefined);
+		const upsertSpy = vi
+			.spyOn(barcodeWritesModule, "upsertBarcodeProduct")
+			.mockResolvedValue(undefined);
+		const onClose = vi.fn();
+
+		render(
+			<AddItemModal
+				uid="test-user-manual-barcode-1"
+				category={category}
+				open
+				onClose={onClose}
+			/>,
+		);
+
+		await userEvent.type(screen.getByLabelText(/name/i), "Home-made Jam");
+		await userEvent.type(
+			screen.getByRole("textbox", { name: /barcode/i }),
+			"9998887776665",
+		);
+		await userEvent.type(screen.getByLabelText(/expiring date/i), "2027-01-01");
+		await userEvent.keyboard("{Enter}");
+
+		await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+		await waitFor(() => expect(addItemSpy).toHaveBeenCalled());
+		expect(addItemSpy).toHaveBeenCalledWith(
+			"test-user-manual-barcode-1",
+			expect.objectContaining({
+				name: "Home-made Jam",
+				barcode: "9998887776665",
+				source: "barcode",
+			}),
+		);
+		expect(upsertSpy).toHaveBeenCalledWith(
+			"test-user-manual-barcode-1",
+			"9998887776665",
+			{
+				name: "Home-made Jam",
+				category: "foods",
+				suggestedDuration: null,
+				source: "manual",
+			},
+		);
+		expect(onClose).toHaveBeenCalled();
+	});
+
+	it("saves with no barcode and skips caching when the field is left blank", async () => {
+		const addItemSpy = vi
+			.spyOn(itemWritesModule, "addItem")
+			.mockResolvedValue(undefined);
+		const upsertSpy = vi
+			.spyOn(barcodeWritesModule, "upsertBarcodeProduct")
+			.mockResolvedValue(undefined);
+
+		render(
+			<AddItemModal
+				uid="test-user-manual-barcode-2"
+				category={category}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		await userEvent.type(screen.getByLabelText(/name/i), "Plain Item");
+		await userEvent.type(screen.getByLabelText(/expiring date/i), "2027-01-01");
+		await userEvent.keyboard("{Enter}");
+
+		await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+		await waitFor(() => expect(addItemSpy).toHaveBeenCalled());
+		expect(addItemSpy).toHaveBeenCalledWith(
+			"test-user-manual-barcode-2",
+			expect.objectContaining({ barcode: null, source: "manual" }),
+		);
+		expect(upsertSpy).not.toHaveBeenCalled();
 	});
 });

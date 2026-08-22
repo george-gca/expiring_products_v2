@@ -20,6 +20,7 @@ import { addItem } from "./firestoreWrites";
 
 interface AddItemFormValues {
 	name: string;
+	barcode?: string;
 	quantity: number;
 	expiringDate: Dayjs;
 	duration?: number;
@@ -48,7 +49,6 @@ export function AddItemModal({
 	const { t } = useTranslation();
 	const [form] = Form.useForm<AddItemFormValues>();
 	const [scannerOpen, setScannerOpen] = useState(false);
-	const [scannedBarcode, setScannedBarcode] = useState<string | null>(null);
 
 	// Re-derived during render (rather than in the useEffect below, which
 	// would cause an extra commit) — the React-recommended "adjusting state
@@ -57,7 +57,6 @@ export function AddItemModal({
 	if (open !== prevOpen) {
 		setPrevOpen(open);
 		if (open) {
-			setScannedBarcode(null);
 			setScannerOpen(false);
 		}
 	}
@@ -66,15 +65,16 @@ export function AddItemModal({
 	// (declared in this component, not recreated by `destroyOnHidden`), so its
 	// internal field store persists even though the <Form> element itself
 	// unmounts. Ant Design's `initialValues` only seeds fields the store has
-	// never held a value for, so stale `name`/`recurring` from an earlier open
-	// survive remounts unless explicitly overwritten here. This stays a
-	// useEffect (rather than joining the render-time resync above) since
-	// `form.setFieldsValue` is an imperative call into an external mutable
-	// object, not a React state setter.
+	// never held a value for, so stale `name`/`barcode`/`recurring` from an
+	// earlier open survive remounts unless explicitly overwritten here. This
+	// stays a useEffect (rather than joining the render-time resync above)
+	// since `form.setFieldsValue` is an imperative call into an external
+	// mutable object, not a React state setter.
 	useEffect(() => {
 		if (open) {
 			form.setFieldsValue({
 				name: initialName ?? "",
+				barcode: "",
 				recurring: initialRecurring,
 			});
 		}
@@ -82,7 +82,7 @@ export function AddItemModal({
 
 	const handleDetect = async (barcode: string) => {
 		setScannerOpen(false);
-		setScannedBarcode(barcode);
+		form.setFieldsValue({ barcode });
 		const result = await lookupBarcode(uid, barcode, category.key);
 		if (result) {
 			form.setFieldsValue({
@@ -96,6 +96,7 @@ export function AddItemModal({
 
 	const handleOk = async () => {
 		const values = await form.validateFields();
+		const barcode = values.barcode?.trim() || null;
 		try {
 			await addItem(uid, {
 				name: values.name.trim(),
@@ -106,11 +107,16 @@ export function AddItemModal({
 				dateOpened: null,
 				opened: false,
 				recurring: values.recurring,
-				barcode: scannedBarcode,
-				source: scannedBarcode ? "barcode" : "manual",
+				barcode,
+				source: barcode ? "barcode" : "manual",
 			});
-			if (scannedBarcode) {
-				await upsertBarcodeProduct(uid, scannedBarcode, {
+			if (barcode) {
+				// Associates this barcode with the item's name/category/duration
+				// regardless of whether it came from a successful scan lookup or
+				// was typed in by hand — the next scan (or manual entry) of the
+				// same barcode finds it via lookupBarcode's cache check, building
+				// up a household-specific barcode database over time.
+				await upsertBarcodeProduct(uid, barcode, {
 					name: values.name.trim(),
 					category: category.key,
 					suggestedDuration: values.duration ?? null,
@@ -118,7 +124,6 @@ export function AddItemModal({
 				});
 			}
 			form.resetFields();
-			setScannedBarcode(null);
 			onClose();
 		} catch {
 			message.error("Something went wrong, please try again");
@@ -150,6 +155,7 @@ export function AddItemModal({
 					layout="vertical"
 					initialValues={{
 						name: initialName ?? "",
+						barcode: "",
 						quantity: 1,
 						recurring: initialRecurring,
 					}}
@@ -159,6 +165,9 @@ export function AddItemModal({
 						label={t("items.name")}
 						rules={[{ required: true }]}
 					>
+						<Input />
+					</Form.Item>
+					<Form.Item name="barcode" label={t("items.barcode")}>
 						<Input />
 					</Form.Item>
 					<Button
