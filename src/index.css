@@ -1,4 +1,5 @@
 :root {
+  --content-width: 1600px;
   --text: #6b6375;
   --text-h: #08060d;
   --bg: #fff;
@@ -51,7 +52,7 @@
 }
 
 #root {
-  width: 1126px;
+  width: var(--content-width);
   max-width: 100%;
   margin: 0 auto;
   text-align: center;

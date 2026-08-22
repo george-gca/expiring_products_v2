@@ -95,6 +95,9 @@ export function ItemList({
 			)}
 			<FloatButton
 				icon={<PlusOutlined />}
+				style={{
+					right: "max(24px, calc((100vw - var(--content-width)) / 2 + 24px))",
+				}}
 				onClick={() => {
 					setAddInitialRecurring(false);
 					setAddOpen(true);
