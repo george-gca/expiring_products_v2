@@ -20,6 +20,7 @@ const category: Category = {
 	name: "Foods",
 	emoji: "🍎",
 	order: 0,
+	archived: false,
 };
 
 // Regression test for I1: opening Add Item from the shopping list's
