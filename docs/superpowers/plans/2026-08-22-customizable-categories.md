@@ -67,7 +67,7 @@ Vitest + Testing Library, Firebase Local Emulator Suite.
   Omit<Category, "id">): { key, name, emoji, order, archived }` — new
   export later tasks use when writing category docs.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Replace the full contents of `src/features/categories/schema.test.ts` with:
 
@@ -151,13 +151,13 @@ describe("toCategoryDoc", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run: `npx vitest run src/features/categories/schema.test.ts`
 Expected: FAIL — `toCategoryDoc` is not exported, and the `archived`
 assertions fail against the current schema shape.
 
-- [ ] **Step 3: Update the implementation**
+- [x] **Step 3: Update the implementation**
 
 Replace the full contents of `src/features/categories/schema.ts` with:
 
@@ -197,19 +197,19 @@ export function toCategoryDoc(category: Omit<Category, "id">) {
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run: `npx vitest run src/features/categories/schema.test.ts`
 Expected: PASS (6 tests)
 
-- [ ] **Step 5: Lint and typecheck**
+- [x] **Step 5: Lint and typecheck**
 
 Run: `npm run lint && npm run typecheck`
 Expected: no errors. If Biome reports formatting issues, run
 `npx biome check --write src/features/categories/schema.ts
 src/features/categories/schema.test.ts` and re-run lint.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/features/categories/schema.ts src/features/categories/schema.test.ts
@@ -238,7 +238,7 @@ git commit -m "feat: add archived field to Category schema"
   All four are consumed by `CategoryFormModal` (Task 4) and
   `CategorySection` (Task 5).
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `src/features/categories/firestoreWrites.test.ts`:
 
@@ -352,7 +352,7 @@ describe("swapCategoryOrder", () => {
 });
 ```
 
-- [ ] **Step 2: Run tests to verify they fail**
+- [x] **Step 2: Run tests to verify they fail**
 
 Run:
 ```bash
@@ -360,7 +360,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/c
 ```
 Expected: FAIL — `./firestoreWrites` does not exist yet.
 
-- [ ] **Step 3: Write the implementation**
+- [x] **Step 3: Write the implementation**
 
 Create `src/features/categories/firestoreWrites.ts`:
 
@@ -422,7 +422,7 @@ export async function swapCategoryOrder(
 }
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run:
 ```bash
@@ -430,13 +430,13 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/c
 ```
 Expected: PASS (4 tests)
 
-- [ ] **Step 5: Lint and typecheck**
+- [x] **Step 5: Lint and typecheck**
 
 Run: `npm run lint && npm run typecheck`
 Expected: no errors (fix formatting with `npx biome check --write` on the
 two new files if needed, then re-run).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/features/categories/firestoreWrites.ts src/features/categories/firestoreWrites.test.ts
@@ -460,7 +460,7 @@ git commit -m "feat: add category create/rename/archive/reorder Firestore writes
   `CategoryTabs`/`AppRoute` (unchanged, already consume this hook) rely on
   this filtered list.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 Add to the end of `src/features/categories/useCategories.test.tsx` (inside
 the existing `describe("useCategories", ...)` block, after the last
@@ -506,7 +506,7 @@ the existing `describe("useCategories", ...)` block, after the last
 	});
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [x] **Step 2: Run test to verify it fails**
 
 Run:
 ```bash
@@ -515,7 +515,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/c
 Expected: FAIL — the archived category is currently included in the
 returned list (2 categories instead of 1).
 
-- [ ] **Step 3: Update the implementation**
+- [x] **Step 3: Update the implementation**
 
 In `src/features/categories/useCategories.ts`, find this block inside the
 `onSnapshot` success callback:
@@ -546,7 +546,7 @@ Replace it with:
 						},
 ```
 
-- [ ] **Step 4: Run tests to verify they pass**
+- [x] **Step 4: Run tests to verify they pass**
 
 Run:
 ```bash
@@ -554,12 +554,12 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/c
 ```
 Expected: PASS (4 tests total)
 
-- [ ] **Step 5: Lint and typecheck**
+- [x] **Step 5: Lint and typecheck**
 
 Run: `npm run lint && npm run typecheck`
 Expected: no errors.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/features/categories/useCategories.ts src/features/categories/useCategories.test.tsx
@@ -586,13 +586,13 @@ git commit -m "feat: exclude archived categories from useCategories"
   `CategorySection` (Task 5) renders this and owns `open`/`editingCategory`
   state.
 
-- [ ] **Step 1: Install the dependency**
+- [x] **Step 1: Install the dependency**
 
 Run: `npm install emoji-picker-react`
 Expected: `package.json` gains `"emoji-picker-react": "^4.19.1"` (or
 whatever the latest 4.x release is) under `dependencies`.
 
-- [ ] **Step 2: Add i18n keys**
+- [x] **Step 2: Add i18n keys**
 
 In `src/locales/en-us.json`, inside the `"settings"` object, add after
 `"languageEnUs": "English",`:
@@ -614,7 +614,7 @@ In `src/locales/pt-br.json`, inside the `"settings"` object, add after
     "categoryIcon": "Ícone",
 ```
 
-- [ ] **Step 3: Write the failing tests**
+- [x] **Step 3: Write the failing tests**
 
 Create `src/features/categories/CategoryFormModal.test.tsx`:
 
@@ -763,12 +763,12 @@ describe("CategoryFormModal icon picker", () => {
 });
 ```
 
-- [ ] **Step 4: Run tests to verify they fail**
+- [x] **Step 4: Run tests to verify they fail**
 
 Run: `npx vitest run src/features/categories/CategoryFormModal.test.tsx`
 Expected: FAIL — `./CategoryFormModal` does not exist yet.
 
-- [ ] **Step 5: Write the implementation**
+- [x] **Step 5: Write the implementation**
 
 Create `src/features/categories/CategoryFormModal.tsx`:
 
@@ -877,17 +877,17 @@ export function CategoryFormModal({
 }
 ```
 
-- [ ] **Step 6: Run tests to verify they pass**
+- [x] **Step 6: Run tests to verify they pass**
 
 Run: `npx vitest run src/features/categories/CategoryFormModal.test.tsx`
 Expected: PASS (3 tests)
 
-- [ ] **Step 7: Lint and typecheck**
+- [x] **Step 7: Lint and typecheck**
 
 Run: `npm run lint && npm run typecheck`
 Expected: no errors.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add package.json package-lock.json src/locales/en-us.json src/locales/pt-br.json src/features/categories/CategoryFormModal.tsx src/features/categories/CategoryFormModal.test.tsx
@@ -911,7 +911,7 @@ git commit -m "feat: add CategoryFormModal for creating/renaming categories"
 - Produces: `CategorySection({ uid: string }): JSX.Element`. `SettingsPane`
   (Task 6) renders this directly.
 
-- [ ] **Step 1: Add i18n keys**
+- [x] **Step 1: Add i18n keys**
 
 In `src/locales/en-us.json`, inside `"settings"`, add after
 `"categoryIcon": "Icon",`:
@@ -941,7 +941,7 @@ In `src/locales/pt-br.json`, inside `"settings"`, add after
     "moveCategoryDown": "Mover para baixo",
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Create `src/features/categories/CategorySection.test.tsx`:
 
@@ -1064,7 +1064,7 @@ describe("CategorySection add", () => {
 });
 ```
 
-- [ ] **Step 3: Run tests to verify they fail**
+- [x] **Step 3: Run tests to verify they fail**
 
 Run:
 ```bash
@@ -1072,7 +1072,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/c
 ```
 Expected: FAIL — `./CategorySection` does not exist yet.
 
-- [ ] **Step 4: Write the implementation**
+- [x] **Step 4: Write the implementation**
 
 Create `src/features/categories/CategorySection.tsx`:
 
@@ -1253,7 +1253,7 @@ export function CategorySection({ uid }: { uid: string }) {
 }
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run:
 ```bash
@@ -1261,12 +1261,12 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/c
 ```
 Expected: PASS (4 tests)
 
-- [ ] **Step 6: Lint and typecheck**
+- [x] **Step 6: Lint and typecheck**
 
 Run: `npm run lint && npm run typecheck`
 Expected: no errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/locales/en-us.json src/locales/pt-br.json src/features/categories/CategorySection.tsx src/features/categories/CategorySection.test.tsx
@@ -1286,7 +1286,7 @@ git commit -m "feat: add CategorySection with reorder, edit, and archive-on-dele
 **Interfaces:**
 - Consumes: `CategorySection` (Task 5).
 
-- [ ] **Step 1: Add the i18n key**
+- [x] **Step 1: Add the i18n key**
 
 In `src/locales/en-us.json`, inside `"settings"`, add after
 `"backupTitle": "Backup",`:
@@ -1302,7 +1302,7 @@ In `src/locales/pt-br.json`, inside `"settings"`, add after
     "sectionCategories": "Categorias",
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 In `src/features/settings/SettingsPane.test.tsx`, replace this line:
 
@@ -1345,7 +1345,7 @@ describe("SettingsPane categories", () => {
 });
 ```
 
-- [ ] **Step 3: Run test to verify it fails**
+- [x] **Step 3: Run test to verify it fails**
 
 Run:
 ```bash
@@ -1354,7 +1354,7 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/s
 Expected: FAIL — no "Foods"/"Medicines" text is rendered yet (the
 Categories card doesn't exist).
 
-- [ ] **Step 4: Update the implementation**
+- [x] **Step 4: Update the implementation**
 
 In `src/features/settings/SettingsPane.tsx`, add this import alongside the
 other feature imports (after the `BackupSection` import):
@@ -1384,7 +1384,7 @@ Replace it with:
 		</Space>
 ```
 
-- [ ] **Step 5: Run tests to verify they pass**
+- [x] **Step 5: Run tests to verify they pass**
 
 Run:
 ```bash
@@ -1392,18 +1392,18 @@ npx firebase emulators:exec --only auth,firestore "npx vitest run src/features/s
 ```
 Expected: PASS (3 tests)
 
-- [ ] **Step 6: Run the full test suite**
+- [x] **Step 6: Run the full test suite**
 
 Run: `npm test`
 Expected: PASS, all files (this is the last task — the whole suite,
 including every earlier task's tests, must be green).
 
-- [ ] **Step 7: Lint and typecheck**
+- [x] **Step 7: Lint and typecheck**
 
 Run: `npm run lint && npm run typecheck`
 Expected: no errors.
 
-- [ ] **Step 8: Manual verification**
+- [x] **Step 8: Manual verification**
 
 Run `npx firebase emulators:start --only auth,firestore` in one terminal
 and `VITE_USE_FIREBASE_EMULATORS=true npm run dev` in another. Sign in,
@@ -1426,7 +1426,7 @@ open the Settings tab, and confirm:
 - Check both light and dark `prefers-color-scheme`, and both desktop
   (1920×1080) and mobile (390×844) viewports, for visual regressions.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/features/settings/SettingsPane.tsx src/features/settings/SettingsPane.test.tsx src/locales/en-us.json src/locales/pt-br.json
