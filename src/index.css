@@ -55,6 +55,7 @@
   width: var(--content-width);
   max-width: 100%;
   margin: 0 auto;
+  padding-inline: 16px;
   border-inline: 1px solid var(--border);
   min-height: 100svh;
   display: flex;
