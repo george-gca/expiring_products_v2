@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import {
 	parseItemDoc,
 	parseItemHistoryDoc,
+	parseWasteEventDoc,
 	safeParseItemDoc,
+	safeParseWasteEventDoc,
 	toItemDoc,
 } from "./schema";
 
@@ -128,5 +130,55 @@ describe("parseItemHistoryDoc", () => {
 		expect(() =>
 			parseItemHistoryDoc({ name: "X", category: "foods", duration: "" }),
 		).toThrow();
+	});
+});
+
+describe("parseWasteEventDoc", () => {
+	it("parses a valid waste_event document, converting the Timestamp to a Date", () => {
+		const occurredAt = Timestamp.fromDate(new Date("2026-08-23T12:00:00Z"));
+		const result = parseWasteEventDoc("event1", {
+			category: "foods",
+			was_opened: true,
+			was_expired: false,
+			consumed: 2,
+			discarded: 0,
+			occurred_at: occurredAt,
+		});
+		expect(result).toEqual({
+			id: "event1",
+			category: "foods",
+			wasOpened: true,
+			wasExpired: false,
+			consumed: 2,
+			discarded: 0,
+			occurredAt: occurredAt.toDate(),
+		});
+	});
+});
+
+describe("safeParseWasteEventDoc", () => {
+	it("returns the parsed event for a valid document", () => {
+		const result = safeParseWasteEventDoc("event1", {
+			category: "medicines",
+			was_opened: false,
+			was_expired: true,
+			consumed: 0,
+			discarded: 1,
+			occurred_at: Timestamp.fromDate(new Date("2026-08-23T12:00:00Z")),
+		});
+		expect(result).not.toBeNull();
+		expect(result?.category).toBe("medicines");
+	});
+
+	it("returns null instead of throwing for a malformed document", () => {
+		const result = safeParseWasteEventDoc("event1", {
+			category: "foods",
+			was_opened: "yes",
+			was_expired: false,
+			consumed: 1,
+			discarded: 0,
+			occurred_at: "2026-08-23",
+		});
+		expect(result).toBeNull();
 	});
 });

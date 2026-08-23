@@ -118,3 +118,47 @@ export function safeParseItemHistoryDoc(
 	const result = itemHistoryDocSchema.safeParse(data);
 	return result.success ? result.data : null;
 }
+
+export const wasteEventDocSchema = z.object({
+	category: z.string().min(1),
+	was_opened: z.boolean(),
+	was_expired: z.boolean(),
+	consumed: z.number().int().nonnegative(),
+	discarded: z.number().int().nonnegative(),
+	occurred_at: timestampSchema,
+});
+
+export interface WasteEvent {
+	id: string;
+	category: string;
+	wasOpened: boolean;
+	wasExpired: boolean;
+	consumed: number;
+	discarded: number;
+	occurredAt: Date;
+}
+
+export function parseWasteEventDoc(id: string, data: unknown): WasteEvent {
+	const parsed = wasteEventDocSchema.parse(data);
+	return {
+		id,
+		category: parsed.category,
+		wasOpened: parsed.was_opened,
+		wasExpired: parsed.was_expired,
+		consumed: parsed.consumed,
+		discarded: parsed.discarded,
+		occurredAt: parsed.occurred_at.toDate(),
+	};
+}
+
+// Same rationale as safeParseItemDoc/safeParseItemHistoryDoc above:
+// onSnapshot's success callback has no try/catch, so a hook that maps over
+// a whole snapshot must use this variant to skip malformed docs instead of
+// wedging `loading` at `true` forever.
+export function safeParseWasteEventDoc(
+	id: string,
+	data: unknown,
+): WasteEvent | null {
+	const result = wasteEventDocSchema.safeParse(data);
+	return result.success ? parseWasteEventDoc(id, data) : null;
+}
