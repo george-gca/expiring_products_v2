@@ -22,9 +22,10 @@ so no data migration was needed. Live at
   threshold.
 - **Barcode scanning** — camera-based scan (with a visual aim guide) looks
   up the product via Open Food Facts, falling back to Open Products Facts
-  for non-food items, or to manual entry; either way, the barcode gets
-  remembered against that item so the next scan of it auto-fills
-  instantly, building a household-specific barcode database over time.
+  and then Open Beauty Facts for non-food and cosmetic items, or to
+  manual entry; either way, the barcode gets remembered against that
+  item so the next scan of it auto-fills instantly, building a
+  household-specific barcode database over time.
 - **Push notifications** — a daily digest of what's expiring soon, with a
   configurable time and lead time, registered per device.
 - **Backup & restore** — export your whole pantry to a JSON file, import it
@@ -38,8 +39,10 @@ so no data migration was needed. Live at
 
 ### Planned / known gaps
 
-- Barcode lookup only covers food products (Open Food Facts' own
-  coverage) — scanning a medicine mostly misses today; see
+- Barcode lookup has no medicine-specific source (Open Food Facts,
+  Open Products Facts, and Open Beauty Facts cover food, general
+  goods, and cosmetics, but none carry drug data) — scanning a
+  medicine still mostly misses; see
   [#8](https://github.com/george-gca/expiring_products_v2/issues/8).
 - See the [issue tracker](https://github.com/george-gca/expiring_products_v2/issues)
   for the current backlog.
@@ -57,7 +60,7 @@ so no data migration was needed. Live at
 | **vite-plugin-pwa + Workbox** | installable PWA, offline app-shell precaching, in-app "new version available" prompt |
 | **Firebase Cloud Messaging** | push notifications, registered per device |
 | **emoji-picker-react** | category icon picker, configured to render native OS emoji glyphs (no image CDN calls, works offline) |
-| **Open Food Facts / Open Products Facts APIs** | barcode → product-name lookup, food and general non-food coverage |
+| **Open Food Facts / Open Products Facts / Open Beauty Facts APIs** | barcode → product-name lookup, chained fallback across food, general non-food, and cosmetic coverage |
 | **Vitest + Testing Library + Playwright** | unit/integration tests run against the real Firebase Local Emulator Suite (not mocks); Playwright covers end-to-end flows |
 | **Biome + a thin ESLint layer** | formatting/linting; ESLint only for the React-specific rules Biome doesn't cover |
 

@@ -9,7 +9,12 @@ export const barcodeProductDocSchema = z.object({
 	name: z.string().min(1),
 	category: z.string().min(1),
 	suggestedDuration: z.number().int().positive().nullable(),
-	source: z.enum(["openfoodfacts", "openproductsfacts", "manual"]),
+	source: z.enum([
+		"openfoodfacts",
+		"openproductsfacts",
+		"openbeautyfacts",
+		"manual",
+	]),
 	updatedAt: timestampSchema,
 });
 
@@ -17,7 +22,7 @@ export interface BarcodeProduct {
 	name: string;
 	category: string;
 	suggestedDuration: number | null;
-	source: "openfoodfacts" | "openproductsfacts" | "manual";
+	source: "openfoodfacts" | "openproductsfacts" | "openbeautyfacts" | "manual";
 	updatedAt: Date;
 }
 

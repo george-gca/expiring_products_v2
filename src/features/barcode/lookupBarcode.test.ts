@@ -129,7 +129,33 @@ describe("lookupBarcode", () => {
 		expect(result).toEqual({ name: "Toothpaste", suggestedDuration: null });
 	});
 
-	it("returns null and writes nothing when both sources miss", async () => {
+	it("falls back to Open Beauty Facts when Open Food Facts and Open Products Facts both miss, and writes the cache", async () => {
+		server.use(
+			http.get(
+				"https://world.openfoodfacts.org/api/v2/product/0123456789015.json",
+				() => HttpResponse.json({ status: 0 }, { status: 404 }),
+			),
+			http.get(
+				"https://world.openproductsfacts.org/api/v2/product/0123456789015.json",
+				() => HttpResponse.json({ status: 0 }, { status: 404 }),
+			),
+			http.get(
+				"https://world.openbeautyfacts.org/api/v2/product/0123456789015.json",
+				() => HttpResponse.json({ product: { product_name: "Shampoo" } }),
+			),
+		);
+
+		const result = await lookupBarcode(uid, "0123456789015", "medicines");
+		expect(result).toEqual({ name: "Shampoo", suggestedDuration: null });
+
+		const cached = await getDoc(
+			doc(db, "users", uid, "barcode_products", "0123456789015"),
+		);
+		expect(cached.data()?.name).toBe("Shampoo");
+		expect(cached.data()?.source).toBe("openbeautyfacts");
+	});
+
+	it("returns null and writes nothing when all three sources miss", async () => {
 		server.use(
 			http.get(
 				"https://world.openfoodfacts.org/api/v2/product/0000000000002.json",
@@ -137,6 +163,10 @@ describe("lookupBarcode", () => {
 			),
 			http.get(
 				"https://world.openproductsfacts.org/api/v2/product/0000000000002.json",
+				() => HttpResponse.json({ status: 0 }, { status: 404 }),
+			),
+			http.get(
+				"https://world.openbeautyfacts.org/api/v2/product/0000000000002.json",
 				() => HttpResponse.json({ status: 0 }, { status: 404 }),
 			),
 		);

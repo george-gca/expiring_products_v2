@@ -31,10 +31,11 @@ export async function lookupBarcode(
 
 	const sources: {
 		host: string;
-		source: "openfoodfacts" | "openproductsfacts";
+		source: "openfoodfacts" | "openproductsfacts" | "openbeautyfacts";
 	}[] = [
 		{ host: "world.openfoodfacts.org", source: "openfoodfacts" },
 		{ host: "world.openproductsfacts.org", source: "openproductsfacts" },
+		{ host: "world.openbeautyfacts.org", source: "openbeautyfacts" },
 	];
 
 	for (const { host, source } of sources) {
