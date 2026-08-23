@@ -10,6 +10,7 @@ import {
 	Switch,
 } from "antd";
 import type { Dayjs } from "dayjs";
+import type { FocusEvent } from "react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { BarcodeScanner } from "../barcode/BarcodeScanner";
@@ -80,9 +81,7 @@ export function AddItemModal({
 		}
 	}, [open, initialName, initialRecurring, form]);
 
-	const handleDetect = async (barcode: string) => {
-		setScannerOpen(false);
-		form.setFieldsValue({ barcode });
+	const applyBarcodeLookup = async (barcode: string) => {
 		const result = await lookupBarcode(uid, barcode, category.key);
 		if (result) {
 			form.setFieldsValue({
@@ -91,6 +90,19 @@ export function AddItemModal({
 					? { duration: result.suggestedDuration }
 					: {}),
 			});
+		}
+	};
+
+	const handleDetect = async (barcode: string) => {
+		setScannerOpen(false);
+		form.setFieldsValue({ barcode });
+		await applyBarcodeLookup(barcode);
+	};
+
+	const handleBarcodeBlur = (e: FocusEvent<HTMLInputElement>) => {
+		const barcode = e.target.value.trim();
+		if (barcode) {
+			applyBarcodeLookup(barcode);
 		}
 	};
 
@@ -168,7 +180,7 @@ export function AddItemModal({
 						<Input />
 					</Form.Item>
 					<Form.Item name="barcode" label={t("items.barcode")}>
-						<Input />
+						<Input onBlur={handleBarcodeBlur} />
 					</Form.Item>
 					<Button
 						icon={<BarcodeOutlined />}

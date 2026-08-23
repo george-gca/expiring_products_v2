@@ -135,6 +135,7 @@ describe("AddItemModal manual barcode entry", () => {
 	});
 
 	it("saves a manually typed barcode with the item and caches it for future lookups", async () => {
+		vi.spyOn(lookupBarcodeModule, "lookupBarcode").mockResolvedValue(null);
 		const addItemSpy = vi
 			.spyOn(itemWritesModule, "addItem")
 			.mockResolvedValue(undefined);
@@ -185,6 +186,7 @@ describe("AddItemModal manual barcode entry", () => {
 	});
 
 	it("saves with no barcode and skips caching when the field is left blank", async () => {
+		const lookupSpy = vi.spyOn(lookupBarcodeModule, "lookupBarcode");
 		const addItemSpy = vi
 			.spyOn(itemWritesModule, "addItem")
 			.mockResolvedValue(undefined);
@@ -213,5 +215,58 @@ describe("AddItemModal manual barcode entry", () => {
 			expect.objectContaining({ barcode: null, source: "manual" }),
 		);
 		expect(upsertSpy).not.toHaveBeenCalled();
+		expect(lookupSpy).not.toHaveBeenCalled();
+	});
+
+	it("looks up and pre-fills the name when a manually typed barcode loses focus", async () => {
+		vi.spyOn(lookupBarcodeModule, "lookupBarcode").mockResolvedValue({
+			name: "Store-Brand Rice",
+			suggestedDuration: 365,
+		});
+
+		render(
+			<AddItemModal
+				uid="test-user-manual-barcode-3"
+				category={category}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		await userEvent.type(
+			screen.getByRole("textbox", { name: /barcode/i }),
+			"1112223334445",
+		);
+		await userEvent.tab();
+
+		await waitFor(() =>
+			expect(lookupBarcodeModule.lookupBarcode).toHaveBeenCalledWith(
+				"test-user-manual-barcode-3",
+				"1112223334445",
+				"foods",
+			),
+		);
+		await waitFor(() =>
+			expect(screen.getByLabelText(/name/i)).toHaveValue("Store-Brand Rice"),
+		);
+		expect(screen.getByLabelText(/duration/i)).toHaveValue("365");
+	});
+
+	it("does not look up when the barcode field is blurred empty", async () => {
+		const lookupSpy = vi.spyOn(lookupBarcodeModule, "lookupBarcode");
+
+		render(
+			<AddItemModal
+				uid="test-user-manual-barcode-4"
+				category={category}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		await userEvent.click(screen.getByRole("textbox", { name: /barcode/i }));
+		await userEvent.tab();
+
+		expect(lookupSpy).not.toHaveBeenCalled();
 	});
 });
