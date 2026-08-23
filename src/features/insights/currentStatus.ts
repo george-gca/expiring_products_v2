@@ -13,12 +13,13 @@ export function computeCurrentStatus(
 ): Record<string, CategoryCurrentStatus> {
 	const result: Record<string, CategoryCurrentStatus> = {};
 	for (const item of items) {
-		const bucket = (result[item.category] ??= {
+		result[item.category] ??= {
 			sealedGood: 0,
 			openedGood: 0,
 			overdueUnopened: 0,
 			overdueOpened: 0,
-		});
+		};
+		const bucket = result[item.category];
 		const overdue = item.expiringDate.getTime() < now.getTime();
 		if (overdue) {
 			if (item.opened) {

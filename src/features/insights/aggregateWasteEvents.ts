@@ -13,13 +13,14 @@ export function aggregateWasteEvents(
 ): Record<string, CategoryWasteHistory> {
 	const result: Record<string, CategoryWasteHistory> = {};
 	for (const event of events) {
-		const bucket = (result[event.category] ??= {
+		result[event.category] ??= {
 			consumedInTime: 0,
 			expiredUnopened: 0,
 			expiredOpened: 0,
 			discardedNotExpired: 0,
 			consumedAfterExpiry: 0,
-		});
+		};
+		const bucket = result[event.category];
 		if (event.consumed > 0) {
 			if (event.wasExpired) {
 				bucket.consumedAfterExpiry += event.consumed;

@@ -111,7 +111,9 @@ export async function updateItemQuantities(
 		}
 
 		if (changes.consumed > 0 || changes.discarded > 0) {
-			const wasteEventDocRef = doc(collection(db, "users", uid, "waste_events"));
+			const wasteEventDocRef = doc(
+				collection(db, "users", uid, "waste_events"),
+			);
 			transaction.set(wasteEventDocRef, {
 				category: item.category,
 				was_opened: item.opened,

@@ -5,12 +5,14 @@ import type { Category } from "./schema";
 interface CategoryTabsProps {
 	categories: Category[];
 	renderPane: (category: Category) => ReactNode;
+	insightsPane: ReactNode;
 	settingsPane: ReactNode;
 }
 
 export function CategoryTabs({
 	categories,
 	renderPane,
+	insightsPane,
 	settingsPane,
 }: CategoryTabsProps) {
 	const items = [
@@ -19,6 +21,7 @@ export function CategoryTabs({
 			label: `${category.emoji} ${category.name}`,
 			children: renderPane(category),
 		})),
+		{ key: "insights", label: "📊", children: insightsPane },
 		{ key: "settings", label: "⚙️", children: settingsPane },
 	];
 	return <Tabs className="category-tabs" items={items} />;

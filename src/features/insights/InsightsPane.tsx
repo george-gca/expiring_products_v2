@@ -85,20 +85,56 @@ export function InsightsPane({
 		{
 			title: t("insights.sectionRightNow"),
 			children: [
-				{ title: t("insights.sealedGood"), dataIndex: "sealedGood", key: "sealedGood" },
-				{ title: t("insights.openedGood"), dataIndex: "openedGood", key: "openedGood" },
-				{ title: t("insights.overdueUnopened"), dataIndex: "overdueUnopened", key: "overdueUnopened" },
-				{ title: t("insights.overdueOpened"), dataIndex: "overdueOpened", key: "overdueOpened" },
+				{
+					title: t("insights.sealedGood"),
+					dataIndex: "sealedGood",
+					key: "sealedGood",
+				},
+				{
+					title: t("insights.openedGood"),
+					dataIndex: "openedGood",
+					key: "openedGood",
+				},
+				{
+					title: t("insights.overdueUnopened"),
+					dataIndex: "overdueUnopened",
+					key: "overdueUnopened",
+				},
+				{
+					title: t("insights.overdueOpened"),
+					dataIndex: "overdueOpened",
+					key: "overdueOpened",
+				},
 			],
 		},
 		{
 			title: t("insights.sectionAllTime"),
 			children: [
-				{ title: t("insights.consumedInTime"), dataIndex: "consumedInTime", key: "consumedInTime" },
-				{ title: t("insights.expiredUnopened"), dataIndex: "expiredUnopened", key: "expiredUnopened" },
-				{ title: t("insights.expiredOpened"), dataIndex: "expiredOpened", key: "expiredOpened" },
-				{ title: t("insights.discardedNotExpired"), dataIndex: "discardedNotExpired", key: "discardedNotExpired" },
-				{ title: t("insights.consumedAfterExpiry"), dataIndex: "consumedAfterExpiry", key: "consumedAfterExpiry" },
+				{
+					title: t("insights.consumedInTime"),
+					dataIndex: "consumedInTime",
+					key: "consumedInTime",
+				},
+				{
+					title: t("insights.expiredUnopened"),
+					dataIndex: "expiredUnopened",
+					key: "expiredUnopened",
+				},
+				{
+					title: t("insights.expiredOpened"),
+					dataIndex: "expiredOpened",
+					key: "expiredOpened",
+				},
+				{
+					title: t("insights.discardedNotExpired"),
+					dataIndex: "discardedNotExpired",
+					key: "discardedNotExpired",
+				},
+				{
+					title: t("insights.consumedAfterExpiry"),
+					dataIndex: "consumedAfterExpiry",
+					key: "consumedAfterExpiry",
+				},
 			],
 		},
 	];

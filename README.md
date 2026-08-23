@@ -28,6 +28,10 @@ so no data migration was needed. Live at
   either way, the barcode gets remembered against that item so the
   next scan (or typed entry) of it auto-fills instantly, building a
   household-specific barcode database over time.
+- **Waste insights** — a dedicated tab showing, per category, what's
+  currently sealed/opened and still good vs. sitting overdue right now,
+  plus an all-time breakdown of what got consumed in time versus what
+  went to waste (and whether it was opened or not when that happened).
 - **Push notifications** — a daily digest of what's expiring soon, with a
   configurable time and lead time, registered per device.
 - **Backup & restore** — export your whole pantry to a JSON file, import it
@@ -63,6 +67,7 @@ so no data migration was needed. Live at
 | **Firebase Cloud Messaging** | push notifications, registered per device |
 | **emoji-picker-react** | category icon picker, configured to render native OS emoji glyphs (no image CDN calls, works offline) |
 | **Open Food Facts / Open Products Facts / Open Beauty Facts APIs** | barcode → product-name lookup, chained fallback across food, general non-food, and cosmetic coverage |
+| **Firestore `waste_events` + client-side aggregation** | per-category consumed/discarded history, summed in the browser — no Cloud Functions, matches this app's data-volume scale |
 | **Vitest + Testing Library + Playwright** | unit/integration tests run against the real Firebase Local Emulator Suite (not mocks); Playwright covers end-to-end flows |
 | **Biome + a thin ESLint layer** | formatting/linting; ESLint only for the React-specific rules Biome doesn't cover |
 

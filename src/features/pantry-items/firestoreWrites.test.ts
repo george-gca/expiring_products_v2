@@ -2,7 +2,11 @@ import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { afterEach, describe, expect, it } from "vitest";
 import { db } from "../../lib/firebase";
 import { clearFirestoreEmulator } from "../../test/emulator";
-import { addItem, setItemRecurring, updateItemQuantities } from "./firestoreWrites";
+import {
+	addItem,
+	setItemRecurring,
+	updateItemQuantities,
+} from "./firestoreWrites";
 import { toItemDoc } from "./schema";
 
 const uid = "test-user-3";

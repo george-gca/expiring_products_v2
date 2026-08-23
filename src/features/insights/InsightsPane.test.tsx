@@ -11,8 +11,22 @@ import { InsightsPane } from "./InsightsPane";
 const uid = "test-user-insights-pane-1";
 
 const categories: Category[] = [
-	{ id: "foods-id", key: "foods", name: "Foods", emoji: "🍎", order: 0, archived: false },
-	{ id: "medicines-id", key: "medicines", name: "Medicines", emoji: "💊", order: 1, archived: false },
+	{
+		id: "foods-id",
+		key: "foods",
+		name: "Foods",
+		emoji: "🍎",
+		order: 0,
+		archived: false,
+	},
+	{
+		id: "medicines-id",
+		key: "medicines",
+		name: "Medicines",
+		emoji: "💊",
+		order: 1,
+		archived: false,
+	},
 ];
 
 afterEach(() =>

@@ -3,6 +3,7 @@ import type { User } from "firebase/auth";
 import { useEffect } from "react";
 import { CategoryTabs } from "../features/categories/CategoryTabs";
 import { useCategories } from "../features/categories/useCategories";
+import { InsightsPane } from "../features/insights/InsightsPane";
 import { onForegroundMessage } from "../features/notifications/messaging";
 import { ItemList } from "../features/pantry-items/ItemList";
 import { SettingsPane } from "../features/settings/SettingsPane";
@@ -52,6 +53,7 @@ export function AppRoute({ user }: { user: User }) {
 					hideDistantThresholdMonths={settings.hideDistantThresholdMonths}
 				/>
 			)}
+			insightsPane={<InsightsPane uid={user.uid} categories={categories} />}
 			settingsPane={<SettingsPane uid={user.uid} settings={settings} />}
 		/>
 	);
