@@ -63,5 +63,19 @@
     "importConfirmPlaceholder": "Type \"{{confirmWord}}\" to confirm",
     "importSuccess": "Backup imported successfully.",
     "importPartialFailure": "Something went wrong during import — some data may not have imported. Check your pantry and try again if needed."
+  },
+  "insights": {
+    "sectionRightNow": "Right now",
+    "sectionAllTime": "All time",
+    "sealedGood": "Sealed, good",
+    "openedGood": "Opened, good",
+    "overdueUnopened": "Overdue, unopened",
+    "overdueOpened": "Overdue, opened",
+    "consumedInTime": "Consumed in time",
+    "expiredUnopened": "Expired, unopened",
+    "expiredOpened": "Expired, opened",
+    "discardedNotExpired": "Discarded, not expired",
+    "consumedAfterExpiry": "Consumed after expiry",
+    "allCategories": "All categories"
   }
 }

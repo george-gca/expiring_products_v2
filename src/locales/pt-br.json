@@ -63,5 +63,19 @@
     "importConfirmPlaceholder": "Digite \"{{confirmWord}}\" para confirmar",
     "importSuccess": "Backup importado com sucesso.",
     "importPartialFailure": "Algo deu errado durante a importação — alguns dados podem não ter sido importados. Verifique sua despensa e tente novamente se necessário."
+  },
+  "insights": {
+    "sectionRightNow": "Agora",
+    "sectionAllTime": "Histórico",
+    "sealedGood": "Lacrados, bons",
+    "openedGood": "Abertos, bons",
+    "overdueUnopened": "Vencidos, não abertos",
+    "overdueOpened": "Vencidos, abertos",
+    "consumedInTime": "Consumidos a tempo",
+    "expiredUnopened": "Vencidos sem abrir",
+    "expiredOpened": "Vencidos após abrir",
+    "discardedNotExpired": "Descartados sem estar vencidos",
+    "consumedAfterExpiry": "Consumidos após vencer",
+    "allCategories": "Todas as categorias"
   }
 }
