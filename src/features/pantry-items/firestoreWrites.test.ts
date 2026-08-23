@@ -2,7 +2,8 @@ import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { afterEach, describe, expect, it } from "vitest";
 import { db } from "../../lib/firebase";
 import { clearFirestoreEmulator } from "../../test/emulator";
-import { addItem, setItemRecurring } from "./firestoreWrites";
+import { addItem, setItemRecurring, updateItemQuantities } from "./firestoreWrites";
+import { toItemDoc } from "./schema";
 
 const uid = "test-user-3";
 
@@ -150,5 +151,98 @@ describe("setItemRecurring", () => {
 
 		const itemDoc = await getDoc(doc(db, "users", uid, "items", itemId));
 		expect(itemDoc.data()?.recurring).toBe(true);
+	});
+});
+
+describe("updateItemQuantities waste_events", () => {
+	async function seedItem(overrides: {
+		quantity: number;
+		expiringDate: Date;
+		opened: boolean;
+	}) {
+		const itemRef = doc(collection(db, "users", uid, "items"));
+		await setDoc(
+			itemRef,
+			toItemDoc({
+				name: "Test Item",
+				category: "foods",
+				quantity: overrides.quantity,
+				expiringDate: overrides.expiringDate,
+				duration: null,
+				dateOpened: null,
+				opened: overrides.opened,
+				recurring: false,
+				barcode: null,
+				source: "manual",
+			}),
+		);
+		return itemRef.id;
+	}
+
+	it("writes a waste_events doc with was_expired: false for a consumed, non-expired item", async () => {
+		const itemId = await seedItem({
+			quantity: 2,
+			expiringDate: new Date("2099-01-01"),
+			opened: false,
+		});
+
+		await updateItemQuantities(uid, itemId, {
+			opened: 0,
+			consumed: 1,
+			discarded: 0,
+		});
+
+		const eventsSnapshot = await getDocs(
+			collection(db, "users", uid, "waste_events"),
+		);
+		expect(eventsSnapshot.size).toBe(1);
+		const event = eventsSnapshot.docs[0].data();
+		expect(event.category).toBe("foods");
+		expect(event.was_opened).toBe(false);
+		expect(event.was_expired).toBe(false);
+		expect(event.consumed).toBe(1);
+		expect(event.discarded).toBe(0);
+	});
+
+	it("writes was_opened: true and was_expired: true when discarding an overdue, previously opened item", async () => {
+		const itemId = await seedItem({
+			quantity: 1,
+			expiringDate: new Date("2020-01-01"),
+			opened: true,
+		});
+
+		await updateItemQuantities(uid, itemId, {
+			opened: 0,
+			consumed: 0,
+			discarded: 1,
+		});
+
+		const eventsSnapshot = await getDocs(
+			collection(db, "users", uid, "waste_events"),
+		);
+		expect(eventsSnapshot.size).toBe(1);
+		const event = eventsSnapshot.docs[0].data();
+		expect(event.was_opened).toBe(true);
+		expect(event.was_expired).toBe(true);
+		expect(event.discarded).toBe(1);
+	});
+
+	it("writes no waste_events doc for a pure opened action", async () => {
+		const itemId = await seedItem({
+			quantity: 3,
+			expiringDate: new Date("2099-01-01"),
+			opened: false,
+		});
+
+		await updateItemQuantities(uid, itemId, {
+			opened: 1,
+			consumed: 0,
+			discarded: 0,
+		});
+
+		const eventsSnapshot = await getDocs(
+			collection(db, "users", uid, "waste_events"),
+		);
+		expect(eventsSnapshot.size).toBe(0);
 	});
 });

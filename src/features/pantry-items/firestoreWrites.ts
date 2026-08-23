@@ -4,6 +4,7 @@ import {
 	doc,
 	runTransaction,
 	setDoc,
+	Timestamp,
 	updateDoc,
 } from "firebase/firestore";
 import { db } from "../../lib/firebase";
@@ -75,6 +76,9 @@ export async function updateItemQuantities(
 			);
 		}
 
+		const now = new Date();
+		const wasExpired = item.expiringDate.getTime() < now.getTime();
+
 		const remaining = item.quantity - totalHandled;
 		if (remaining > 0) {
 			transaction.update(itemRef, { quantity: remaining });
@@ -83,10 +87,8 @@ export async function updateItemQuantities(
 		}
 
 		if (changes.opened > 0) {
-			const now = new Date();
-			const alreadyExpired = item.expiringDate.getTime() < now.getTime();
 			const newExpiringDate =
-				item.duration !== null && !alreadyExpired
+				item.duration !== null && !wasExpired
 					? new Date(now.getTime() + item.duration * 24 * 60 * 60 * 1000)
 					: item.expiringDate;
 
@@ -106,6 +108,18 @@ export async function updateItemQuantities(
 					source: item.source,
 				}),
 			);
+		}
+
+		if (changes.consumed > 0 || changes.discarded > 0) {
+			const wasteEventDocRef = doc(collection(db, "users", uid, "waste_events"));
+			transaction.set(wasteEventDocRef, {
+				category: item.category,
+				was_opened: item.opened,
+				was_expired: wasExpired,
+				consumed: changes.consumed,
+				discarded: changes.discarded,
+				occurred_at: Timestamp.now(),
+			});
 		}
 	});
 }
