@@ -20,8 +20,9 @@ so no data migration was needed. Live at
 - **Low-stock & shopping mode** — a shopping list derived from items you've
   marked as recurring purchases that have dropped below your configured
   threshold.
-- **Barcode scanning** — camera-based scan (with a visual aim guide) or a
-  manually typed barcode both look up the product via Open Food Facts,
+- **Barcode scanning** — camera-based scan (with a visual aim guide and a
+  mirror toggle, handy for laptop webcams) or a manually typed barcode
+  both look up the product via Open Food Facts,
   falling back to Open Products Facts and then Open Beauty Facts for
   non-food and cosmetic items, or to manual entry of the name itself;
   either way, the barcode gets remembered against that item so the

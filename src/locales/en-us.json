@@ -23,6 +23,7 @@
     "quantityExceedsStock": "Opened + consumed + discarded can't exceed the current quantity",
     "scanBarcode": "Scan barcode",
     "cancelScan": "Cancel scan",
+    "mirrorCamera": "Mirror camera",
     "cameraUnavailable": "Camera unavailable. Enter the item manually below."
   },
   "settings": {

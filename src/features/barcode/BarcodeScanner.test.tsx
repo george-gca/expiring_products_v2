@@ -1,5 +1,6 @@
 import "../../lib/i18n";
 import { render, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { BarcodeScanner } from "./BarcodeScanner";
 
@@ -157,6 +158,39 @@ describe("BarcodeScanner", () => {
 				container.querySelector('[data-testid="scan-guide"]'),
 			).toBeTruthy(),
 		);
+	});
+
+	it("mirrors the video preview when the mirror toggle is clicked", async () => {
+		const getUserMedia = vi.fn().mockResolvedValue({
+			getTracks: () => [{ stop: vi.fn() }],
+		});
+		Object.defineProperty(navigator, "mediaDevices", {
+			value: { getUserMedia },
+			configurable: true,
+		});
+		class FakeBarcodeDetector {
+			detect() {
+				return Promise.resolve([]);
+			}
+		}
+		vi.stubGlobal("BarcodeDetector", FakeBarcodeDetector);
+
+		const { container, getByRole } = render(
+			<BarcodeScanner onDetect={vi.fn()} />,
+		);
+
+		const video = await waitFor(() => {
+			const el = container.querySelector("video") as HTMLVideoElement;
+			expect(el).toBeTruthy();
+			return el;
+		});
+		expect(video.style.transform).toBe("");
+
+		await userEvent.click(getByRole("button", { name: /mirror camera/i }));
+		expect(video.style.transform).toBe("scaleX(-1)");
+
+		await userEvent.click(getByRole("button", { name: /mirror camera/i }));
+		expect(video.style.transform).toBe("");
 	});
 
 	it("shows an inline error, without bouncing back to the caller, when the camera is unavailable", async () => {

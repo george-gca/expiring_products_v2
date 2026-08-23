@@ -1,4 +1,5 @@
-import { Spin } from "antd";
+import { SwapOutlined } from "@ant-design/icons";
+import { Button, Spin } from "antd";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -14,6 +15,7 @@ export function BarcodeScanner({
 	const [status, setStatus] = useState<"loading" | "streaming" | "error">(
 		"loading",
 	);
+	const [mirrored, setMirrored] = useState(false);
 
 	// Latest callback is read via a ref rather than listed as an effect dep:
 	// the camera-acquisition effect below must run exactly once per mount
@@ -108,7 +110,18 @@ export function BarcodeScanner({
 					ref={videoRef}
 					autoPlay
 					muted
-					style={{ width: "100%", display: "block" }}
+					style={{
+						width: "100%",
+						display: "block",
+						transform: mirrored ? "scaleX(-1)" : undefined,
+					}}
+				/>
+				<Button
+					shape="circle"
+					icon={<SwapOutlined />}
+					aria-label={t("items.mirrorCamera")}
+					onClick={() => setMirrored((m) => !m)}
+					style={{ position: "absolute", top: 8, right: 8 }}
 				/>
 				{/* Purely a visual aim guide — detection still scans the full
 				    frame regardless of where the barcode sits relative to it. */}

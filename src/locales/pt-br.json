@@ -23,6 +23,7 @@
     "quantityExceedsStock": "Abertos + consumidos + descartados não podem exceder a quantidade atual",
     "scanBarcode": "Escanear código de barras",
     "cancelScan": "Cancelar escaneamento",
+    "mirrorCamera": "Espelhar câmera",
     "cameraUnavailable": "Câmera indisponível. Preencha os campos manualmente abaixo."
   },
   "settings": {
