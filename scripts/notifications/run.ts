@@ -73,7 +73,13 @@ export async function runDailyNotifications(
 		}
 
 		const { title, body } = buildDigestBody(
-			dueItems.map((itemDoc) => itemDoc.data().name as string),
+			dueItems.map((itemDoc) => ({
+				name: itemDoc.data().name as string,
+				expiringDate: (
+					itemDoc.data().expiring_date as { toDate: () => Date }
+				).toDate(),
+			})),
+			now,
 			language,
 		);
 

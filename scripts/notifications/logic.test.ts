@@ -39,15 +39,84 @@ describe("needsNotification", () => {
 });
 
 describe("buildDigestBody", () => {
-	it("builds pt-br wording", () => {
-		const { title, body } = buildDigestBody(["Leite", "Ovos"], "pt-br");
-		expect(title).toContain("2");
-		expect(body).toBe("Leite, Ovos");
+	const now = new Date("2026-01-15T00:00:00Z");
+
+	it("groups an item expiring today into the today bucket (pt-br)", () => {
+		const { body } = buildDigestBody(
+			[{ name: "Leite", expiringDate: new Date("2026-01-15T00:00:00Z") }],
+			now,
+			"pt-br",
+		);
+		expect(body).toBe("Hoje: Leite");
 	});
 
-	it("builds en-us wording", () => {
-		const { title, body } = buildDigestBody(["Milk"], "en-us");
-		expect(title).toContain("1");
-		expect(body).toBe("Milk");
+	it("groups an item expiring today into the today bucket (en-us)", () => {
+		const { body } = buildDigestBody(
+			[{ name: "Milk", expiringDate: new Date("2026-01-15T00:00:00Z") }],
+			now,
+			"en-us",
+		);
+		expect(body).toBe("Today: Milk");
+	});
+
+	it("groups items 1-2 days out separately from today", () => {
+		const { body } = buildDigestBody(
+			[
+				{ name: "Leite", expiringDate: new Date("2026-01-15T00:00:00Z") },
+				{ name: "Ovos", expiringDate: new Date("2026-01-16T00:00:00Z") },
+				{ name: "Iogurte", expiringDate: new Date("2026-01-17T00:00:00Z") },
+			],
+			now,
+			"pt-br",
+		);
+		expect(body).toBe("Hoje: Leite\n1-2 dias: Ovos, Iogurte");
+	});
+
+	it("puts an item 3+ days out in the this-week bucket", () => {
+		const { body } = buildDigestBody(
+			[{ name: "Queijo", expiringDate: new Date("2026-01-18T00:00:00Z") }],
+			now,
+			"pt-br",
+		);
+		expect(body).toBe("Esta semana: Queijo");
+	});
+
+	it("omits empty buckets", () => {
+		const { body } = buildDigestBody(
+			[{ name: "Queijo", expiringDate: new Date("2026-01-18T00:00:00Z") }],
+			now,
+			"en-us",
+		);
+		expect(body).toBe("This week: Queijo");
+	});
+
+	it("flags the title when any item is due today", () => {
+		const { title } = buildDigestBody(
+			[
+				{ name: "Leite", expiringDate: new Date("2026-01-15T00:00:00Z") },
+				{ name: "Queijo", expiringDate: new Date("2026-01-18T00:00:00Z") },
+			],
+			now,
+			"en-us",
+		);
+		expect(title).toBe("2 item(s) expiring soon — 1 today!");
+	});
+
+	it("leaves the title unflagged when nothing is due today", () => {
+		const { title } = buildDigestBody(
+			[{ name: "Queijo", expiringDate: new Date("2026-01-18T00:00:00Z") }],
+			now,
+			"pt-br",
+		);
+		expect(title).toBe("1 item(ns) vencendo em breve");
+	});
+
+	it("treats an already-overdue item as due today", () => {
+		const { body } = buildDigestBody(
+			[{ name: "Leite", expiringDate: new Date("2026-01-10T00:00:00Z") }],
+			now,
+			"pt-br",
+		);
+		expect(body).toBe("Hoje: Leite");
 	});
 });
