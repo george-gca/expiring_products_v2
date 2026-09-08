@@ -10,7 +10,7 @@ export function ItemListItem({
 	item: PantryItem;
 	onClick: () => void;
 }) {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const { token } = theme.useToken();
 	const color = getExpiryWarningColor(item, new Date());
 
@@ -36,7 +36,7 @@ export function ItemListItem({
 				<Typography.Text strong>{item.name}</Typography.Text>
 				<Typography.Text type="secondary">
 					{t("items.expiresOn", {
-						date: item.expiringDate.toLocaleDateString(),
+						date: item.expiringDate.toLocaleDateString(i18n.language),
 					})}
 				</Typography.Text>
 			</Flex>
