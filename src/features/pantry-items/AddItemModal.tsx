@@ -18,6 +18,17 @@ import { upsertBarcodeProduct } from "../barcode/firestoreWrites";
 import { lookupBarcode } from "../barcode/lookupBarcode";
 import type { Category } from "../categories/schema";
 import { addItem } from "./firestoreWrites";
+import { QuantityStepper } from "./QuantityStepper";
+
+// Antd's DatePicker parses/displays "YYYY-MM-DD" by default regardless of
+// ConfigProvider's `locale` — that prop only covers calendar labels, not the
+// typed-entry format — so the day/month order must be set explicitly here.
+// ISO stays accepted as a second parse format (not displayed) for anyone
+// used to typing it that way.
+const DATE_FORMATS: Record<string, string> = {
+	"pt-BR": "DD/MM/YYYY",
+	"en-US": "MM/DD/YYYY",
+};
 
 interface AddItemFormValues {
 	name: string;
@@ -47,7 +58,7 @@ export function AddItemModal({
 	// type recurring) and `false` from the ordinary "+" button.
 	initialRecurring?: boolean;
 }) {
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const [form] = Form.useForm<AddItemFormValues>();
 	const [scannerOpen, setScannerOpen] = useState(false);
 
@@ -95,7 +106,9 @@ export function AddItemModal({
 
 	const handleDetect = async (barcode: string) => {
 		setScannerOpen(false);
-		form.setFieldsValue({ barcode });
+		// A scan always starts a fresh count, regardless of whatever quantity
+		// was left over in the form store from a prior cancelled add.
+		form.setFieldsValue({ barcode, quantity: 1 });
 		await applyBarcodeLookup(barcode);
 	};
 
@@ -194,14 +207,20 @@ export function AddItemModal({
 						label={t("items.quantity")}
 						rules={[{ required: true }]}
 					>
-						<InputNumber min={1} style={{ width: "100%" }} />
+						<QuantityStepper min={1} />
 					</Form.Item>
 					<Form.Item
 						name="expiringDate"
 						label={t("items.expiringDate")}
 						rules={[{ required: true }]}
 					>
-						<DatePicker style={{ width: "100%" }} />
+						<DatePicker
+							format={[
+								DATE_FORMATS[i18n.language] ?? DATE_FORMATS["pt-BR"],
+								"YYYY-MM-DD",
+							]}
+							style={{ width: "100%" }}
+						/>
 					</Form.Item>
 					<Form.Item name="duration" label={t("items.duration")}>
 						<InputNumber min={1} style={{ width: "100%" }} />

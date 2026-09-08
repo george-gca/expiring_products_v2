@@ -1,14 +1,7 @@
-import { Flex, Tag, Typography } from "antd";
+import { Flex, Tag, Typography, theme } from "antd";
 import { useTranslation } from "react-i18next";
 import type { PantryItem } from "./schema";
 import { getExpiryWarningColor } from "./sortItems";
-
-const COLOR_STYLES: Record<"red" | "yellow" | "white", { background: string }> =
-	{
-		red: { background: "#fff1f0" },
-		yellow: { background: "#fffbe6" },
-		white: { background: "transparent" },
-	};
 
 export function ItemListItem({
 	item,
@@ -18,14 +11,26 @@ export function ItemListItem({
 	onClick: () => void;
 }) {
 	const { t } = useTranslation();
+	const { token } = theme.useToken();
 	const color = getExpiryWarningColor(item, new Date());
+
+	// Semantic tokens (not hardcoded hex) so the background stays readable
+	// under both the light and dark ConfigProvider algorithms — see Root.tsx.
+	const colorStyles: Record<
+		"red" | "yellow" | "white",
+		{ background: string }
+	> = {
+		red: { background: token.colorErrorBg },
+		yellow: { background: token.colorWarningBg },
+		white: { background: "transparent" },
+	};
 
 	return (
 		<Flex
 			justify="space-between"
 			align="center"
 			onClick={onClick}
-			style={{ cursor: "pointer", ...COLOR_STYLES[color] }}
+			style={{ cursor: "pointer", ...colorStyles[color] }}
 		>
 			<Flex vertical>
 				<Typography.Text strong>{item.name}</Typography.Text>

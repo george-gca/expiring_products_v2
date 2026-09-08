@@ -1,9 +1,10 @@
-import { Form, InputNumber, Modal, message, Switch } from "antd";
+import { Form, Modal, message, Switch } from "antd";
 import { doc, getDoc } from "firebase/firestore";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { db } from "../../lib/firebase";
 import { setItemRecurring, updateItemQuantities } from "./firestoreWrites";
+import { QuantityStepper } from "./QuantityStepper";
 import { type PantryItem, safeParseItemHistoryDoc } from "./schema";
 
 interface EditFormValues {
@@ -95,13 +96,13 @@ export function EditItemModal({
 				}}
 			>
 				<Form.Item name="opened" label={t("items.openedItems")}>
-					<InputNumber min={0} max={item.quantity} style={{ width: "100%" }} />
+					<QuantityStepper min={0} max={item.quantity} />
 				</Form.Item>
 				<Form.Item name="consumed" label={t("items.consumedItems")}>
-					<InputNumber min={0} max={item.quantity} style={{ width: "100%" }} />
+					<QuantityStepper min={0} max={item.quantity} />
 				</Form.Item>
 				<Form.Item name="discarded" label={t("items.discardedItems")}>
-					<InputNumber min={0} max={item.quantity} style={{ width: "100%" }} />
+					<QuantityStepper min={0} max={item.quantity} />
 				</Form.Item>
 				<Form.Item
 					name="recurring"

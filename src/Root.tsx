@@ -1,13 +1,21 @@
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { Button, ConfigProvider, notification, theme } from "antd";
+import enUS from "antd/locale/en_US";
+import ptBR from "antd/locale/pt_BR";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { App } from "./App";
 import { useColorScheme } from "./lib/useColorScheme";
 
+// i18next canonicalizes to BCP-47 casing ("pt-BR"/"en-US") — see src/lib/i18n.ts.
+const ANTD_LOCALES: Record<string, typeof ptBR> = {
+	"pt-BR": ptBR,
+	"en-US": enUS,
+};
+
 export function Root() {
 	const isDark = useColorScheme();
-	const { t } = useTranslation();
+	const { t, i18n } = useTranslation();
 	const {
 		needRefresh: [needRefresh],
 		updateServiceWorker,
@@ -38,6 +46,7 @@ export function Root() {
 
 	return (
 		<ConfigProvider
+			locale={ANTD_LOCALES[i18n.language] ?? ptBR}
 			theme={{
 				algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
 			}}
