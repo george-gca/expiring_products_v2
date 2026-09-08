@@ -19,7 +19,20 @@ export function Root() {
 	const {
 		needRefresh: [needRefresh],
 		updateServiceWorker,
-	} = useRegisterSW();
+	} = useRegisterSW({
+		// The browser's own SW update check only runs on a real top-level
+		// navigation and is throttled to ~once/24h — a PWA that stays open or
+		// gets resumed by the OS (rather than freshly relaunched) can go
+		// indefinitely without ever re-checking. No polling interval: this
+		// checks only at the moment someone actually returns to the app,
+		// which is also the only moment they could see the prompt anyway.
+		onRegisteredSW(_url, registration) {
+			if (!registration) return;
+			document.addEventListener("visibilitychange", () => {
+				if (document.visibilityState === "visible") registration.update();
+			});
+		},
+	});
 
 	// A new service worker only reaches the "waiting" state a client can see
 	// once it's actually installed — sw.ts holds it there (no unconditional
