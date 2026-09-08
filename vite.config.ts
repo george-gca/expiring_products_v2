@@ -16,6 +16,15 @@ export default defineConfig({
       srcDir: 'src',
       filename: 'sw.ts',
       includeAssets: ['apple-touch-icon.png'],
+      // Default cap is 2 MiB; the main JS chunk crossed that (the Insights
+      // tab's added deps pushed it to ~2.3 MB) and this plugin version turns
+      // that overage into a hard build failure rather than just a warning —
+      // silently breaking every deploy since without an obvious error in the
+      // app itself. Codesplitting the bundle down is the real fix long-term;
+      // this unblocks deploys now.
+      injectManifest: {
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+      },
       manifest: {
         name: 'Produtos a vencer',
         short_name: 'Produtos a vencer',
