@@ -17,18 +17,9 @@ import { BarcodeScanner } from "../barcode/BarcodeScanner";
 import { upsertBarcodeProduct } from "../barcode/firestoreWrites";
 import { lookupBarcode } from "../barcode/lookupBarcode";
 import type { Category } from "../categories/schema";
+import { datePickerFormats } from "./dateFormat";
 import { addItem } from "./firestoreWrites";
 import { QuantityStepper } from "./QuantityStepper";
-
-// Antd's DatePicker parses/displays "YYYY-MM-DD" by default regardless of
-// ConfigProvider's `locale` — that prop only covers calendar labels, not the
-// typed-entry format — so the day/month order must be set explicitly here.
-// ISO stays accepted as a second parse format (not displayed) for anyone
-// used to typing it that way.
-const DATE_FORMATS: Record<string, string> = {
-	"pt-BR": "DD/MM/YYYY",
-	"en-US": "MM/DD/YYYY",
-};
 
 interface AddItemFormValues {
 	name: string;
@@ -215,10 +206,7 @@ export function AddItemModal({
 						rules={[{ required: true }]}
 					>
 						<DatePicker
-							format={[
-								DATE_FORMATS[i18n.language] ?? DATE_FORMATS["pt-BR"],
-								"YYYY-MM-DD",
-							]}
+							format={datePickerFormats(i18n.language)}
 							style={{ width: "100%" }}
 						/>
 					</Form.Item>

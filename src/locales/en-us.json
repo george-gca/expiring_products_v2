@@ -24,7 +24,11 @@
     "scanBarcode": "Scan barcode",
     "cancelScan": "Cancel scan",
     "mirrorCamera": "Mirror camera",
-    "cameraUnavailable": "Camera unavailable. Enter the item manually below."
+    "cameraUnavailable": "Camera unavailable. Enter the item manually below.",
+    "editDetails": "Fix item details",
+    "recordUsage": "Back to recording usage",
+    "delete": "Delete",
+    "deleteConfirmTitle": "Delete this item? It won't count in stats."
   },
   "settings": {
     "sectionPreferences": "Preferences",

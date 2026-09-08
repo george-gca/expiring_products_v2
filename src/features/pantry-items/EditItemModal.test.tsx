@@ -1,11 +1,12 @@
 import "../../lib/i18n";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import {
 	addDoc,
 	collection,
 	doc,
 	getDoc,
+	getDocs,
 	setDoc,
 	Timestamp,
 } from "firebase/firestore";
@@ -126,5 +127,129 @@ describe("EditItemModal", () => {
 		await waitFor(() =>
 			expect(screen.getByRole("switch", { name: /recurring/i })).toBeChecked(),
 		);
+	});
+});
+
+describe("EditItemModal details editing", () => {
+	it("corrects the name and expiring date via a direct field edit, touching neither item_history nor waste_events", async () => {
+		const user = userEvent.setup();
+		const itemsRef = collection(db, "users", uid, "items");
+		const original = await addDoc(itemsRef, {
+			name: "Bananas",
+			category: "foods",
+			quantity: 2,
+			expiring_date: Timestamp.fromDate(new Date("2027-01-01")),
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		const item: PantryItem = {
+			id: original.id,
+			name: "Bananas",
+			category: "foods",
+			quantity: 2,
+			expiringDate: new Date("2027-01-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		};
+		const onClose = vi.fn();
+
+		render(<EditItemModal uid={uid} item={item} onClose={onClose} />);
+
+		await user.click(screen.getByRole("button", { name: /fix item details/i }));
+
+		const nameInput = screen.getByLabelText(/^name$/i);
+		await user.clear(nameInput);
+		await user.type(nameInput, "Ripe Bananas");
+
+		const dateInput = screen.getByLabelText(/expiring date/i);
+		await user.clear(dateInput);
+		// Locale resolves to en-US in this test environment (MM/DD/YY): raw
+		// digits parse via the separator-free MMDDYY fallback format (see
+		// dateFormat.ts) — "020127" is Feb 1, 2027.
+		await user.type(dateInput, "020127");
+		await user.keyboard("{Enter}");
+
+		await user.click(screen.getByRole("button", { name: "OK" }));
+
+		await waitFor(() => expect(onClose).toHaveBeenCalled());
+
+		const itemDoc = await getDoc(doc(db, "users", uid, "items", original.id));
+		expect(itemDoc.data()?.name).toBe("Ripe Bananas");
+		expect(
+			itemDoc.data()?.expiring_date.toDate().toISOString().slice(0, 10),
+		).toBe("2027-02-01");
+
+		const historyDoc = await getDoc(
+			doc(
+				db,
+				"users",
+				uid,
+				"item_history",
+				encodeURIComponent("foods_Bananas"),
+			),
+		);
+		expect(historyDoc.exists()).toBe(false);
+
+		const eventsSnapshot = await getDocs(
+			collection(db, "users", uid, "waste_events"),
+		);
+		expect(eventsSnapshot.size).toBe(0);
+	});
+});
+
+describe("EditItemModal delete", () => {
+	it("deletes the item doc without writing a waste_events entry, so a mis-entered item is excluded from stats", async () => {
+		const user = userEvent.setup();
+		const itemsRef = collection(db, "users", uid, "items");
+		const original = await addDoc(itemsRef, {
+			name: "Added By Mistake",
+			category: "foods",
+			quantity: 1,
+			expiring_date: Timestamp.fromDate(new Date("2020-01-01")),
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		const item: PantryItem = {
+			id: original.id,
+			name: "Added By Mistake",
+			category: "foods",
+			quantity: 1,
+			expiringDate: new Date("2020-01-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		};
+		const onClose = vi.fn();
+
+		render(<EditItemModal uid={uid} item={item} onClose={onClose} />);
+
+		await user.click(screen.getByRole("button", { name: /delete/i }));
+		const popup = await screen.findByRole("tooltip");
+		await user.click(within(popup).getByRole("button", { name: "OK" }));
+
+		await waitFor(() => expect(onClose).toHaveBeenCalled());
+
+		const itemDoc = await getDoc(doc(db, "users", uid, "items", original.id));
+		expect(itemDoc.exists()).toBe(false);
+
+		const eventsSnapshot = await getDocs(
+			collection(db, "users", uid, "waste_events"),
+		);
+		expect(eventsSnapshot.size).toBe(0);
 	});
 });

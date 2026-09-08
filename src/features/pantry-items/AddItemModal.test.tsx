@@ -158,7 +158,10 @@ describe("AddItemModal manual barcode entry", () => {
 			screen.getByRole("textbox", { name: /barcode/i }),
 			"9998887776665",
 		);
-		await userEvent.type(screen.getByLabelText(/expiring date/i), "2027-01-01");
+		// The DatePicker uses a digit-only cell mask (DD/MM/YY for pt-BR, the
+		// test's default locale) — no "/" typed, matching the new input-mask
+		// behavior. "010127" fills as 01/01/27.
+		await userEvent.type(screen.getByLabelText(/expiring date/i), "010127");
 		await userEvent.keyboard("{Enter}");
 
 		await userEvent.click(screen.getByRole("button", { name: "OK" }));
@@ -204,7 +207,7 @@ describe("AddItemModal manual barcode entry", () => {
 		);
 
 		await userEvent.type(screen.getByLabelText(/name/i), "Plain Item");
-		await userEvent.type(screen.getByLabelText(/expiring date/i), "2027-01-01");
+		await userEvent.type(screen.getByLabelText(/expiring date/i), "010127");
 		await userEvent.keyboard("{Enter}");
 
 		await userEvent.click(screen.getByRole("button", { name: "OK" }));

@@ -1,6 +1,7 @@
 import {
 	addDoc,
 	collection,
+	deleteDoc,
 	doc,
 	runTransaction,
 	setDoc,
@@ -124,6 +125,37 @@ export async function updateItemQuantities(
 			});
 		}
 	});
+}
+
+interface ItemDetailsChanges {
+	name: string;
+	quantity: number;
+	expiringDate: Date;
+	duration: number | null;
+}
+
+// Corrects a mis-entered item in place — distinct from updateItemQuantities,
+// which records a usage event (open/consume/discard) rather than fixing the
+// stored record itself. A plain field overwrite: no item_history or
+// waste_events write, so a correction never appears in Insights history.
+export async function updateItemDetails(
+	uid: string,
+	itemId: string,
+	changes: ItemDetailsChanges,
+): Promise<void> {
+	await updateDoc(doc(db, "users", uid, "items", itemId), {
+		name: changes.name,
+		quantity: changes.quantity,
+		expiring_date: Timestamp.fromDate(changes.expiringDate),
+		duration: changes.duration,
+	});
+}
+
+// Removes a mis-entered item entirely. Deliberately just the item doc — no
+// waste_events write, so a deleted entry (unlike a real consume/discard) is
+// excluded from Insights' all-time stats.
+export async function deleteItem(uid: string, itemId: string): Promise<void> {
+	await deleteDoc(doc(db, "users", uid, "items", itemId));
 }
 
 export async function setItemRecurring(

@@ -40,7 +40,9 @@ export function ItemListItem({
 					})}
 				</Typography.Text>
 			</Flex>
-			<Tag color="blue">{item.quantity}</Tag>
+			<Tag color="blue" style={{ marginInlineEnd: token.marginXS }}>
+				{item.quantity}
+			</Tag>
 		</Flex>
 	);
 }

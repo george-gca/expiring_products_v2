@@ -24,7 +24,11 @@
     "scanBarcode": "Escanear código de barras",
     "cancelScan": "Cancelar escaneamento",
     "mirrorCamera": "Espelhar câmera",
-    "cameraUnavailable": "Câmera indisponível. Preencha os campos manualmente abaixo."
+    "cameraUnavailable": "Câmera indisponível. Preencha os campos manualmente abaixo.",
+    "editDetails": "Corrigir dados do item",
+    "recordUsage": "Voltar para registrar uso",
+    "delete": "Excluir",
+    "deleteConfirmTitle": "Excluir este item? Ele não entrará nas estatísticas."
   },
   "settings": {
     "sectionPreferences": "Preferências",
