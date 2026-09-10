@@ -85,7 +85,7 @@ test("exports a backup and re-imports it, restoring the pantry to the exported s
 	await page.getByRole("button", { name: "OK" }).click();
 	await expect(page.getByText("Whole Milk")).toBeVisible();
 
-	await page.getByRole("tab", { name: "⚙️" }).click();
+	await page.getByRole("tab", { name: /⚙️/ }).click();
 
 	const downloadPromise = page.waitForEvent("download");
 	await page.getByRole("button", { name: "Exportar backup" }).click();
@@ -105,7 +105,7 @@ test("exports a backup and re-imports it, restoring the pantry to the exported s
 	await page.getByRole("button", { name: "OK" }).click();
 	await expect(page.getByText("Extra Item")).toBeVisible();
 
-	await page.getByRole("tab", { name: "⚙️" }).click();
+	await page.getByRole("tab", { name: /⚙️/ }).click();
 	await page.getByLabel("Importar backup").setInputFiles(backupPath);
 
 	await expect(page.getByText(/substituir todos os dados/i)).toBeVisible();
@@ -158,7 +158,7 @@ test("switching language updates the rendered UI immediately", async ({ page }) 
 	await page.getByLabel("Senha").fill("correct-horse-battery");
 	await page.getByRole("button", { name: "Cadastrar" }).click();
 
-	await page.getByRole("tab", { name: "⚙️" }).click();
+	await page.getByRole("tab", { name: /⚙️/ }).click();
 	await expect(page.getByText("Aviso de estoque baixo")).toBeVisible();
 
 	await page.getByRole("combobox").click();
@@ -244,7 +244,7 @@ test("denies notification permission gracefully, leaving the switch off with an 
 	await page.getByLabel("Senha").fill("correct-horse-battery");
 	await page.getByRole("button", { name: "Cadastrar" }).click();
 
-	await page.getByRole("tab", { name: "⚙️" }).click();
+	await page.getByRole("tab", { name: /⚙️/ }).click();
 	const notifSwitch = page.getByRole("switch", { name: /notifica/i });
 	await notifSwitch.click();
 

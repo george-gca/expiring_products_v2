@@ -31,6 +31,7 @@
     "deleteConfirmTitle": "Excluir este item? Ele não entrará nas estatísticas."
   },
   "settings": {
+    "tabName": "Configurações",
     "sectionPreferences": "Preferências",
     "sectionNotifications": "Notificações",
     "lowStockThreshold": "Aviso de estoque baixo",
@@ -69,6 +70,7 @@
     "importPartialFailure": "Algo deu errado durante a importação — alguns dados podem não ter sido importados. Verifique sua despensa e tente novamente se necessário."
   },
   "insights": {
+    "tabName": "Estatísticas",
     "sectionRightNow": "Agora",
     "sectionAllTime": "Histórico",
     "sealedGood": "Lacrados, bons",

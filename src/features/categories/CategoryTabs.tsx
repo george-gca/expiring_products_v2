@@ -1,6 +1,7 @@
 import { Tabs } from "antd";
 import type { ReactNode } from "react";
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import type { Category } from "./schema";
 
 interface CategoryTabsProps {
@@ -16,6 +17,7 @@ export function CategoryTabs({
 	insightsPane,
 	settingsPane,
 }: CategoryTabsProps) {
+	const { t } = useTranslation();
 	const containerRef = useRef<HTMLDivElement>(null);
 
 	// Selecting a tab toggles its label between icon-only and icon+name (see
@@ -53,8 +55,24 @@ export function CategoryTabs({
 			),
 			children: renderPane(category),
 		})),
-		{ key: "insights", label: "📊", children: insightsPane },
-		{ key: "settings", label: "⚙️", children: settingsPane },
+		{
+			key: "insights",
+			label: (
+				<>
+					📊 <span className="category-tab-name">{t("insights.tabName")}</span>
+				</>
+			),
+			children: insightsPane,
+		},
+		{
+			key: "settings",
+			label: (
+				<>
+					⚙️ <span className="category-tab-name">{t("settings.tabName")}</span>
+				</>
+			),
+			children: settingsPane,
+		},
 	];
 	return (
 		<div ref={containerRef}>

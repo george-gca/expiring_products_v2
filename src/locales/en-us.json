@@ -31,6 +31,7 @@
     "deleteConfirmTitle": "Delete this item? It won't count in stats."
   },
   "settings": {
+    "tabName": "Settings",
     "sectionPreferences": "Preferences",
     "sectionNotifications": "Notifications",
     "lowStockThreshold": "Low stock warning threshold",
@@ -69,6 +70,7 @@
     "importPartialFailure": "Something went wrong during import — some data may not have imported. Check your pantry and try again if needed."
   },
   "insights": {
+    "tabName": "Statistics",
     "sectionRightNow": "Right now",
     "sectionAllTime": "All time",
     "sealedGood": "Sealed, good",
