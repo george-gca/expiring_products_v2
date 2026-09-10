@@ -30,10 +30,10 @@ so no data migration was needed. Live at
   next scan (or typed entry) of it auto-fills instantly, building a
   household-specific barcode database over time.
 - **Waste insights** — a dedicated tab showing a monthly consumed-in-time vs.
-  wasted trend, per-category breakdowns of what's currently sealed/opened and
-  still good vs. sitting overdue right now, plus an all-time breakdown of what
-  got consumed in time versus what went to waste (and whether it was opened
-  or not when that happened).
+  wasted trend, a category ranking by waste rate, per-category breakdowns of
+  what's currently sealed/opened and still good vs. sitting overdue right
+  now, plus an all-time breakdown of what got consumed in time versus what
+  went to waste (and whether it was opened or not when that happened).
 - **Push notifications** — a daily digest of what's expiring soon, with a
   configurable time and lead time, registered per device.
 - **Backup & restore** — export your whole pantry to a JSON file, import it
