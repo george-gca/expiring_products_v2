@@ -33,20 +33,25 @@ afterEach(() =>
 	clearFirestoreEmulator(import.meta.env.VITE_FIREBASE_PROJECT_ID),
 );
 
-// Category cells render as "<emoji> <name>" (e.g. "🍎 Foods") in one text
-// node, and every numeric column also appears in the "All categories"
-// total row — so assertions below match the combined label text and scope
-// numeric lookups to one row via `within`, rather than a bare getByText
-// that would either miss the combined string or hit more than one match.
+// The table is transposed: categories (plus "All categories") are column
+// headers, and each metric (e.g. "Sealed, good") is a row shared across both
+// the "Right now" and "All time" tables. So a category no longer identifies
+// a single row — assertions below locate the metric's row by its label,
+// then check the cell at that category's column position (label column
+// first, then categories in the order passed to the component, then the
+// "All categories" total column last) rather than searching by category text.
 describe("InsightsPane", () => {
-	it("renders a row per category, plus an All categories row, all zero when there's no data", async () => {
+	it("renders a category column per category, plus an All categories column, all zero when there's no data", async () => {
 		render(<InsightsPane uid={uid} categories={categories} />);
 
+		// Both the "Right now" and "All time" tables render the same category
+		// columns, so each header text is expected to appear twice.
 		await waitFor(() =>
-			expect(screen.getByText("🍎 Foods")).toBeInTheDocument(),
+			expect(screen.getAllByText("🍎 Foods").length).toBeGreaterThan(0),
 		);
-		expect(screen.getByText("💊 Medicines")).toBeInTheDocument();
-		expect(screen.getByText("All categories")).toBeInTheDocument();
+		expect(screen.getAllByText("💊 Medicines").length).toBeGreaterThan(0);
+		expect(screen.getAllByText("All categories").length).toBeGreaterThan(0);
+		expect(screen.getByText("Sealed, good")).toBeInTheDocument();
 	});
 
 	it("reflects a seeded sealed item in the Right now block", async () => {
@@ -68,11 +73,14 @@ describe("InsightsPane", () => {
 
 		render(<InsightsPane uid={uid} categories={categories} />);
 
-		const foodsRow = await waitFor(() =>
-			screen.getByText("🍎 Foods").closest("tr"),
-		);
-		expect(foodsRow).not.toBeNull();
-		expect(within(foodsRow as HTMLElement).getByText("4")).toBeInTheDocument();
+		// [label, Foods, Medicines, All categories]
+		await waitFor(() => {
+			const row = screen.getByText("Sealed, good").closest("tr");
+			const cells = within(row as HTMLElement).getAllByRole("cell");
+			expect(cells[1]).toHaveTextContent("4");
+			expect(cells[2]).toHaveTextContent("0");
+			expect(cells[3]).toHaveTextContent("4");
+		});
 	});
 
 	it("reflects a seeded waste_events doc in the All time block", async () => {
@@ -87,12 +95,15 @@ describe("InsightsPane", () => {
 
 		render(<InsightsPane uid={uid} categories={categories} />);
 
-		const medicinesRow = await waitFor(() =>
-			screen.getByText("💊 Medicines").closest("tr"),
-		);
-		expect(medicinesRow).not.toBeNull();
-		expect(
-			within(medicinesRow as HTMLElement).getByText("2"),
-		).toBeInTheDocument();
+		// was_expired: true, was_opened: false, discarded: 2 buckets into
+		// "Expired, unopened" (see aggregateWasteEvents.ts).
+		// [label, Foods, Medicines, All categories]
+		await waitFor(() => {
+			const row = screen.getByText("Expired, unopened").closest("tr");
+			const cells = within(row as HTMLElement).getAllByRole("cell");
+			expect(cells[1]).toHaveTextContent("0");
+			expect(cells[2]).toHaveTextContent("2");
+			expect(cells[3]).toHaveTextContent("2");
+		});
 	});
 });

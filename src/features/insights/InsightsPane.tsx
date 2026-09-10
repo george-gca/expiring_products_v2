@@ -20,6 +20,12 @@ interface InsightsRow {
 	consumedAfterExpiry: number;
 }
 
+interface MetricRow {
+	key: string;
+	label: string;
+	[categoryKey: string]: string | number;
+}
+
 const EMPTY_CURRENT = {
 	sealedGood: 0,
 	openedGood: 0,
@@ -80,72 +86,63 @@ export function InsightsPane({
 		},
 	);
 
-	const columns: TableColumnsType<InsightsRow> = [
-		{ title: "", dataIndex: "categoryLabel", key: "categoryLabel" },
-		{
-			title: t("insights.sectionRightNow"),
-			children: [
-				{
-					title: t("insights.sealedGood"),
-					dataIndex: "sealedGood",
-					key: "sealedGood",
-				},
-				{
-					title: t("insights.openedGood"),
-					dataIndex: "openedGood",
-					key: "openedGood",
-				},
-				{
-					title: t("insights.overdueUnopened"),
-					dataIndex: "overdueUnopened",
-					key: "overdueUnopened",
-				},
-				{
-					title: t("insights.overdueOpened"),
-					dataIndex: "overdueOpened",
-					key: "overdueOpened",
-				},
-			],
-		},
-		{
-			title: t("insights.sectionAllTime"),
-			children: [
-				{
-					title: t("insights.consumedInTime"),
-					dataIndex: "consumedInTime",
-					key: "consumedInTime",
-				},
-				{
-					title: t("insights.expiredUnopened"),
-					dataIndex: "expiredUnopened",
-					key: "expiredUnopened",
-				},
-				{
-					title: t("insights.expiredOpened"),
-					dataIndex: "expiredOpened",
-					key: "expiredOpened",
-				},
-				{
-					title: t("insights.discardedNotExpired"),
-					dataIndex: "discardedNotExpired",
-					key: "discardedNotExpired",
-				},
-				{
-					title: t("insights.consumedAfterExpiry"),
-					dataIndex: "consumedAfterExpiry",
-					key: "consumedAfterExpiry",
-				},
-			],
-		},
+	const columnRows = [...rows, totalRow];
+	const columns: TableColumnsType<MetricRow> = [
+		{ title: "", dataIndex: "label", key: "label" },
+		...columnRows.map((row) => ({
+			title: row.categoryLabel,
+			dataIndex: row.key,
+			key: row.key,
+		})),
 	];
 
+	const toMetricRows = (
+		metrics: { key: keyof InsightsRow; label: string }[],
+	): MetricRow[] =>
+		metrics.map(({ key, label }) => {
+			const metricRow: MetricRow = { key, label };
+			for (const row of columnRows) {
+				metricRow[row.key] = row[key] as number;
+			}
+			return metricRow;
+		});
+
+	const rightNowRows = toMetricRows([
+		{ key: "sealedGood", label: t("insights.sealedGood") },
+		{ key: "openedGood", label: t("insights.openedGood") },
+		{ key: "overdueUnopened", label: t("insights.overdueUnopened") },
+		{ key: "overdueOpened", label: t("insights.overdueOpened") },
+	]);
+
+	const allTimeRows = toMetricRows([
+		{ key: "consumedInTime", label: t("insights.consumedInTime") },
+		{ key: "expiredUnopened", label: t("insights.expiredUnopened") },
+		{ key: "expiredOpened", label: t("insights.expiredOpened") },
+		{ key: "discardedNotExpired", label: t("insights.discardedNotExpired") },
+		{
+			key: "consumedAfterExpiry",
+			label: t("insights.consumedAfterExpiry"),
+		},
+	]);
+
 	return (
-		<Table
-			columns={columns}
-			dataSource={[...rows, totalRow]}
-			pagination={false}
-			rowKey="key"
-			scroll={{ x: true }}
-		/>
+		<>
+			<Table
+				title={() => t("insights.sectionRightNow")}
+				columns={columns}
+				dataSource={rightNowRows}
+				pagination={false}
+				rowKey="key"
+				scroll={{ x: true }}
+			/>
+			<Table
+				title={() => t("insights.sectionAllTime")}
+				columns={columns}
+				dataSource={allTimeRows}
+				pagination={false}
+				rowKey="key"
+				scroll={{ x: true }}
+			/>
+		</>
 	);
 }
