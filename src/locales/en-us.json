@@ -71,8 +71,11 @@
   },
   "insights": {
     "tabName": "Statistics",
+    "sectionTrend": "Trend",
+    "trendEmpty": "No history yet.",
     "sectionRightNow": "Right now",
     "sectionAllTime": "All time",
+    "wasted": "Wasted",
     "sealedGood": "Sealed, good",
     "openedGood": "Opened, good",
     "overdueUnopened": "Overdue, unopened",

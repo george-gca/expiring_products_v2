@@ -52,6 +52,7 @@ describe("InsightsPane", () => {
 		expect(screen.getAllByText("💊 Medicines").length).toBeGreaterThan(0);
 		expect(screen.getAllByText("All categories").length).toBeGreaterThan(0);
 		expect(screen.getByText("Sealed, good")).toBeInTheDocument();
+		expect(screen.getByText("No history yet.")).toBeInTheDocument();
 	});
 
 	it("reflects a seeded sealed item in the Right now block", async () => {
@@ -105,5 +106,14 @@ describe("InsightsPane", () => {
 			expect(cells[2]).toHaveTextContent("2");
 			expect(cells[3]).toHaveTextContent("2");
 		});
+
+		// A discarded event has a month bucket, so the trend chart renders
+		// instead of the "No history yet." empty state. (Recharts' own output
+		// isn't asserted here — jsdom's ResizeObserver stub never reports a
+		// nonzero container size, so ResponsiveContainer renders no SVG
+		// content; this was verified visually in a real browser instead.)
+		await waitFor(() =>
+			expect(screen.queryByText("No history yet.")).not.toBeInTheDocument(),
+		);
 	});
 });

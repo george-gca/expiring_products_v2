@@ -71,8 +71,11 @@
   },
   "insights": {
     "tabName": "Estatísticas",
+    "sectionTrend": "Tendência",
+    "trendEmpty": "Nenhum histórico ainda.",
     "sectionRightNow": "Agora",
     "sectionAllTime": "Histórico",
+    "wasted": "Desperdiçados",
     "sealedGood": "Lacrados, bons",
     "openedGood": "Abertos, bons",
     "overdueUnopened": "Vencidos, não abertos",

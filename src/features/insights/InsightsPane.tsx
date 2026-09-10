@@ -1,10 +1,12 @@
-import { Table, type TableColumnsType } from "antd";
+import { Card, Empty, Table, type TableColumnsType } from "antd";
 import { useTranslation } from "react-i18next";
 import type { Category } from "../categories/schema";
 import { useAllPantryItems } from "../pantry-items/useAllPantryItems";
 import { aggregateWasteEvents } from "./aggregateWasteEvents";
+import { aggregateWasteTrend } from "./aggregateWasteTrend";
 import { computeCurrentStatus } from "./currentStatus";
 import { useWasteEvents } from "./useWasteEvents";
+import { WasteTrendChart } from "./WasteTrendChart";
 
 interface InsightsRow {
 	key: string;
@@ -56,6 +58,7 @@ export function InsightsPane({
 
 	const currentByCategory = computeCurrentStatus(items, new Date());
 	const historyByCategory = aggregateWasteEvents(events);
+	const trend = aggregateWasteTrend(events);
 
 	const rows: InsightsRow[] = categories.map((category) => ({
 		key: category.key,
@@ -127,6 +130,13 @@ export function InsightsPane({
 
 	return (
 		<>
+			<Card title={t("insights.sectionTrend")}>
+				{trend.length === 0 ? (
+					<Empty description={t("insights.trendEmpty")} />
+				) : (
+					<WasteTrendChart data={trend} />
+				)}
+			</Card>
 			<Table
 				title={() => t("insights.sectionRightNow")}
 				columns={columns}
