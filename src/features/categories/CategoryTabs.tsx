@@ -18,7 +18,12 @@ export function CategoryTabs({
 	const items = [
 		...categories.map((category) => ({
 			key: category.key,
-			label: `${category.emoji} ${category.name}`,
+			label: (
+				<>
+					{category.emoji}{" "}
+					<span className="category-tab-name">{category.name}</span>
+				</>
+			),
 			children: renderPane(category),
 		})),
 		{ key: "insights", label: "📊", children: insightsPane },

@@ -61,11 +61,20 @@
    fill .ant-tabs-nav-wrap is what gives the auto margin below any free
    space to actually push into. */
 .category-tabs .ant-tabs-nav-list {
-  width: 100%;
+  min-width: 100%;
 }
 
 .category-tabs .ant-tabs-tab[data-node-key="settings"] {
   margin-inline-start: auto;
+}
+
+/* On narrow screens, show the category name only on the active tab so more
+   tabs fit before overflowing into scroll — unselected tabs fall back to
+   icon-only. */
+@media (max-width: 600px) {
+  .category-tabs .ant-tabs-tab:not(.ant-tabs-tab-active) .category-tab-name {
+    display: none;
+  }
 }
 
 #root {
