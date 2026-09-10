@@ -52,7 +52,9 @@ describe("InsightsPane", () => {
 		expect(screen.getAllByText("💊 Medicines").length).toBeGreaterThan(0);
 		expect(screen.getAllByText("All categories").length).toBeGreaterThan(0);
 		expect(screen.getByText("Sealed, good")).toBeInTheDocument();
-		expect(screen.getByText("No history yet.")).toBeInTheDocument();
+		// Both the trend chart and the waste-rate ranking fall back to this
+		// same empty-state text when there's no waste history yet.
+		expect(screen.getAllByText("No history yet.")).toHaveLength(2);
 	});
 
 	it("reflects a seeded sealed item in the Right now block", async () => {

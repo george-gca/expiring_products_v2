@@ -4,8 +4,10 @@ import type { Category } from "../categories/schema";
 import { useAllPantryItems } from "../pantry-items/useAllPantryItems";
 import { aggregateWasteEvents } from "./aggregateWasteEvents";
 import { aggregateWasteTrend } from "./aggregateWasteTrend";
+import { computeWasteRateRanking } from "./computeWasteRateRanking";
 import { computeCurrentStatus } from "./currentStatus";
 import { useWasteEvents } from "./useWasteEvents";
+import { WasteRateRankingChart } from "./WasteRateRankingChart";
 import { WasteTrendChart } from "./WasteTrendChart";
 
 interface InsightsRow {
@@ -59,6 +61,7 @@ export function InsightsPane({
 	const currentByCategory = computeCurrentStatus(items, new Date());
 	const historyByCategory = aggregateWasteEvents(events);
 	const trend = aggregateWasteTrend(events);
+	const wasteRanking = computeWasteRateRanking(historyByCategory, categories);
 
 	const rows: InsightsRow[] = categories.map((category) => ({
 		key: category.key,
@@ -135,6 +138,13 @@ export function InsightsPane({
 					<Empty description={t("insights.trendEmpty")} />
 				) : (
 					<WasteTrendChart data={trend} />
+				)}
+			</Card>
+			<Card title={t("insights.sectionWasteRanking")}>
+				{wasteRanking.length === 0 ? (
+					<Empty description={t("insights.wasteRankingEmpty")} />
+				) : (
+					<WasteRateRankingChart data={wasteRanking} />
 				)}
 			</Card>
 			<Table
