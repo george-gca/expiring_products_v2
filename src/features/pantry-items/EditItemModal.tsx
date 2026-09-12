@@ -19,7 +19,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { db } from "../../lib/firebase";
 import type { Category } from "../categories/schema";
-import { applyNumericDateInputMode, datePickerFormats } from "./dateFormat";
+import { configureDateInputForMobile, datePickerFormats } from "./dateFormat";
 import {
 	deleteItem,
 	setItemRecurring,
@@ -254,7 +254,7 @@ export function EditItemModal({
 						rules={[{ required: true }]}
 					>
 						<DatePicker
-							ref={applyNumericDateInputMode}
+							ref={configureDateInputForMobile}
 							format={datePickerFormats(i18n.language)}
 							placement="topLeft"
 							style={{ width: "100%" }}

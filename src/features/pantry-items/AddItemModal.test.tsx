@@ -290,7 +290,7 @@ describe("AddItemModal date picker mobile behavior", () => {
 		expect(dateInput).toHaveAttribute("pattern", "[0-9]*");
 	});
 
-	it("opens the calendar panel above the date field instead of below", async () => {
+	it("does not open the calendar panel when the date field itself is clicked", async () => {
 		render(
 			<AddItemModal
 				uid="test-user-date-mobile-2"
@@ -301,6 +301,29 @@ describe("AddItemModal date picker mobile behavior", () => {
 		);
 
 		await userEvent.click(screen.getByLabelText(/expiring date/i));
+
+		expect(
+			document.querySelector(".ant-picker-dropdown"),
+		).not.toBeInTheDocument();
+	});
+
+	it("opens the calendar panel above the date field when the calendar icon is clicked", async () => {
+		render(
+			<AddItemModal
+				uid="test-user-date-mobile-3"
+				category={category}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		// The calendar icon itself has `pointer-events: none` (antd renders it
+		// purely decorative, `aria-hidden`), so a real tap on it actually lands
+		// on the wrapper behind it — reproduce that by clicking the wrapper
+		// rather than the icon span.
+		const pickerInputWrapper = document.querySelector(".ant-picker-input");
+		if (!pickerInputWrapper) throw new Error("date picker wrapper not found");
+		await userEvent.click(pickerInputWrapper);
 
 		const dropdown = document.querySelector(".ant-picker-dropdown");
 		expect(dropdown).toHaveClass("ant-picker-dropdown-placement-topLeft");

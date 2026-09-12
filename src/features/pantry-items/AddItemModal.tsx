@@ -17,7 +17,7 @@ import { BarcodeScanner } from "../barcode/BarcodeScanner";
 import { upsertBarcodeProduct } from "../barcode/firestoreWrites";
 import { lookupBarcode } from "../barcode/lookupBarcode";
 import type { Category } from "../categories/schema";
-import { applyNumericDateInputMode, datePickerFormats } from "./dateFormat";
+import { configureDateInputForMobile, datePickerFormats } from "./dateFormat";
 import { addItem } from "./firestoreWrites";
 import { QuantityStepper } from "./QuantityStepper";
 
@@ -206,7 +206,7 @@ export function AddItemModal({
 						rules={[{ required: true }]}
 					>
 						<DatePicker
-							ref={applyNumericDateInputMode}
+							ref={configureDateInputForMobile}
 							format={datePickerFormats(i18n.language)}
 							placement="topLeft"
 							style={{ width: "100%" }}

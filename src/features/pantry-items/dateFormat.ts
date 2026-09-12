@@ -31,16 +31,27 @@ export function datePickerFormats(language: string): [string, string] {
 // <input> isn't reachable through props at all (rc-picker's SingleSelector
 // only forwards unknown props to the root wrapper div, not the input it
 // renders internally) — so the only way to get the mobile numeric keypad on
-// this field is to reach into the DOM via the picker's own ref. Digits-only
-// (no "/") because the raw separator-free format above already lets typing
-// plain digits parse correctly, so the numeric keypad never needs to offer
-// "/".
-export function applyNumericDateInputMode(
+// this field, or to change its click behavior, is to reach into the DOM via
+// the picker's own ref (pass this directly as the DatePicker's `ref`).
+//
+// Two independent fixes live here:
+// - inputMode/pattern: digits-only (no "/") because the raw separator-free
+//   format above already lets typing plain digits parse correctly, so the
+//   numeric keypad never needs to offer "/".
+// - The click listener: rc-picker opens the calendar panel on *any* click
+//   inside its wrapper div, input included — there's no prop to scope that
+//   to just the calendar icon. Stopping the input's own click from bubbling
+//   keeps it from ever reaching that wrapper's click handler, so tapping the
+//   input only focuses it (native mobile keyboard, no popup); the icon isn't
+//   covered by this listener, so clicking it still bubbles up and opens the
+//   panel as before.
+export function configureDateInputForMobile(
 	picker: { nativeElement: HTMLElement } | null,
 ): void {
 	const input = picker?.nativeElement.querySelector("input");
 	if (input) {
 		input.inputMode = "numeric";
 		input.pattern = "[0-9]*";
+		input.addEventListener("click", (event) => event.stopPropagation());
 	}
 }
