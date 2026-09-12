@@ -15,11 +15,13 @@ import { usePantryItems } from "./usePantryItems";
 export function ItemList({
 	uid,
 	category,
+	categories,
 	lowStockThreshold,
 	hideDistantThresholdMonths,
 }: {
 	uid: string;
 	category: Category;
+	categories: Category[];
 	lowStockThreshold: number;
 	hideDistantThresholdMonths: number;
 }) {
@@ -123,6 +125,7 @@ export function ItemList({
 				<EditItemModal
 					uid={uid}
 					item={editingItem}
+					categories={categories}
 					onClose={() => setEditingItem(null)}
 				/>
 			)}

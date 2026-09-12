@@ -49,6 +49,7 @@ export function AppRoute({ user }: { user: User }) {
 				<ItemList
 					uid={user.uid}
 					category={category}
+					categories={categories}
 					lowStockThreshold={settings.lowStockThreshold}
 					hideDistantThresholdMonths={settings.hideDistantThresholdMonths}
 				/>

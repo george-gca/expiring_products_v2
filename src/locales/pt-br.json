@@ -13,6 +13,7 @@
     "addTitle": "Adicionar item",
     "name": "Nome",
     "quantity": "Quantidade",
+    "category": "Categoria",
     "expiringDate": "Data de validade",
     "duration": "Duração após aberto (dias)",
     "recurring": "Compra recorrente",

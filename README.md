@@ -16,8 +16,10 @@ so no data migration was needed. Live at
   categories (e.g. Foods, Medicines, Freezer) with an emoji icon of your
   choosing, not a fixed set.
 - **Expiration tracking** — sort/filter items per category, hide items
-  expiring further out than you care about right now, and fix or delete an
-  item you entered wrong (a deleted entry never counts toward waste stats).
+  expiring further out than you care about right now, fix or delete an
+  item you entered wrong (a deleted entry never counts toward waste stats),
+  and move an item to a different category if it was filed under the
+  wrong one.
 - **Low-stock & shopping mode** — a shopping list derived from items you've
   marked as recurring purchases that have dropped below your configured
   threshold.

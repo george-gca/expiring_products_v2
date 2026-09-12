@@ -33,6 +33,8 @@ export function QuantityStepper({
 				min={min}
 				max={max}
 				style={{ width: "100%" }}
+				inputMode="numeric"
+				pattern="[0-9]*"
 			/>
 			<Button
 				icon={<MinusOutlined />}

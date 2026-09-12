@@ -13,6 +13,7 @@
     "addTitle": "Add Item",
     "name": "Name",
     "quantity": "Quantity",
+    "category": "Category",
     "expiringDate": "Expiring Date",
     "duration": "Duration after opened (days)",
     "recurring": "Recurring purchase",

@@ -13,10 +13,30 @@ import {
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../lib/firebase";
 import { clearFirestoreEmulator } from "../../test/emulator";
+import type { Category } from "../categories/schema";
 import { EditItemModal } from "./EditItemModal";
 import type { PantryItem } from "./schema";
 
 const uid = "test-user-5";
+
+const categories: Category[] = [
+	{
+		id: "foods-id",
+		key: "foods",
+		name: "Foods",
+		emoji: "🍎",
+		order: 0,
+		archived: false,
+	},
+	{
+		id: "medicines-id",
+		key: "medicines",
+		name: "Medicines",
+		emoji: "💊",
+		order: 1,
+		archived: false,
+	},
+];
 
 afterEach(() =>
 	clearFirestoreEmulator(import.meta.env.VITE_FIREBASE_PROJECT_ID),
@@ -53,7 +73,14 @@ describe("EditItemModal", () => {
 		};
 		const onClose = vi.fn();
 
-		render(<EditItemModal uid={uid} item={item} onClose={onClose} />);
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				onClose={onClose}
+			/>,
+		);
 
 		// Fields render in JSX order: opened, consumed, discarded. Each is
 		// individually capped at item.quantity (3), but their sum is not
@@ -122,7 +149,14 @@ describe("EditItemModal", () => {
 			source: "manual",
 		};
 
-		render(<EditItemModal uid={uid} item={item} onClose={vi.fn()} />);
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				onClose={vi.fn()}
+			/>,
+		);
 
 		await waitFor(() =>
 			expect(screen.getByRole("switch", { name: /recurring/i })).toBeChecked(),
@@ -161,7 +195,14 @@ describe("EditItemModal details editing", () => {
 		};
 		const onClose = vi.fn();
 
-		render(<EditItemModal uid={uid} item={item} onClose={onClose} />);
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				onClose={onClose}
+			/>,
+		);
 
 		await user.click(screen.getByRole("button", { name: /fix item details/i }));
 
@@ -236,7 +277,14 @@ describe("EditItemModal delete", () => {
 		};
 		const onClose = vi.fn();
 
-		render(<EditItemModal uid={uid} item={item} onClose={onClose} />);
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				onClose={onClose}
+			/>,
+		);
 
 		await user.click(screen.getByRole("button", { name: /delete/i }));
 		const popup = await screen.findByRole("tooltip");
@@ -251,5 +299,122 @@ describe("EditItemModal delete", () => {
 			collection(db, "users", uid, "waste_events"),
 		);
 		expect(eventsSnapshot.size).toBe(0);
+	});
+});
+
+describe("EditItemModal date picker mobile behavior", () => {
+	it("sets a numeric inputmode on the expiring date field so mobile shows the numeric keypad", async () => {
+		const user = userEvent.setup();
+		const item: PantryItem = {
+			id: "item-1",
+			name: "Butter",
+			category: "foods",
+			quantity: 1,
+			expiringDate: new Date("2027-01-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		};
+
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				onClose={vi.fn()}
+			/>,
+		);
+		await user.click(screen.getByRole("button", { name: /fix item details/i }));
+
+		const dateInput = screen.getByLabelText(/expiring date/i);
+		expect(dateInput).toHaveAttribute("inputmode", "numeric");
+		expect(dateInput).toHaveAttribute("pattern", "[0-9]*");
+	});
+
+	it("opens the calendar panel above the date field instead of below", async () => {
+		const user = userEvent.setup();
+		const item: PantryItem = {
+			id: "item-2",
+			name: "Butter",
+			category: "foods",
+			quantity: 1,
+			expiringDate: new Date("2027-01-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		};
+
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				onClose={vi.fn()}
+			/>,
+		);
+		await user.click(screen.getByRole("button", { name: /fix item details/i }));
+		await user.click(screen.getByLabelText(/expiring date/i));
+
+		const dropdown = document.querySelector(".ant-picker-dropdown");
+		expect(dropdown).toHaveClass("ant-picker-dropdown-placement-topLeft");
+	});
+});
+
+describe("EditItemModal move to another category", () => {
+	it("moves the item to a different category via the details form", async () => {
+		const user = userEvent.setup();
+		const itemsRef = collection(db, "users", uid, "items");
+		const original = await addDoc(itemsRef, {
+			name: "Aspirin",
+			category: "foods",
+			quantity: 1,
+			expiring_date: Timestamp.fromDate(new Date("2027-01-01")),
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		const item: PantryItem = {
+			id: original.id,
+			name: "Aspirin",
+			category: "foods",
+			quantity: 1,
+			expiringDate: new Date("2027-01-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		};
+		const onClose = vi.fn();
+
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				onClose={onClose}
+			/>,
+		);
+
+		await user.click(screen.getByRole("button", { name: /fix item details/i }));
+		await user.click(screen.getByLabelText(/^category$/i));
+		await user.click(await screen.findByText("💊 Medicines"));
+
+		await user.click(screen.getByRole("button", { name: "OK" }));
+
+		await waitFor(() => expect(onClose).toHaveBeenCalled());
+
+		const itemDoc = await getDoc(doc(db, "users", uid, "items", original.id));
+		expect(itemDoc.data()?.category).toBe("medicines");
 	});
 });

@@ -273,3 +273,36 @@ describe("AddItemModal manual barcode entry", () => {
 		expect(lookupSpy).not.toHaveBeenCalled();
 	});
 });
+
+describe("AddItemModal date picker mobile behavior", () => {
+	it("sets a numeric inputmode on the expiring date field so mobile shows the numeric keypad", () => {
+		render(
+			<AddItemModal
+				uid="test-user-date-mobile-1"
+				category={category}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		const dateInput = screen.getByLabelText(/expiring date/i);
+		expect(dateInput).toHaveAttribute("inputmode", "numeric");
+		expect(dateInput).toHaveAttribute("pattern", "[0-9]*");
+	});
+
+	it("opens the calendar panel above the date field instead of below", async () => {
+		render(
+			<AddItemModal
+				uid="test-user-date-mobile-2"
+				category={category}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		await userEvent.click(screen.getByLabelText(/expiring date/i));
+
+		const dropdown = document.querySelector(".ant-picker-dropdown");
+		expect(dropdown).toHaveClass("ant-picker-dropdown-placement-topLeft");
+	});
+});

@@ -129,6 +129,7 @@ export async function updateItemQuantities(
 
 interface ItemDetailsChanges {
 	name: string;
+	category: string;
 	quantity: number;
 	expiringDate: Date;
 	duration: number | null;
@@ -145,6 +146,7 @@ export async function updateItemDetails(
 ): Promise<void> {
 	await updateDoc(doc(db, "users", uid, "items", itemId), {
 		name: changes.name,
+		category: changes.category,
 		quantity: changes.quantity,
 		expiring_date: Timestamp.fromDate(changes.expiringDate),
 		duration: changes.duration,

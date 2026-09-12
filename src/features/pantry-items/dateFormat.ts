@@ -26,3 +26,21 @@ export function datePickerFormats(language: string): [string, string] {
 		RAW_DATE_FORMATS[language] ?? RAW_DATE_FORMATS["pt-BR"],
 	];
 }
+
+// Antd's DatePicker has no `inputMode`/`pattern` prop — its underlying
+// <input> isn't reachable through props at all (rc-picker's SingleSelector
+// only forwards unknown props to the root wrapper div, not the input it
+// renders internally) — so the only way to get the mobile numeric keypad on
+// this field is to reach into the DOM via the picker's own ref. Digits-only
+// (no "/") because the raw separator-free format above already lets typing
+// plain digits parse correctly, so the numeric keypad never needs to offer
+// "/".
+export function applyNumericDateInputMode(
+	picker: { nativeElement: HTMLElement } | null,
+): void {
+	const input = picker?.nativeElement.querySelector("input");
+	if (input) {
+		input.inputMode = "numeric";
+		input.pattern = "[0-9]*";
+	}
+}

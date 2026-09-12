@@ -9,6 +9,7 @@ import {
 	Modal,
 	message,
 	Popconfirm,
+	Select,
 	Switch,
 } from "antd";
 import type { Dayjs } from "dayjs";
@@ -17,7 +18,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { db } from "../../lib/firebase";
-import { datePickerFormats } from "./dateFormat";
+import type { Category } from "../categories/schema";
+import { applyNumericDateInputMode, datePickerFormats } from "./dateFormat";
 import {
 	deleteItem,
 	setItemRecurring,
@@ -36,6 +38,7 @@ interface UsageFormValues {
 
 interface DetailsFormValues {
 	name: string;
+	category: string;
 	quantity: number;
 	expiringDate: Dayjs;
 	duration?: number;
@@ -44,10 +47,12 @@ interface DetailsFormValues {
 export function EditItemModal({
 	uid,
 	item,
+	categories,
 	onClose,
 }: {
 	uid: string;
 	item: PantryItem;
+	categories: Category[];
 	onClose: () => void;
 }) {
 	const { t, i18n } = useTranslation();
@@ -111,6 +116,7 @@ export function EditItemModal({
 		try {
 			await updateItemDetails(uid, item.id, {
 				name: values.name.trim(),
+				category: values.category,
 				quantity: values.quantity,
 				expiringDate: values.expiringDate.toDate(),
 				duration: values.duration ?? null,
@@ -210,6 +216,7 @@ export function EditItemModal({
 					layout="vertical"
 					initialValues={{
 						name: item.name,
+						category: item.category,
 						quantity: item.quantity,
 						expiringDate: dayjs(item.expiringDate),
 						duration: item.duration ?? undefined,
@@ -221,6 +228,18 @@ export function EditItemModal({
 						rules={[{ required: true }]}
 					>
 						<Input />
+					</Form.Item>
+					<Form.Item
+						name="category"
+						label={t("items.category")}
+						rules={[{ required: true }]}
+					>
+						<Select
+							options={categories.map((category) => ({
+								value: category.key,
+								label: `${category.emoji} ${category.name}`,
+							}))}
+						/>
 					</Form.Item>
 					<Form.Item
 						name="quantity"
@@ -235,7 +254,9 @@ export function EditItemModal({
 						rules={[{ required: true }]}
 					>
 						<DatePicker
+							ref={applyNumericDateInputMode}
 							format={datePickerFormats(i18n.language)}
+							placement="topLeft"
 							style={{ width: "100%" }}
 						/>
 					</Form.Item>
