@@ -1,5 +1,5 @@
 import { PlusOutlined } from "@ant-design/icons";
-import { Empty, FloatButton, Listy, Switch, theme } from "antd";
+import { Empty, FloatButton, Input, Listy, Switch, theme } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Category } from "../categories/schema";
@@ -40,16 +40,23 @@ export function ItemList({
 	// through its onAddItem callback; which callback fired already tells us.
 	const [addInitialRecurring, setAddInitialRecurring] = useState(false);
 
-	const { getSortDirection, getFilter, isShoppingModeOn, setShoppingModeOn } =
-		useUiPreferencesStore();
+	const {
+		getSortDirection,
+		getFilter,
+		getSearch,
+		setSearch,
+		isShoppingModeOn,
+		setShoppingModeOn,
+	} = useUiPreferencesStore();
 	const direction = getSortDirection(category.key);
 	const filter = getFilter(category.key);
+	const search = getSearch(category.key);
 	const shoppingModeOn = isShoppingModeOn(category.key);
 
 	const filtered = items.filter((item) => {
-		if (filter === "opened") return item.opened;
-		if (filter === "unopened") return !item.opened;
-		return true;
+		if (filter === "opened" && !item.opened) return false;
+		if (filter === "unopened" && item.opened) return false;
+		return item.name.toLowerCase().includes(search.toLowerCase());
 	});
 	const notDistant = filterDistantItems(
 		filtered,
@@ -70,6 +77,16 @@ export function ItemList({
 				unCheckedChildren={t("items.shoppingMode")}
 				style={{ marginBottom: 12 }}
 			/>
+			{!shoppingModeOn && (
+				<Input.Search
+					aria-label={t("items.search")}
+					placeholder={t("items.searchPlaceholder")}
+					allowClear
+					value={search}
+					onChange={(e) => setSearch(category.key, e.target.value)}
+					style={{ marginBottom: 12 }}
+				/>
+			)}
 			{shoppingModeOn ? (
 				<ShoppingList
 					uid={uid}

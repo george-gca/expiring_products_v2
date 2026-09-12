@@ -6,14 +6,17 @@ type Filter = "all" | "opened" | "unopened";
 interface UiPreferencesState {
 	sortDirectionByCategory: Record<string, SortDirection>;
 	filterByCategory: Record<string, Filter>;
+	searchByCategory: Record<string, string>;
 	shoppingModeOnByCategory: Record<string, boolean>;
 	skippedNamesByCategory: Record<string, Set<string>>;
 	getSortDirection: (categoryKey: string) => SortDirection;
 	getFilter: (categoryKey: string) => Filter;
+	getSearch: (categoryKey: string) => string;
 	isShoppingModeOn: (categoryKey: string) => boolean;
 	getSkippedNames: (categoryKey: string) => Set<string>;
 	setSortDirection: (categoryKey: string, direction: SortDirection) => void;
 	setFilter: (categoryKey: string, filter: Filter) => void;
+	setSearch: (categoryKey: string, search: string) => void;
 	setShoppingModeOn: (categoryKey: string, on: boolean) => void;
 	skipItem: (categoryKey: string, name: string) => void;
 }
@@ -21,11 +24,13 @@ interface UiPreferencesState {
 export const useUiPreferencesStore = create<UiPreferencesState>((set, get) => ({
 	sortDirectionByCategory: {},
 	filterByCategory: {},
+	searchByCategory: {},
 	shoppingModeOnByCategory: {},
 	skippedNamesByCategory: {},
 	getSortDirection: (categoryKey) =>
 		get().sortDirectionByCategory[categoryKey] ?? "asc",
 	getFilter: (categoryKey) => get().filterByCategory[categoryKey] ?? "all",
+	getSearch: (categoryKey) => get().searchByCategory[categoryKey] ?? "",
 	isShoppingModeOn: (categoryKey) =>
 		get().shoppingModeOnByCategory[categoryKey] ?? false,
 	getSkippedNames: (categoryKey) =>
@@ -40,6 +45,10 @@ export const useUiPreferencesStore = create<UiPreferencesState>((set, get) => ({
 	setFilter: (categoryKey, filter) =>
 		set((state) => ({
 			filterByCategory: { ...state.filterByCategory, [categoryKey]: filter },
+		})),
+	setSearch: (categoryKey, search) =>
+		set((state) => ({
+			searchByCategory: { ...state.searchByCategory, [categoryKey]: search },
 		})),
 	setShoppingModeOn: (categoryKey, on) =>
 		set((state) => ({

@@ -14,6 +14,8 @@
     "name": "Nome",
     "quantity": "Quantidade",
     "category": "Categoria",
+    "search": "Buscar",
+    "searchPlaceholder": "Buscar itens…",
     "expiringDate": "Data de validade",
     "duration": "Duração após aberto (dias)",
     "recurring": "Compra recorrente",

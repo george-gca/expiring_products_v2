@@ -19,6 +19,20 @@ describe("useUiPreferencesStore", () => {
 	});
 });
 
+describe("search state", () => {
+	it("defaults to an empty search for an unseen category", () => {
+		const state = useUiPreferencesStore.getState();
+		expect(state.getSearch("foods")).toBe("");
+	});
+
+	it("stores search text per category independently", () => {
+		const { setSearch, getSearch } = useUiPreferencesStore.getState();
+		setSearch("foods", "coffee");
+		expect(getSearch("foods")).toBe("coffee");
+		expect(getSearch("medicines")).toBe("");
+	});
+});
+
 describe("shopping mode state", () => {
 	it("defaults to off with no skipped names for an unseen category", () => {
 		const state = useUiPreferencesStore.getState();

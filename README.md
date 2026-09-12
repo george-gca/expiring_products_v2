@@ -15,7 +15,7 @@ so no data migration was needed. Live at
 - **Custom category tabs** — create, rename, reorder, and archive your own
   categories (e.g. Foods, Medicines, Freezer) with an emoji icon of your
   choosing, not a fixed set.
-- **Expiration tracking** — sort/filter items per category, hide items
+- **Expiration tracking** — sort/filter/search items per category, hide items
   expiring further out than you care about right now, fix or delete an
   item you entered wrong (a deleted entry never counts toward waste stats),
   and move an item to a different category if it was filed under the
