@@ -1,7 +1,8 @@
 import "../../lib/i18n";
-import { render, screen } from "@testing-library/react";
+import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { renderWithFeedback } from "../../test/renderWithFeedback";
 import * as exportBackupModule from "../backup/exportBackup";
 import * as importBackupModule from "../backup/importBackup";
 import { BackupSection } from "./BackupSection";
@@ -40,7 +41,7 @@ describe("BackupSection export", () => {
 			.spyOn(HTMLAnchorElement.prototype, "click")
 			.mockImplementation(() => {});
 
-		render(<BackupSection uid="test-user-export-ui" />);
+		renderWithFeedback(<BackupSection uid="test-user-export-ui" />);
 		await userEvent.click(
 			screen.getByRole("button", { name: /export backup/i }),
 		);
@@ -70,7 +71,7 @@ const fixtureImportBackup = {
 
 describe("BackupSection import", () => {
 	it("shows an error for a non-JSON file and does not open the confirm modal", async () => {
-		render(<BackupSection uid="test-user-import-ui-1" />);
+		renderWithFeedback(<BackupSection uid="test-user-import-ui-1" />);
 		const input = screen.getByLabelText(/import backup/i);
 		await userEvent.upload(
 			input,
@@ -84,7 +85,7 @@ describe("BackupSection import", () => {
 	});
 
 	it("rejects an unsupported backup version without opening the confirm modal", async () => {
-		render(<BackupSection uid="test-user-import-ui-2" />);
+		renderWithFeedback(<BackupSection uid="test-user-import-ui-2" />);
 		const input = screen.getByLabelText(/import backup/i);
 		await userEvent.upload(
 			input,
@@ -106,7 +107,7 @@ describe("BackupSection import", () => {
 			.spyOn(importBackupModule, "importBackup")
 			.mockResolvedValue(undefined);
 
-		render(<BackupSection uid="test-user-import-ui-3" />);
+		renderWithFeedback(<BackupSection uid="test-user-import-ui-3" />);
 		const input = screen.getByLabelText(/import backup/i);
 		await userEvent.upload(
 			input,

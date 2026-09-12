@@ -1,4 +1,3 @@
-import { message } from "antd";
 import {
 	collection,
 	doc,
@@ -9,6 +8,7 @@ import {
 	setDoc,
 } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import { message } from "../../lib/feedback";
 import { db } from "../../lib/firebase";
 import { type Category, parseCategoryDoc } from "./schema";
 

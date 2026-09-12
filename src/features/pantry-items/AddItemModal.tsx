@@ -6,13 +6,13 @@ import {
 	Input,
 	InputNumber,
 	Modal,
-	message,
 	Switch,
 } from "antd";
 import type { Dayjs } from "dayjs";
 import type { FocusEvent } from "react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { message } from "../../lib/feedback";
 import { BarcodeScanner } from "../barcode/BarcodeScanner";
 import { upsertBarcodeProduct } from "../barcode/firestoreWrites";
 import { lookupBarcode } from "../barcode/lookupBarcode";

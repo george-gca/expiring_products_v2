@@ -7,7 +7,6 @@ import {
 	Input,
 	InputNumber,
 	Modal,
-	message,
 	Popconfirm,
 	Select,
 	Switch,
@@ -17,6 +16,7 @@ import dayjs from "dayjs";
 import { doc, getDoc } from "firebase/firestore";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { message } from "../../lib/feedback";
 import { db } from "../../lib/firebase";
 import type { Category } from "../categories/schema";
 import { configureDateInputForMobile, datePickerFormats } from "./dateFormat";

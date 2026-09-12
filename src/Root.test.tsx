@@ -1,7 +1,8 @@
 import "./lib/i18n";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import * as feedbackModule from "./lib/feedback";
 import { Root } from "./Root";
 
 vi.mock("./App", () => ({ App: () => null }));
@@ -38,5 +39,26 @@ describe("Root update prompt", () => {
 		await userEvent.click(screen.getByRole("button", { name: /refresh/i }));
 
 		expect(updateServiceWorker).toHaveBeenCalledWith(true);
+	});
+
+	it("wires the theme-aware message/notification apis so toasts elsewhere follow the current theme", async () => {
+		const setFeedbackApisSpy = vi.spyOn(feedbackModule, "setFeedbackApis");
+		needRefresh.current = false;
+
+		render(<Root />);
+
+		await waitFor(() =>
+			expect(setFeedbackApisSpy).toHaveBeenCalledWith(
+				expect.objectContaining({
+					message: expect.objectContaining({
+						error: expect.any(Function),
+						success: expect.any(Function),
+					}),
+					notification: expect.objectContaining({
+						info: expect.any(Function),
+					}),
+				}),
+			),
+		);
 	});
 });

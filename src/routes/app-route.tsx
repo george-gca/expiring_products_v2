@@ -1,4 +1,3 @@
-import { notification } from "antd";
 import type { User } from "firebase/auth";
 import { useEffect } from "react";
 import { CategoryTabs } from "../features/categories/CategoryTabs";
@@ -8,6 +7,7 @@ import { onForegroundMessage } from "../features/notifications/messaging";
 import { ItemList } from "../features/pantry-items/ItemList";
 import { SettingsPane } from "../features/settings/SettingsPane";
 import { useSettings } from "../features/settings/useSettings";
+import { notification } from "../lib/feedback";
 import i18n from "../lib/i18n";
 
 export function AppRoute({ user }: { user: User }) {

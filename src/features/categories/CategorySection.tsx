@@ -5,18 +5,10 @@ import {
 	PlusOutlined,
 	UpOutlined,
 } from "@ant-design/icons";
-import {
-	Button,
-	Flex,
-	Input,
-	Modal,
-	message,
-	Tooltip,
-	Typography,
-	theme,
-} from "antd";
+import { Button, Flex, Input, Modal, Tooltip, Typography, theme } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { message } from "../../lib/feedback";
 import { CategoryFormModal } from "./CategoryFormModal";
 import { archiveCategory, swapCategoryOrder } from "./firestoreWrites";
 import type { Category } from "./schema";

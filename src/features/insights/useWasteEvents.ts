@@ -1,6 +1,6 @@
-import { message } from "antd";
 import { collection, onSnapshot } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import { message } from "../../lib/feedback";
 import { db } from "../../lib/firebase";
 import {
 	safeParseWasteEventDoc,

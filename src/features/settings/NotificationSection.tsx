@@ -1,7 +1,8 @@
-import { Col, Form, InputNumber, message, Row, Switch } from "antd";
+import { Col, Form, InputNumber, Row, Switch } from "antd";
 import type { FocusEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { message } from "../../lib/feedback";
 import { hasAnyFcmToken } from "../notifications/firestoreWrites";
 import {
 	registerForPush,

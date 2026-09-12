@@ -1,16 +1,8 @@
-import {
-	Card,
-	Col,
-	Form,
-	InputNumber,
-	message,
-	Row,
-	Select,
-	Space,
-} from "antd";
+import { Card, Col, Form, InputNumber, Row, Select, Space } from "antd";
 import type { FocusEvent } from "react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { message } from "../../lib/feedback";
 import i18n from "../../lib/i18n";
 import { CategorySection } from "../categories/CategorySection";
 import { BackupSection } from "./BackupSection";

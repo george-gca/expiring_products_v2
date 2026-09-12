@@ -1,6 +1,6 @@
-import { message } from "antd";
 import { collection, onSnapshot, query, where } from "firebase/firestore";
 import { useEffect, useState } from "react";
+import { message } from "../../lib/feedback";
 import { db } from "../../lib/firebase";
 import { type PantryItem, safeParseItemDoc } from "./schema";
 

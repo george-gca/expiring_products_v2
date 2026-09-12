@@ -1,8 +1,9 @@
 import { DownloadOutlined, UploadOutlined } from "@ant-design/icons";
-import { Button, Input, Modal, message, Space } from "antd";
+import { Button, Input, Modal, Space } from "antd";
 import type { ChangeEvent } from "react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { message } from "../../lib/feedback";
 import { buildBackup } from "../backup/exportBackup";
 import { importBackup } from "../backup/importBackup";
 import { type Backup, safeParseBackup } from "../backup/schema";

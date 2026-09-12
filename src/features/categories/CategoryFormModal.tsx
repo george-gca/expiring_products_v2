@@ -1,10 +1,11 @@
-import { Button, Form, Input, Modal, message, Popover } from "antd";
+import { Button, Form, Input, Modal, Popover } from "antd";
 import EmojiPicker, {
 	type EmojiClickData,
 	EmojiStyle,
 } from "emoji-picker-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { message } from "../../lib/feedback";
 import { createCategory, renameCategory } from "./firestoreWrites";
 import type { Category } from "./schema";
 

@@ -1,10 +1,11 @@
 import { useRegisterSW } from "virtual:pwa-register/react";
-import { Button, ConfigProvider, notification, theme } from "antd";
+import { Button, ConfigProvider, message, notification, theme } from "antd";
 import enUS from "antd/locale/en_US";
 import ptBR from "antd/locale/pt_BR";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { App } from "./App";
+import { setFeedbackApis } from "./lib/feedback";
 import { useColorScheme } from "./lib/useColorScheme";
 
 // i18next canonicalizes to BCP-47 casing ("pt-BR"/"en-US") — see src/lib/i18n.ts.
@@ -16,6 +17,20 @@ const ANTD_LOCALES: Record<string, typeof ptBR> = {
 export function Root() {
 	const isDark = useColorScheme();
 	const { t, i18n } = useTranslation();
+
+	// antd's static `message`/`notification` methods render outside
+	// <ConfigProvider>'s tree, so they never pick up its dark/light
+	// theme.algorithm — the hook-based instances here do, since their
+	// contextHolder is mounted inside ConfigProvider below. Every other file
+	// reaches these through lib/feedback's proxy rather than importing antd's
+	// static API directly, so every toast in the app follows the theme too.
+	const [messageApi, messageContextHolder] = message.useMessage();
+	const [notificationApi, notificationContextHolder] =
+		notification.useNotification();
+	useEffect(() => {
+		setFeedbackApis({ message: messageApi, notification: notificationApi });
+	}, [messageApi, notificationApi]);
+
 	const {
 		needRefresh: [needRefresh],
 		updateServiceWorker,
@@ -40,7 +55,7 @@ export function Root() {
 	// before the update takes over an already-open tab.
 	useEffect(() => {
 		if (!needRefresh) return;
-		notification.info({
+		notificationApi.info({
 			key: "pwa-update-available",
 			message: t("app.updateAvailable"),
 			description: t("app.updateAvailableDescription"),
@@ -55,7 +70,7 @@ export function Root() {
 				</Button>
 			),
 		});
-	}, [needRefresh, t, updateServiceWorker]);
+	}, [needRefresh, t, updateServiceWorker, notificationApi]);
 
 	return (
 		<ConfigProvider
@@ -64,6 +79,8 @@ export function Root() {
 				algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
 			}}
 		>
+			{messageContextHolder}
+			{notificationContextHolder}
 			<App />
 		</ConfigProvider>
 	);
