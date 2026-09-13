@@ -18,12 +18,14 @@ export function ItemList({
 	categories,
 	lowStockThreshold,
 	hideDistantThresholdMonths,
+	hideDistantEnabled,
 }: {
 	uid: string;
 	category: Category;
 	categories: Category[];
 	lowStockThreshold: number;
 	hideDistantThresholdMonths: number;
+	hideDistantEnabled: boolean;
 }) {
 	const { t } = useTranslation();
 	const { token } = theme.useToken();
@@ -58,11 +60,9 @@ export function ItemList({
 		if (filter === "unopened" && item.opened) return false;
 		return item.name.toLowerCase().includes(search.toLowerCase());
 	});
-	const notDistant = filterDistantItems(
-		filtered,
-		hideDistantThresholdMonths,
-		new Date(),
-	);
+	const notDistant = hideDistantEnabled
+		? filterDistantItems(filtered, hideDistantThresholdMonths, new Date())
+		: filtered;
 	const sorted = sortItems(notDistant);
 	if (direction === "desc") sorted.reverse();
 

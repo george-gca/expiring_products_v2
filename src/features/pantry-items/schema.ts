@@ -9,7 +9,7 @@ export const itemDocSchema = z.object({
 	name: z.string().min(1),
 	category: z.string().min(1),
 	quantity: z.number().int().nonnegative(),
-	expiring_date: timestampSchema,
+	expiring_date: timestampSchema.nullable(),
 	duration: z.number().int().positive().nullable(),
 	date_opened: timestampSchema.nullable(),
 	opened: z.boolean(),
@@ -24,7 +24,7 @@ export interface PantryItem {
 	name: string;
 	category: string;
 	quantity: number;
-	expiringDate: Date;
+	expiringDate: Date | null;
 	duration: number | null;
 	dateOpened: Date | null;
 	opened: boolean;
@@ -41,7 +41,7 @@ export function parseItemDoc(id: string, data: unknown): PantryItem {
 		name: parsed.name,
 		category: parsed.category,
 		quantity: parsed.quantity,
-		expiringDate: parsed.expiring_date.toDate(),
+		expiringDate: parsed.expiring_date ? parsed.expiring_date.toDate() : null,
 		duration: parsed.duration,
 		dateOpened: parsed.date_opened ? parsed.date_opened.toDate() : null,
 		opened: parsed.opened,
@@ -73,7 +73,9 @@ export function toItemDoc(item: Omit<PantryItem, "id">) {
 		name: item.name,
 		category: item.category,
 		quantity: item.quantity,
-		expiring_date: Timestamp.fromDate(item.expiringDate),
+		expiring_date: item.expiringDate
+			? Timestamp.fromDate(item.expiringDate)
+			: null,
 		duration: item.duration,
 		date_opened: item.dateOpened ? Timestamp.fromDate(item.dateOpened) : null,
 		opened: item.opened,
@@ -121,21 +123,27 @@ export function safeParseItemHistoryDoc(
 
 export const wasteEventDocSchema = z.object({
 	category: z.string().min(1),
+	// `name` and `opened_at` are absent on events written before this field
+	// existed — optional so those legacy docs still parse.
+	name: z.string().min(1).optional(),
 	was_opened: z.boolean(),
 	was_expired: z.boolean(),
 	consumed: z.number().int().nonnegative(),
 	discarded: z.number().int().nonnegative(),
 	occurred_at: timestampSchema,
+	opened_at: timestampSchema.nullable().optional(),
 });
 
 export interface WasteEvent {
 	id: string;
 	category: string;
+	name: string | null;
 	wasOpened: boolean;
 	wasExpired: boolean;
 	consumed: number;
 	discarded: number;
 	occurredAt: Date;
+	openedAt: Date | null;
 }
 
 export function parseWasteEventDoc(id: string, data: unknown): WasteEvent {
@@ -143,11 +151,13 @@ export function parseWasteEventDoc(id: string, data: unknown): WasteEvent {
 	return {
 		id,
 		category: parsed.category,
+		name: parsed.name ?? null,
 		wasOpened: parsed.was_opened,
 		wasExpired: parsed.was_expired,
 		consumed: parsed.consumed,
 		discarded: parsed.discarded,
 		occurredAt: parsed.occurred_at.toDate(),
+		openedAt: parsed.opened_at ? parsed.opened_at.toDate() : null,
 	};
 }
 

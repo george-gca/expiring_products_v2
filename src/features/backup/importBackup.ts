@@ -38,7 +38,7 @@ export async function importBackup(uid: string, backup: Backup): Promise<void> {
 				collection(db, "users", uid, "items"),
 				toItemDoc({
 					...item,
-					expiringDate: new Date(item.expiringDate),
+					expiringDate: item.expiringDate ? new Date(item.expiringDate) : null,
 					dateOpened: item.dateOpened ? new Date(item.dateOpened) : null,
 				}),
 			),

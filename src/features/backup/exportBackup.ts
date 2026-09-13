@@ -31,7 +31,7 @@ export async function buildBackup(uid: string): Promise<Backup> {
 			name: item.name,
 			category: item.category,
 			quantity: item.quantity,
-			expiringDate: item.expiringDate.toISOString(),
+			expiringDate: item.expiringDate ? item.expiringDate.toISOString() : null,
 			duration: item.duration,
 			dateOpened: item.dateOpened ? item.dateOpened.toISOString() : null,
 			opened: item.opened,

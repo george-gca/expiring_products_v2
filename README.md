@@ -15,11 +15,16 @@ so no data migration was needed. Live at
 - **Custom category tabs** — create, rename, reorder, and archive your own
   categories (e.g. Foods, Medicines, Freezer) with an emoji icon of your
   choosing, not a fixed set.
-- **Expiration tracking** — sort/filter/search items per category, hide items
-  expiring further out than you care about right now, fix or delete an
-  item you entered wrong (a deleted entry never counts toward waste stats),
-  and move an item to a different category if it was filed under the
-  wrong one.
+- **Expiration tracking** — sort/filter/search items per category, optionally
+  hide items expiring further out than you care about right now (items with
+  no expiration date at all, like trash bags, sort to the bottom and can be
+  hidden the same way), fix or delete an item you entered wrong (a deleted
+  entry never counts toward waste stats), and move an item to a different
+  category if it was filed under the wrong one.
+- **Backdatable usage** — when marking an item opened, consumed, or
+  discarded, an "this is happening now" toggle (on by default) lets you
+  record the actual date instead, for whenever you're logging it a few days
+  late.
 - **Low-stock & shopping mode** — a shopping list derived from items you've
   marked as recurring purchases that have dropped below your configured
   threshold.

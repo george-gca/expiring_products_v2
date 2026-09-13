@@ -16,6 +16,7 @@ const settings: Settings = {
 	lowStockThreshold: 3,
 	language: "pt-br",
 	hideDistantThresholdMonths: 3,
+	hideDistantEnabled: true,
 	notificationsEnabled: false,
 	notifyDaysBeforeExpiry: 3,
 	notifyHourLocal: 8,
@@ -134,5 +135,37 @@ describe("NotificationSection", () => {
 		await userEvent.click(screen.getByRole("switch", { name: /notifica/i }));
 
 		await waitFor(() => expect(updateSpy).toHaveBeenCalledWith(uid, false));
+	});
+});
+
+describe("NotificationSection numeric fields", () => {
+	it("commits a typed notifyDaysBeforeExpiry immediately, no blur needed", async () => {
+		const updateSpy = vi
+			.spyOn(settingsWritesModule, "updateNotifyDaysBeforeExpiry")
+			.mockResolvedValue();
+
+		render(<NotificationSection uid="test-user-notif-5" settings={settings} />);
+		const input = screen.getByLabelText(/notify how many days/i);
+		await userEvent.tripleClick(input);
+		await userEvent.keyboard("5");
+
+		expect(updateSpy).toHaveBeenCalledWith("test-user-notif-5", 5);
+	});
+
+	it("commits a typed notifyHourLocal immediately, no blur needed", async () => {
+		const updateSpy = vi
+			.spyOn(settingsWritesModule, "updateNotifyHourLocal")
+			.mockResolvedValue();
+
+		render(<NotificationSection uid="test-user-notif-6" settings={settings} />);
+		const input = screen.getByLabelText(/notification time/i);
+		await userEvent.tripleClick(input);
+		await userEvent.keyboard("9");
+
+		expect(updateSpy).toHaveBeenCalledWith(
+			"test-user-notif-6",
+			9,
+			Intl.DateTimeFormat().resolvedOptions().timeZone,
+		);
 	});
 });

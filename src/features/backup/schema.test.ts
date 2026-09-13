@@ -8,6 +8,7 @@ const validBackup = {
 		lowStockThreshold: 3,
 		language: "pt-br" as const,
 		hideDistantThresholdMonths: 3,
+		hideDistantEnabled: true,
 		notificationsEnabled: false,
 		notifyDaysBeforeExpiry: 3,
 		notifyHourLocal: 8,
@@ -49,6 +50,14 @@ describe("parseBackup", () => {
 				items: [{ ...validBackup.items[0], quantity: -1 }],
 			}),
 		).toThrow();
+	});
+
+	it("parses an item with a null expiringDate", () => {
+		const backup = {
+			...validBackup,
+			items: [{ ...validBackup.items[0], expiringDate: null }],
+		};
+		expect(parseBackup(backup)).toEqual(backup);
 	});
 
 	it("rejects a non-integer settings threshold", () => {

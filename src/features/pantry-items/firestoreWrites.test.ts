@@ -5,6 +5,7 @@ import { clearFirestoreEmulator } from "../../test/emulator";
 import {
 	addItem,
 	setItemRecurring,
+	updateItemDetails,
 	updateItemQuantities,
 } from "./firestoreWrites";
 import { toItemDoc } from "./schema";
@@ -110,6 +111,58 @@ describe("addItem", () => {
 		);
 		expect(historyDoc.exists()).toBe(true);
 		expect(historyDoc.data()?.name).toBe("Milk 1/2 gal");
+	});
+});
+
+describe("addItem", () => {
+	it("writes a null expiring_date for an item with no expiration", async () => {
+		await addItem(uid, {
+			name: "Trash Bags",
+			category: "cleaning",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+
+		const itemsSnapshot = await getDocs(collection(db, "users", uid, "items"));
+		expect(itemsSnapshot.docs[0].data().expiring_date).toBeNull();
+	});
+});
+
+describe("updateItemDetails", () => {
+	it("can clear an item's expiring_date to null", async () => {
+		const itemRef = doc(collection(db, "users", uid, "items"));
+		await setDoc(
+			itemRef,
+			toItemDoc({
+				name: "Trash Bags",
+				category: "cleaning",
+				quantity: 1,
+				expiringDate: new Date("2026-09-01"),
+				duration: null,
+				dateOpened: null,
+				opened: false,
+				recurring: false,
+				barcode: null,
+				source: "manual",
+			}),
+		);
+
+		await updateItemDetails(uid, itemRef.id, {
+			name: "Trash Bags",
+			category: "cleaning",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+		});
+
+		const itemDoc = await getDoc(doc(db, "users", uid, "items", itemRef.id));
+		expect(itemDoc.data()?.expiring_date).toBeNull();
 	});
 });
 
@@ -248,5 +301,62 @@ describe("updateItemQuantities waste_events", () => {
 			collection(db, "users", uid, "waste_events"),
 		);
 		expect(eventsSnapshot.size).toBe(0);
+	});
+
+	it("stamps the waste_events doc with the item's name and its dateOpened", async () => {
+		const itemRef = doc(collection(db, "users", uid, "items"));
+		await setDoc(
+			itemRef,
+			toItemDoc({
+				name: "Detergent",
+				category: "cleaning",
+				quantity: 1,
+				expiringDate: null,
+				duration: null,
+				dateOpened: new Date("2026-08-01T00:00:00Z"),
+				opened: true,
+				recurring: false,
+				barcode: null,
+				source: "manual",
+			}),
+		);
+
+		await updateItemQuantities(uid, itemRef.id, {
+			opened: 0,
+			consumed: 1,
+			discarded: 0,
+		});
+
+		const eventsSnapshot = await getDocs(
+			collection(db, "users", uid, "waste_events"),
+		);
+		const event = eventsSnapshot.docs[0].data();
+		expect(event.name).toBe("Detergent");
+		expect(event.opened_at.toDate()).toEqual(new Date("2026-08-01T00:00:00Z"));
+	});
+
+	it("uses the provided `when` date instead of now for dateOpened and occurred_at, for backdating", async () => {
+		const itemId = await seedItem({
+			quantity: 2,
+			expiringDate: new Date("2099-01-01"),
+			opened: false,
+		});
+		const when = new Date("2026-08-10T00:00:00Z");
+
+		await updateItemQuantities(
+			uid,
+			itemId,
+			{ opened: 1, consumed: 1, discarded: 0 },
+			when,
+		);
+
+		const itemsSnapshot = await getDocs(collection(db, "users", uid, "items"));
+		const openedItem = itemsSnapshot.docs.find((d) => d.data().opened);
+		expect(openedItem?.data().date_opened.toDate()).toEqual(when);
+
+		const eventsSnapshot = await getDocs(
+			collection(db, "users", uid, "waste_events"),
+		);
+		expect(eventsSnapshot.docs[0].data().occurred_at.toDate()).toEqual(when);
 	});
 });

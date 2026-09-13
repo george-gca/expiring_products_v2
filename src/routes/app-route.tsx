@@ -52,6 +52,7 @@ export function AppRoute({ user }: { user: User }) {
 					categories={categories}
 					lowStockThreshold={settings.lowStockThreshold}
 					hideDistantThresholdMonths={settings.hideDistantThresholdMonths}
+					hideDistantEnabled={settings.hideDistantEnabled}
 				/>
 			)}
 			insightsPane={<InsightsPane uid={user.uid} categories={categories} />}

@@ -3,6 +3,7 @@ import { z } from "zod";
 const DEFAULT_LOW_STOCK_THRESHOLD = 3;
 const DEFAULT_LANGUAGE = "pt-br";
 const DEFAULT_HIDE_DISTANT_THRESHOLD_MONTHS = 3;
+const DEFAULT_HIDE_DISTANT_ENABLED = true;
 const DEFAULT_NOTIFICATIONS_ENABLED = false;
 const DEFAULT_NOTIFY_DAYS_BEFORE_EXPIRY = 3;
 const DEFAULT_NOTIFY_HOUR_LOCAL = 8;
@@ -30,6 +31,7 @@ export const settingsDocSchema = z.object({
 		.int()
 		.positive()
 		.catch(DEFAULT_HIDE_DISTANT_THRESHOLD_MONTHS),
+	hideDistantEnabled: z.boolean().catch(DEFAULT_HIDE_DISTANT_ENABLED),
 	notificationsEnabled: z.boolean().catch(DEFAULT_NOTIFICATIONS_ENABLED),
 	notifyDaysBeforeExpiry: z
 		.number()
@@ -49,6 +51,7 @@ export interface Settings {
 	lowStockThreshold: number;
 	language: "pt-br" | "en-us";
 	hideDistantThresholdMonths: number;
+	hideDistantEnabled: boolean;
 	notificationsEnabled: boolean;
 	notifyDaysBeforeExpiry: number;
 	notifyHourLocal: number;

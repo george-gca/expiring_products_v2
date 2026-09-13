@@ -1,5 +1,5 @@
 import "../../lib/i18n";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import i18n from "../../lib/i18n";
@@ -12,6 +12,7 @@ const settings: Settings = {
 	lowStockThreshold: 3,
 	language: "pt-br",
 	hideDistantThresholdMonths: 3,
+	hideDistantEnabled: true,
 	notificationsEnabled: false,
 	notifyDaysBeforeExpiry: 3,
 	notifyHourLocal: 8,
@@ -44,23 +45,86 @@ describe("SettingsPane language", () => {
 });
 
 describe("SettingsPane hide-distant threshold", () => {
-	it("commits the new threshold on blur", async () => {
+	it("commits the new threshold immediately when typed, no blur needed", async () => {
 		const updateSpy = vi
 			.spyOn(settingsWritesModule, "updateHideDistantThresholdMonths")
 			.mockResolvedValue(undefined);
 
 		render(<SettingsPane uid="test-user-settings-ui-2" settings={settings} />);
 		const input = screen.getByLabelText(/hide items expiring/i);
-		// Not userEvent.clear() + type(): clearing this controlled InputNumber
-		// fires onChange(null), which this component (matching the existing
-		// low-stock-threshold field's established pattern) immediately falls
-		// back to displaying "1" for — so a plain clear+type would produce
-		// "16", not "6". Select the existing text and replace it instead.
+		// Select the existing text and replace it, rather than clear() + type():
+		// clearing this controlled input fires onChange(null), which falls back
+		// to displaying the min value, so a plain clear+type would produce "16"
+		// instead of "6".
 		await userEvent.tripleClick(input);
 		await userEvent.keyboard("6");
-		await userEvent.tab(); // blur
 
 		expect(updateSpy).toHaveBeenCalledWith("test-user-settings-ui-2", 6);
+	});
+
+	it("commits immediately via the stepper's plus button", async () => {
+		const updateSpy = vi
+			.spyOn(settingsWritesModule, "updateHideDistantThresholdMonths")
+			.mockResolvedValue(undefined);
+
+		render(<SettingsPane uid="test-user-settings-ui-2b" settings={settings} />);
+		const input = screen.getByLabelText(/hide items expiring/i);
+		const stepper = input.closest<HTMLElement>(".ant-space-compact");
+		if (!stepper) throw new Error("stepper container not found");
+		await userEvent.click(
+			within(stepper).getByRole("button", { name: "plus" }),
+		);
+
+		expect(updateSpy).toHaveBeenCalledWith("test-user-settings-ui-2b", 4);
+	});
+});
+
+describe("SettingsPane hide-distant enabled checkbox", () => {
+	it("defaults checked when settings.hideDistantEnabled is true, and shows the threshold field", () => {
+		render(<SettingsPane uid="test-user-settings-ui-4" settings={settings} />);
+
+		expect(
+			screen.getByRole("checkbox", {
+				name: /hide items that will take longer/i,
+			}),
+		).toBeChecked();
+		expect(screen.getByLabelText(/hide items expiring/i)).toBeInTheDocument();
+	});
+
+	it("unchecking hides the threshold field and persists hideDistantEnabled: false", async () => {
+		const updateSpy = vi
+			.spyOn(settingsWritesModule, "updateHideDistantEnabled")
+			.mockResolvedValue(undefined);
+
+		render(<SettingsPane uid="test-user-settings-ui-5" settings={settings} />);
+		await userEvent.click(
+			screen.getByRole("checkbox", {
+				name: /hide items that will take longer/i,
+			}),
+		);
+
+		expect(updateSpy).toHaveBeenCalledWith("test-user-settings-ui-5", false);
+		expect(
+			screen.queryByLabelText(/hide items expiring/i),
+		).not.toBeInTheDocument();
+	});
+
+	it("renders unchecked and hides the threshold field when settings.hideDistantEnabled is false", () => {
+		render(
+			<SettingsPane
+				uid="test-user-settings-ui-6"
+				settings={{ ...settings, hideDistantEnabled: false }}
+			/>,
+		);
+
+		expect(
+			screen.getByRole("checkbox", {
+				name: /hide items that will take longer/i,
+			}),
+		).not.toBeChecked();
+		expect(
+			screen.queryByLabelText(/hide items expiring/i),
+		).not.toBeInTheDocument();
 	});
 });
 

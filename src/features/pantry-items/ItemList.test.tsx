@@ -56,6 +56,7 @@ describe("ItemList search", () => {
 				categories={[category]}
 				lowStockThreshold={1}
 				hideDistantThresholdMonths={12}
+				hideDistantEnabled
 			/>,
 		);
 
@@ -84,6 +85,7 @@ describe("ItemList search", () => {
 				categories={[category]}
 				lowStockThreshold={1}
 				hideDistantThresholdMonths={12}
+				hideDistantEnabled
 			/>,
 		);
 
@@ -93,5 +95,51 @@ describe("ItemList search", () => {
 		);
 
 		expect(screen.queryByText("Coffee")).not.toBeInTheDocument();
+	});
+});
+
+describe("ItemList hideDistantEnabled", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it("hides a no-expiration item when hideDistantEnabled is true, regardless of the threshold", () => {
+		mockedUsePantryItems.mockReturnValue({
+			items: [makeItem({ name: "Trash Bags", expiringDate: null })],
+			loading: false,
+		});
+
+		render(
+			<ItemList
+				uid="test-user-hide-distant-1"
+				category={category}
+				categories={[category]}
+				lowStockThreshold={1}
+				hideDistantThresholdMonths={999}
+				hideDistantEnabled
+			/>,
+		);
+
+		expect(screen.queryByText("Trash Bags")).not.toBeInTheDocument();
+	});
+
+	it("shows a no-expiration item when hideDistantEnabled is false", () => {
+		mockedUsePantryItems.mockReturnValue({
+			items: [makeItem({ name: "Trash Bags", expiringDate: null })],
+			loading: false,
+		});
+
+		render(
+			<ItemList
+				uid="test-user-hide-distant-2"
+				category={category}
+				categories={[category]}
+				lowStockThreshold={1}
+				hideDistantThresholdMonths={3}
+				hideDistantEnabled={false}
+			/>,
+		);
+
+		expect(screen.getByText("Trash Bags")).toBeInTheDocument();
 	});
 });

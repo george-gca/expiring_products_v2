@@ -1,12 +1,13 @@
-import { Card, Col, Form, InputNumber, Row, Select, Space } from "antd";
-import type { FocusEvent } from "react";
+import { Card, Checkbox, Col, Form, Row, Select, Space } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { message } from "../../lib/feedback";
 import i18n from "../../lib/i18n";
 import { CategorySection } from "../categories/CategorySection";
+import { QuantityStepper } from "../pantry-items/QuantityStepper";
 import { BackupSection } from "./BackupSection";
 import {
+	updateHideDistantEnabled,
 	updateHideDistantThresholdMonths,
 	updateLanguage,
 	updateLowStockThreshold,
@@ -53,42 +54,41 @@ export function SettingsPane({
 		setHideDistantValue(settings.hideDistantThresholdMonths);
 	}
 
-	const handleBlur = async (event: FocusEvent<HTMLInputElement>) => {
-		// Read the raw DOM value rather than trusting the `value` state: while
-		// the user is typing an out-of-range number (e.g. "0" when min is 1),
-		// the underlying InputNumber skips calling onChange entirely, so
-		// `value` can still hold a stale, previously-committed number. Our own
-		// onBlur (attached directly to the native <input>) also fires before
-		// the library's internal blur handler clamps the displayed value, so
-		// we must compute the clamped value ourselves rather than rely on a
-		// subsequent onChange to have already corrected `value`.
-		const parsed = Number(event.target.value);
-		// Round before clamping: `precision={0}` below stops most non-integer
-		// entry, but the raw DOM value is read independently of that prop, so
-		// round defensively too. settingsDocSchema requires an integer — a
-		// value like 2.5 slipping through here would fail to parse on the next
-		// read (see schema.ts's `.catch()` for the read-side defense in depth).
-		const committed = Number.isNaN(parsed)
-			? value
-			: Math.max(MIN_LOW_STOCK_THRESHOLD, Math.round(parsed));
-		setValue(committed);
-		if (committed === settings.lowStockThreshold) return;
+	const [hideDistantEnabled, setHideDistantEnabled] = useState(
+		settings.hideDistantEnabled,
+	);
+	const [prevHideDistantEnabled, setPrevHideDistantEnabled] = useState(
+		settings.hideDistantEnabled,
+	);
+	if (prevHideDistantEnabled !== settings.hideDistantEnabled) {
+		setPrevHideDistantEnabled(settings.hideDistantEnabled);
+		setHideDistantEnabled(settings.hideDistantEnabled);
+	}
+
+	const handleLowStockChange = async (next: number) => {
+		setValue(next);
+		if (next === settings.lowStockThreshold) return;
 		try {
-			await updateLowStockThreshold(uid, committed);
+			await updateLowStockThreshold(uid, next);
 		} catch {
 			message.error("Something went wrong, please try again");
 		}
 	};
 
-	const handleHideDistantBlur = async (event: FocusEvent<HTMLInputElement>) => {
-		const parsed = Number(event.target.value);
-		const committed = Number.isNaN(parsed)
-			? hideDistantValue
-			: Math.max(MIN_HIDE_DISTANT_THRESHOLD_MONTHS, Math.round(parsed));
-		setHideDistantValue(committed);
-		if (committed === settings.hideDistantThresholdMonths) return;
+	const handleHideDistantThresholdChange = async (next: number) => {
+		setHideDistantValue(next);
+		if (next === settings.hideDistantThresholdMonths) return;
 		try {
-			await updateHideDistantThresholdMonths(uid, committed);
+			await updateHideDistantThresholdMonths(uid, next);
+		} catch {
+			message.error("Something went wrong, please try again");
+		}
+	};
+
+	const handleHideDistantEnabledChange = async (checked: boolean) => {
+		setHideDistantEnabled(checked);
+		try {
+			await updateHideDistantEnabled(uid, checked);
 		} catch {
 			message.error("Something went wrong, please try again");
 		}
@@ -121,28 +121,35 @@ export function SettingsPane({
 					<Row gutter={16}>
 						<Col xs={24} sm={12}>
 							<Form.Item label={t("settings.lowStockThreshold")}>
-								<InputNumber
+								<QuantityStepper
 									min={MIN_LOW_STOCK_THRESHOLD}
-									precision={0}
 									value={value}
-									onChange={(newValue) => setValue(newValue ?? 1)}
-									onBlur={handleBlur}
-									style={{ width: "100%" }}
+									onChange={handleLowStockChange}
+									aria-label={t("settings.lowStockThreshold")}
 								/>
 							</Form.Item>
 						</Col>
 						<Col xs={24} sm={12}>
-							<Form.Item label={t("settings.hideDistantThresholdMonths")}>
-								<InputNumber
-									min={MIN_HIDE_DISTANT_THRESHOLD_MONTHS}
-									precision={0}
-									value={hideDistantValue}
-									onChange={(newValue) => setHideDistantValue(newValue ?? 1)}
-									onBlur={handleHideDistantBlur}
-									aria-label={t("settings.hideDistantThresholdMonths")}
-									style={{ width: "100%" }}
-								/>
+							<Form.Item>
+								<Checkbox
+									checked={hideDistantEnabled}
+									onChange={(e) =>
+										handleHideDistantEnabledChange(e.target.checked)
+									}
+								>
+									{t("settings.hideDistantEnabled")}
+								</Checkbox>
 							</Form.Item>
+							{hideDistantEnabled && (
+								<Form.Item label={t("settings.hideDistantThresholdMonths")}>
+									<QuantityStepper
+										min={MIN_HIDE_DISTANT_THRESHOLD_MONTHS}
+										value={hideDistantValue}
+										onChange={handleHideDistantThresholdChange}
+										aria-label={t("settings.hideDistantThresholdMonths")}
+									/>
+								</Form.Item>
+							)}
 						</Col>
 					</Row>
 				</Form>

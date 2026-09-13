@@ -62,6 +62,10 @@ export async function updateItemQuantities(
 	uid: string,
 	itemId: string,
 	changes: QuantityChanges,
+	// When this usage actually happened — defaults to now, but callers pass a
+	// backdated value when the user is recording something that happened
+	// earlier than the moment they opened the app to record it.
+	when: Date = new Date(),
 ): Promise<void> {
 	const itemRef = doc(db, "users", uid, "items", itemId);
 
@@ -77,8 +81,9 @@ export async function updateItemQuantities(
 			);
 		}
 
-		const now = new Date();
-		const wasExpired = item.expiringDate.getTime() < now.getTime();
+		const wasExpired =
+			item.expiringDate !== null &&
+			item.expiringDate.getTime() < when.getTime();
 
 		const remaining = item.quantity - totalHandled;
 		if (remaining > 0) {
@@ -90,7 +95,7 @@ export async function updateItemQuantities(
 		if (changes.opened > 0) {
 			const newExpiringDate =
 				item.duration !== null && !wasExpired
-					? new Date(now.getTime() + item.duration * 24 * 60 * 60 * 1000)
+					? new Date(when.getTime() + item.duration * 24 * 60 * 60 * 1000)
 					: item.expiringDate;
 
 			const openedItemDocRef = doc(collection(db, "users", uid, "items"));
@@ -102,7 +107,7 @@ export async function updateItemQuantities(
 					quantity: changes.opened,
 					expiringDate: newExpiringDate,
 					duration: item.duration,
-					dateOpened: now,
+					dateOpened: when,
 					opened: true,
 					recurring: item.recurring,
 					barcode: item.barcode,
@@ -117,11 +122,13 @@ export async function updateItemQuantities(
 			);
 			transaction.set(wasteEventDocRef, {
 				category: item.category,
+				name: item.name,
 				was_opened: item.opened,
 				was_expired: wasExpired,
 				consumed: changes.consumed,
 				discarded: changes.discarded,
-				occurred_at: Timestamp.now(),
+				occurred_at: Timestamp.fromDate(when),
+				opened_at: item.dateOpened ? Timestamp.fromDate(item.dateOpened) : null,
 			});
 		}
 	});
@@ -131,7 +138,7 @@ interface ItemDetailsChanges {
 	name: string;
 	category: string;
 	quantity: number;
-	expiringDate: Date;
+	expiringDate: Date | null;
 	duration: number | null;
 }
 
@@ -148,7 +155,9 @@ export async function updateItemDetails(
 		name: changes.name,
 		category: changes.category,
 		quantity: changes.quantity,
-		expiring_date: Timestamp.fromDate(changes.expiringDate),
+		expiring_date: changes.expiringDate
+			? Timestamp.fromDate(changes.expiringDate)
+			: null,
 		duration: changes.duration,
 	});
 }

@@ -1,6 +1,7 @@
 import { BarcodeOutlined } from "@ant-design/icons";
 import {
 	Button,
+	Checkbox,
 	DatePicker,
 	Form,
 	Input,
@@ -25,7 +26,8 @@ interface AddItemFormValues {
 	name: string;
 	barcode?: string;
 	quantity: number;
-	expiringDate: Dayjs;
+	noExpiration: boolean;
+	expiringDate?: Dayjs;
 	duration?: number;
 	recurring: boolean;
 }
@@ -52,6 +54,11 @@ export function AddItemModal({
 	const { t, i18n } = useTranslation();
 	const [form] = Form.useForm<AddItemFormValues>();
 	const [scannerOpen, setScannerOpen] = useState(false);
+	// Local state (not Form.useWatch) so the expiring-date/duration fields'
+	// visibility is correct on the very first render — Form.useWatch only
+	// picks up initialValues one render later, which briefly shows the wrong
+	// fields.
+	const [noExpiration, setNoExpiration] = useState(false);
 
 	// Re-derived during render (rather than in the useEffect below, which
 	// would cause an extra commit) — the React-recommended "adjusting state
@@ -61,6 +68,7 @@ export function AddItemModal({
 		setPrevOpen(open);
 		if (open) {
 			setScannerOpen(false);
+			setNoExpiration(false);
 		}
 	}
 
@@ -79,6 +87,7 @@ export function AddItemModal({
 				name: initialName ?? "",
 				barcode: "",
 				recurring: initialRecurring,
+				noExpiration: false,
 			});
 		}
 	}, [open, initialName, initialRecurring, form]);
@@ -118,8 +127,10 @@ export function AddItemModal({
 				name: values.name.trim(),
 				category: category.key,
 				quantity: values.quantity,
-				expiringDate: values.expiringDate.toDate(),
-				duration: values.duration ?? null,
+				expiringDate: values.noExpiration
+					? null
+					: (values.expiringDate?.toDate() ?? null),
+				duration: values.noExpiration ? null : (values.duration ?? null),
 				dateOpened: null,
 				opened: false,
 				recurring: values.recurring,
@@ -173,6 +184,7 @@ export function AddItemModal({
 						name: initialName ?? "",
 						barcode: "",
 						quantity: 1,
+						noExpiration: false,
 						recurring: initialRecurring,
 					}}
 				>
@@ -200,21 +212,30 @@ export function AddItemModal({
 					>
 						<QuantityStepper min={1} />
 					</Form.Item>
-					<Form.Item
-						name="expiringDate"
-						label={t("items.expiringDate")}
-						rules={[{ required: true }]}
-					>
-						<DatePicker
-							ref={configureDateInputForMobile}
-							format={datePickerFormats(i18n.language)}
-							placement="topLeft"
-							style={{ width: "100%" }}
-						/>
+					<Form.Item name="noExpiration" valuePropName="checked">
+						<Checkbox onChange={(e) => setNoExpiration(e.target.checked)}>
+							{t("items.noExpiration")}
+						</Checkbox>
 					</Form.Item>
-					<Form.Item name="duration" label={t("items.duration")}>
-						<InputNumber min={1} style={{ width: "100%" }} />
-					</Form.Item>
+					{!noExpiration && (
+						<>
+							<Form.Item
+								name="expiringDate"
+								label={t("items.expiringDate")}
+								rules={[{ required: true }]}
+							>
+								<DatePicker
+									ref={configureDateInputForMobile}
+									format={datePickerFormats(i18n.language)}
+									placement="topLeft"
+									style={{ width: "100%" }}
+								/>
+							</Form.Item>
+							<Form.Item name="duration" label={t("items.duration")}>
+								<InputNumber min={1} style={{ width: "100%" }} />
+							</Form.Item>
+						</>
+					)}
 					<Form.Item
 						name="recurring"
 						label={t("items.recurring")}

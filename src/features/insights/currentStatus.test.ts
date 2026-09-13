@@ -73,6 +73,26 @@ describe("computeCurrentStatus", () => {
 		expect(result.medicines.overdueOpened).toBe(1);
 	});
 
+	it("buckets an unopened item with no expiration date as sealedGood, never overdue", () => {
+		const result = computeCurrentStatus(
+			[
+				item({
+					category: "cleaning",
+					quantity: 1,
+					opened: false,
+					expiringDate: null,
+				}),
+			],
+			now,
+		);
+		expect(result.cleaning).toEqual({
+			sealedGood: 1,
+			openedGood: 0,
+			overdueUnopened: 0,
+			overdueOpened: 0,
+		});
+	});
+
 	it("sums quantities across multiple items in the same category", () => {
 		const result = computeCurrentStatus(
 			[

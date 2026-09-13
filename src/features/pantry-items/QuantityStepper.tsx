@@ -10,11 +10,13 @@ export function QuantityStepper({
 	onChange,
 	min = 0,
 	max,
+	"aria-label": ariaLabel,
 }: {
 	value?: number;
 	onChange?: (value: number) => void;
 	min?: number;
 	max?: number;
+	"aria-label"?: string;
 }) {
 	const current = value ?? min;
 
@@ -35,6 +37,7 @@ export function QuantityStepper({
 				style={{ width: "100%" }}
 				inputMode="numeric"
 				pattern="[0-9]*"
+				aria-label={ariaLabel}
 			/>
 			<Button
 				icon={<MinusOutlined />}

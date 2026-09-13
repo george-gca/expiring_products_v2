@@ -246,6 +246,166 @@ describe("EditItemModal details editing", () => {
 	});
 });
 
+describe("EditItemModal no expiration date", () => {
+	it("clears the expiring date via the details form's 'no expiration' checkbox", async () => {
+		const user = userEvent.setup();
+		const itemsRef = collection(db, "users", uid, "items");
+		const original = await addDoc(itemsRef, {
+			name: "Trash Bags",
+			category: "foods",
+			quantity: 1,
+			expiring_date: Timestamp.fromDate(new Date("2027-01-01")),
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		const item: PantryItem = {
+			id: original.id,
+			name: "Trash Bags",
+			category: "foods",
+			quantity: 1,
+			expiringDate: new Date("2027-01-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		};
+		const onClose = vi.fn();
+
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				onClose={onClose}
+			/>,
+		);
+
+		await user.click(screen.getByRole("button", { name: /fix item details/i }));
+		await user.click(screen.getByRole("checkbox", { name: /no expiration/i }));
+		expect(screen.queryByLabelText(/expiring date/i)).not.toBeInTheDocument();
+
+		await user.click(screen.getByRole("button", { name: "OK" }));
+
+		await waitFor(() => expect(onClose).toHaveBeenCalled());
+
+		const itemDoc = await getDoc(doc(db, "users", uid, "items", original.id));
+		expect(itemDoc.data()?.expiring_date).toBeNull();
+	});
+});
+
+describe("EditItemModal backdating usage", () => {
+	it("defaults 'happening now' checked and records the current time", async () => {
+		const itemsRef = collection(db, "users", uid, "items");
+		const original = await addDoc(itemsRef, {
+			name: "Detergent",
+			category: "foods",
+			quantity: 2,
+			expiring_date: null,
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		const item: PantryItem = {
+			id: original.id,
+			name: "Detergent",
+			category: "foods",
+			quantity: 2,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		};
+
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				onClose={vi.fn()}
+			/>,
+		);
+
+		expect(
+			screen.getByRole("checkbox", { name: /happening now/i }),
+		).toBeChecked();
+		expect(
+			screen.queryByLabelText(/when did this happen/i),
+		).not.toBeInTheDocument();
+	});
+
+	it("lets the user backdate the opened event via the unchecked 'happening now' date field", async () => {
+		const user = userEvent.setup();
+		const itemsRef = collection(db, "users", uid, "items");
+		const original = await addDoc(itemsRef, {
+			name: "Detergent",
+			category: "foods",
+			quantity: 2,
+			expiring_date: null,
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		const item: PantryItem = {
+			id: original.id,
+			name: "Detergent",
+			category: "foods",
+			quantity: 2,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		};
+		const onClose = vi.fn();
+
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				onClose={onClose}
+			/>,
+		);
+
+		await user.click(screen.getByRole("checkbox", { name: /happening now/i }));
+		const whenInput = screen.getByLabelText(/when did this happen/i);
+		await user.clear(whenInput);
+		await user.type(whenInput, "010127");
+		await user.keyboard("{Enter}");
+
+		const [openedInput] = screen.getAllByRole("spinbutton");
+		await user.clear(openedInput);
+		await user.type(openedInput, "1");
+
+		await user.click(screen.getByRole("button", { name: "OK" }));
+
+		await waitFor(() => expect(onClose).toHaveBeenCalled());
+
+		const itemsSnapshot = await getDocs(collection(db, "users", uid, "items"));
+		const openedItem = itemsSnapshot.docs.find((d) => d.data().opened);
+		expect(
+			openedItem?.data().date_opened.toDate().toISOString().slice(0, 10),
+		).toBe("2027-01-01");
+	});
+});
+
 describe("EditItemModal delete", () => {
 	it("deletes the item doc without writing a waste_events entry, so a mis-entered item is excluded from stats", async () => {
 		const user = userEvent.setup();

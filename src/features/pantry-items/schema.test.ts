@@ -32,6 +32,20 @@ describe("parseItemDoc", () => {
 		expect(result.lastNotifiedAt).toEqual(lastNotifiedAt.toDate());
 	});
 
+	it("parses a null expiring_date as an item with no expiration", () => {
+		const result = parseItemDoc("item1", {
+			name: "Trash Bags",
+			category: "cleaning",
+			quantity: 1,
+			expiring_date: null,
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+		});
+		expect(result.expiringDate).toBeNull();
+	});
+
 	it("defaults source to manual and barcode/lastNotifiedAt to null when absent", () => {
 		const result = parseItemDoc("item1", {
 			name: "Aspirin",
@@ -98,6 +112,22 @@ describe("toItemDoc", () => {
 		expect(doc.name).toBe("Whole Milk");
 		expect(doc.last_notified_at).toBeNull();
 	});
+
+	it("writes a null expiring_date for an item with no expiration", () => {
+		const doc = toItemDoc({
+			name: "Trash Bags",
+			category: "cleaning",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		expect(doc.expiring_date).toBeNull();
+	});
 });
 
 describe("parseItemHistoryDoc", () => {
@@ -147,12 +177,31 @@ describe("parseWasteEventDoc", () => {
 		expect(result).toEqual({
 			id: "event1",
 			category: "foods",
+			name: null,
 			wasOpened: true,
 			wasExpired: false,
 			consumed: 2,
 			discarded: 0,
 			occurredAt: occurredAt.toDate(),
+			openedAt: null,
 		});
+	});
+
+	it("parses name and opened_at when present", () => {
+		const occurredAt = Timestamp.fromDate(new Date("2026-08-23T12:00:00Z"));
+		const openedAt = Timestamp.fromDate(new Date("2026-08-10T09:00:00Z"));
+		const result = parseWasteEventDoc("event1", {
+			category: "cleaning",
+			name: "Detergent",
+			was_opened: true,
+			was_expired: false,
+			consumed: 1,
+			discarded: 0,
+			occurred_at: occurredAt,
+			opened_at: openedAt,
+		});
+		expect(result.name).toBe("Detergent");
+		expect(result.openedAt).toEqual(openedAt.toDate());
 	});
 });
 

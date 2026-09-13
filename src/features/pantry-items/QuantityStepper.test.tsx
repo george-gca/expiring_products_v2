@@ -10,4 +10,14 @@ describe("QuantityStepper", () => {
 		expect(input).toHaveAttribute("inputmode", "numeric");
 		expect(input).toHaveAttribute("pattern", "[0-9]*");
 	});
+
+	it("forwards an aria-label to the underlying input, for use outside a named Form.Item", () => {
+		render(
+			<QuantityStepper value={1} onChange={() => {}} aria-label="My Field" />,
+		);
+
+		expect(
+			screen.getByRole("spinbutton", { name: "My Field" }),
+		).toBeInTheDocument();
+	});
 });

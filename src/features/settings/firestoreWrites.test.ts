@@ -3,6 +3,7 @@ import { afterEach, describe, expect, it } from "vitest";
 import { db } from "../../lib/firebase";
 import { clearFirestoreEmulator } from "../../test/emulator";
 import {
+	updateHideDistantEnabled,
 	updateHideDistantThresholdMonths,
 	updateLanguage,
 	updateLowStockThreshold,
@@ -41,6 +42,15 @@ describe("updateHideDistantThresholdMonths", () => {
 		await updateHideDistantThresholdMonths(uid, 6);
 		const snapshot = await getDoc(doc(db, "users", uid));
 		expect(snapshot.data()?.hideDistantThresholdMonths).toBe(6);
+	});
+});
+
+describe("updateHideDistantEnabled", () => {
+	it("updates an existing settings doc's hideDistantEnabled", async () => {
+		await setDoc(doc(db, "users", uid), { lowStockThreshold: 3 });
+		await updateHideDistantEnabled(uid, false);
+		const snapshot = await getDoc(doc(db, "users", uid));
+		expect(snapshot.data()?.hideDistantEnabled).toBe(false);
 	});
 });
 

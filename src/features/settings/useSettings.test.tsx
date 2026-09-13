@@ -19,6 +19,7 @@ describe("useSettings", () => {
 			lowStockThreshold: 3,
 			language: "pt-br",
 			hideDistantThresholdMonths: 3,
+			hideDistantEnabled: true,
 			notificationsEnabled: false,
 			notifyDaysBeforeExpiry: 3,
 			notifyHourLocal: 8,

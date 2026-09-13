@@ -1,6 +1,7 @@
 import { DeleteOutlined, EditOutlined, UndoOutlined } from "@ant-design/icons";
 import {
 	Button,
+	Checkbox,
 	DatePicker,
 	Flex,
 	Form,
@@ -34,13 +35,16 @@ interface UsageFormValues {
 	consumed: number;
 	discarded: number;
 	recurring: boolean;
+	happeningNow: boolean;
+	when?: Dayjs;
 }
 
 interface DetailsFormValues {
 	name: string;
 	category: string;
 	quantity: number;
-	expiringDate: Dayjs;
+	noExpiration: boolean;
+	expiringDate?: Dayjs;
 	duration?: number;
 }
 
@@ -59,6 +63,11 @@ export function EditItemModal({
 	const [mode, setMode] = useState<"usage" | "details">("usage");
 	const [usageForm] = Form.useForm<UsageFormValues>();
 	const [detailsForm] = Form.useForm<DetailsFormValues>();
+	// Local state (not Form.useWatch) so field visibility is correct on the
+	// very first render — this modal remounts fresh per edited item, so
+	// initializing straight from `item` here is safe.
+	const [happeningNow, setHappeningNow] = useState(true);
+	const [noExpiration, setNoExpiration] = useState(item.expiringDate === null);
 
 	// item.recurring reflects this purchase instance's own recurring field,
 	// which can disagree with item_history's authoritative per-item-type flag
@@ -104,7 +113,12 @@ export function EditItemModal({
 			// item doc (full consumption/discard), and setItemRecurring's updateDoc
 			// against that doc would then throw "document not found".
 			await setItemRecurring(uid, item, values.recurring);
-			await updateItemQuantities(uid, item.id, values);
+			await updateItemQuantities(
+				uid,
+				item.id,
+				values,
+				values.happeningNow ? undefined : values.when?.toDate(),
+			);
 			onClose();
 		} catch {
 			message.error("Something went wrong, please try again");
@@ -118,8 +132,10 @@ export function EditItemModal({
 				name: values.name.trim(),
 				category: values.category,
 				quantity: values.quantity,
-				expiringDate: values.expiringDate.toDate(),
-				duration: values.duration ?? null,
+				expiringDate: values.noExpiration
+					? null
+					: (values.expiringDate?.toDate() ?? null),
+				duration: values.noExpiration ? null : (values.duration ?? null),
 			});
 			onClose();
 		} catch {
@@ -190,6 +206,7 @@ export function EditItemModal({
 						consumed: 0,
 						discarded: 0,
 						recurring: item.recurring,
+						happeningNow: true,
 					}}
 				>
 					<Form.Item name="opened" label={t("items.openedItems")}>
@@ -208,6 +225,26 @@ export function EditItemModal({
 					>
 						<Switch />
 					</Form.Item>
+					<Form.Item name="happeningNow" valuePropName="checked">
+						<Checkbox onChange={(e) => setHappeningNow(e.target.checked)}>
+							{t("items.happeningNow")}
+						</Checkbox>
+					</Form.Item>
+					{!happeningNow && (
+						<Form.Item
+							name="when"
+							label={t("items.whenDidThisHappen")}
+							rules={[{ required: true }]}
+							initialValue={dayjs()}
+						>
+							<DatePicker
+								ref={configureDateInputForMobile}
+								format={datePickerFormats(i18n.language)}
+								placement="topLeft"
+								style={{ width: "100%" }}
+							/>
+						</Form.Item>
+					)}
 				</Form>
 			) : (
 				<Form
@@ -218,7 +255,10 @@ export function EditItemModal({
 						name: item.name,
 						category: item.category,
 						quantity: item.quantity,
-						expiringDate: dayjs(item.expiringDate),
+						noExpiration: item.expiringDate === null,
+						expiringDate: item.expiringDate
+							? dayjs(item.expiringDate)
+							: undefined,
 						duration: item.duration ?? undefined,
 					}}
 				>
@@ -248,21 +288,30 @@ export function EditItemModal({
 					>
 						<QuantityStepper min={1} />
 					</Form.Item>
-					<Form.Item
-						name="expiringDate"
-						label={t("items.expiringDate")}
-						rules={[{ required: true }]}
-					>
-						<DatePicker
-							ref={configureDateInputForMobile}
-							format={datePickerFormats(i18n.language)}
-							placement="topLeft"
-							style={{ width: "100%" }}
-						/>
+					<Form.Item name="noExpiration" valuePropName="checked">
+						<Checkbox onChange={(e) => setNoExpiration(e.target.checked)}>
+							{t("items.noExpiration")}
+						</Checkbox>
 					</Form.Item>
-					<Form.Item name="duration" label={t("items.duration")}>
-						<InputNumber min={1} style={{ width: "100%" }} />
-					</Form.Item>
+					{!noExpiration && (
+						<>
+							<Form.Item
+								name="expiringDate"
+								label={t("items.expiringDate")}
+								rules={[{ required: true }]}
+							>
+								<DatePicker
+									ref={configureDateInputForMobile}
+									format={datePickerFormats(i18n.language)}
+									placement="topLeft"
+									style={{ width: "100%" }}
+								/>
+							</Form.Item>
+							<Form.Item name="duration" label={t("items.duration")}>
+								<InputNumber min={1} style={{ width: "100%" }} />
+							</Form.Item>
+						</>
+					)}
 				</Form>
 			)}
 		</Modal>

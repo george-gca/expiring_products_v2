@@ -45,6 +45,13 @@ describe("sortItems", () => {
 		const result = sortItems([later, soonUnopened, soonOpened]);
 		expect(result.map((i) => i.id)).toEqual(["b", "a", "c"]);
 	});
+
+	it("sorts items with no expiration date after all dated items", () => {
+		const dated = makeItem({ id: "a", expiringDate: new Date("2099-01-01") });
+		const noExpiration = makeItem({ id: "b", expiringDate: null });
+		const result = sortItems([noExpiration, dated]);
+		expect(result.map((i) => i.id)).toEqual(["a", "b"]);
+	});
 });
 
 describe("getExpiryWarningColor", () => {
@@ -62,6 +69,11 @@ describe("getExpiryWarningColor", () => {
 
 	it("returns white for items expiring beyond 3 days", () => {
 		const item = makeItem({ expiringDate: new Date("2026-09-01") });
+		expect(getExpiryWarningColor(item, now)).toBe("white");
+	});
+
+	it("returns white for items with no expiration date", () => {
+		const item = makeItem({ expiringDate: null });
 		expect(getExpiryWarningColor(item, now)).toBe("white");
 	});
 });
@@ -83,5 +95,10 @@ describe("filterDistantItems", () => {
 		const cutoff = dayjs(now).add(3, "month").toDate();
 		const item = makeItem({ expiringDate: cutoff });
 		expect(filterDistantItems([item], 3, now)).toEqual([item]);
+	});
+
+	it("drops items with no expiration date, treating them as maximally distant", () => {
+		const item = makeItem({ expiringDate: null });
+		expect(filterDistantItems([item], 3, now)).toEqual([]);
 	});
 });

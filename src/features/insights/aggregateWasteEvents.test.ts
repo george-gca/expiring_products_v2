@@ -6,11 +6,13 @@ function event(overrides: Partial<WasteEvent>): WasteEvent {
 	return {
 		id: "event1",
 		category: "foods",
+		name: null,
 		wasOpened: false,
 		wasExpired: false,
 		consumed: 0,
 		discarded: 0,
 		occurredAt: new Date("2026-08-23T00:00:00Z"),
+		openedAt: null,
 		...overrides,
 	};
 }

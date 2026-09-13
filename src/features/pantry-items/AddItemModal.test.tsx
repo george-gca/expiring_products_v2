@@ -61,6 +61,43 @@ describe("AddItemModal", () => {
 	});
 });
 
+describe("AddItemModal no expiration date", () => {
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it("hides the expiring date and duration fields when 'no expiration' is checked, and submits with both null", async () => {
+		const addItemSpy = vi
+			.spyOn(itemWritesModule, "addItem")
+			.mockResolvedValue(undefined);
+
+		render(
+			<AddItemModal
+				uid="test-user-no-expiration-1"
+				category={category}
+				open
+				onClose={vi.fn()}
+			/>,
+		);
+
+		await userEvent.type(screen.getByLabelText(/name/i), "Trash Bags");
+		await userEvent.click(
+			screen.getByRole("checkbox", { name: /no expiration/i }),
+		);
+
+		expect(screen.queryByLabelText(/expiring date/i)).not.toBeInTheDocument();
+		expect(screen.queryByLabelText(/duration/i)).not.toBeInTheDocument();
+
+		await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+		await waitFor(() => expect(addItemSpy).toHaveBeenCalled());
+		expect(addItemSpy).toHaveBeenCalledWith(
+			"test-user-no-expiration-1",
+			expect.objectContaining({ expiringDate: null, duration: null }),
+		);
+	});
+});
+
 describe("AddItemModal barcode scanning", () => {
 	// Without this, vi.spyOn's call history on the shared lookupBarcode module
 	// export leaks across tests in this file (same pattern as Phase 4's

@@ -1,5 +1,4 @@
-import { Col, Form, InputNumber, Row, Switch } from "antd";
-import type { FocusEvent } from "react";
+import { Col, Form, Row, Switch } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { message } from "../../lib/feedback";
@@ -10,6 +9,7 @@ import {
 	unregisterFromPush,
 } from "../notifications/messaging";
 import { useFcmTokenRegistered } from "../notifications/useFcmTokenRegistered";
+import { QuantityStepper } from "../pantry-items/QuantityStepper";
 import {
 	updateNotificationsEnabled,
 	updateNotifyDaysBeforeExpiry,
@@ -78,34 +78,23 @@ export function NotificationSection({
 		}
 	};
 
-	const handleDaysBlur = async (event: FocusEvent<HTMLInputElement>) => {
-		const parsed = Number(event.target.value);
-		const committed = Number.isNaN(parsed)
-			? daysValue
-			: Math.max(MIN_NOTIFY_DAYS_BEFORE_EXPIRY, Math.round(parsed));
-		setDaysValue(committed);
-		if (committed === settings.notifyDaysBeforeExpiry) return;
+	const handleDaysChange = async (next: number) => {
+		setDaysValue(next);
+		if (next === settings.notifyDaysBeforeExpiry) return;
 		try {
-			await updateNotifyDaysBeforeExpiry(uid, committed);
+			await updateNotifyDaysBeforeExpiry(uid, next);
 		} catch {
 			message.error("Something went wrong, please try again");
 		}
 	};
 
-	const handleHourBlur = async (event: FocusEvent<HTMLInputElement>) => {
-		const parsed = Number(event.target.value);
-		const committed = Number.isNaN(parsed)
-			? hourValue
-			: Math.min(
-					MAX_NOTIFY_HOUR_LOCAL,
-					Math.max(MIN_NOTIFY_HOUR_LOCAL, Math.round(parsed)),
-				);
-		setHourValue(committed);
-		if (committed === settings.notifyHourLocal) return;
+	const handleHourChange = async (next: number) => {
+		setHourValue(next);
+		if (next === settings.notifyHourLocal) return;
 		try {
 			await updateNotifyHourLocal(
 				uid,
-				committed,
+				next,
 				Intl.DateTimeFormat().resolvedOptions().timeZone,
 			);
 		} catch {
@@ -128,32 +117,22 @@ export function NotificationSection({
 			<Row gutter={16}>
 				<Col xs={24} sm={12}>
 					<Form.Item label={t("settings.notifyDaysBeforeExpiry")}>
-						<InputNumber
+						<QuantityStepper
 							min={MIN_NOTIFY_DAYS_BEFORE_EXPIRY}
-							precision={0}
 							value={daysValue}
-							onChange={(newValue) =>
-								setDaysValue(newValue ?? MIN_NOTIFY_DAYS_BEFORE_EXPIRY)
-							}
-							onBlur={handleDaysBlur}
+							onChange={handleDaysChange}
 							aria-label={t("settings.notifyDaysBeforeExpiry")}
-							style={{ width: "100%" }}
 						/>
 					</Form.Item>
 				</Col>
 				<Col xs={24} sm={12}>
 					<Form.Item label={t("settings.notifyHourLocal")}>
-						<InputNumber
+						<QuantityStepper
 							min={MIN_NOTIFY_HOUR_LOCAL}
 							max={MAX_NOTIFY_HOUR_LOCAL}
-							precision={0}
 							value={hourValue}
-							onChange={(newValue) =>
-								setHourValue(newValue ?? MIN_NOTIFY_HOUR_LOCAL)
-							}
-							onBlur={handleHourBlur}
+							onChange={handleHourChange}
 							aria-label={t("settings.notifyHourLocal")}
-							style={{ width: "100%" }}
 						/>
 					</Form.Item>
 				</Col>

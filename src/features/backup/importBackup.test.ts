@@ -26,6 +26,7 @@ const backup: Backup = {
 		lowStockThreshold: 5,
 		language: "en-us",
 		hideDistantThresholdMonths: 3,
+		hideDistantEnabled: true,
 		notificationsEnabled: true,
 		notifyDaysBeforeExpiry: 5,
 		notifyHourLocal: 20,
@@ -90,6 +91,7 @@ describe("importBackup", () => {
 			lowStockThreshold: 5,
 			language: "en-us",
 			hideDistantThresholdMonths: 3,
+			hideDistantEnabled: true,
 			notificationsEnabled: true,
 			notifyDaysBeforeExpiry: 5,
 			notifyHourLocal: 20,
@@ -123,5 +125,15 @@ describe("importBackup", () => {
 			duration: "7",
 			recurring: true,
 		});
+	});
+
+	it("imports an item with a null expiringDate as an item with no expiration", async () => {
+		await importBackup(uid, {
+			...backup,
+			items: [{ ...backup.items[0], expiringDate: null }],
+		});
+
+		const itemsSnap = await getDocs(collection(db, "users", uid, "items"));
+		expect(itemsSnap.docs[0].data().expiring_date).toBeNull();
 	});
 });

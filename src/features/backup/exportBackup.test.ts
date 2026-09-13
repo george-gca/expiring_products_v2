@@ -47,6 +47,7 @@ describe("buildBackup", () => {
 			lowStockThreshold: 5,
 			language: "en-us",
 			hideDistantThresholdMonths: 6,
+			hideDistantEnabled: true,
 			notificationsEnabled: false,
 			notifyDaysBeforeExpiry: 3,
 			notifyHourLocal: 8,
@@ -74,12 +75,32 @@ describe("buildBackup", () => {
 		]);
 	});
 
+	it("exports a null expiringDate for an item with no expiration date", async () => {
+		await addDoc(collection(db, "users", uid, "items"), {
+			name: "Trash Bags",
+			category: "cleaning",
+			quantity: 1,
+			expiring_date: null,
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+
+		const backup = await buildBackup(uid);
+
+		expect(backup.items[0].expiringDate).toBeNull();
+	});
+
 	it("defaults settings to the standard threshold when no settings doc exists yet", async () => {
 		const backup = await buildBackup(uid);
 		expect(backup.settings).toEqual({
 			lowStockThreshold: 3,
 			language: "pt-br",
 			hideDistantThresholdMonths: 3,
+			hideDistantEnabled: true,
 			notificationsEnabled: false,
 			notifyDaysBeforeExpiry: 3,
 			notifyHourLocal: 8,

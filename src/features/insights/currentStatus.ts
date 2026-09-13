@@ -20,7 +20,8 @@ export function computeCurrentStatus(
 			overdueOpened: 0,
 		};
 		const bucket = result[item.category];
-		const overdue = item.expiringDate.getTime() < now.getTime();
+		const overdue =
+			item.expiringDate !== null && item.expiringDate.getTime() < now.getTime();
 		if (overdue) {
 			if (item.opened) {
 				bucket.overdueOpened += item.quantity;

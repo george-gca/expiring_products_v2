@@ -35,9 +35,11 @@ export function ItemListItem({
 			<Flex vertical>
 				<Typography.Text strong>{item.name}</Typography.Text>
 				<Typography.Text type="secondary">
-					{t("items.expiresOn", {
-						date: item.expiringDate.toLocaleDateString(i18n.language),
-					})}
+					{item.expiringDate === null
+						? t("items.noExpiration")
+						: t("items.expiresOn", {
+								date: item.expiringDate.toLocaleDateString(i18n.language),
+							})}
 				</Typography.Text>
 			</Flex>
 			<Tag color="blue" style={{ marginInlineEnd: token.marginXS }}>

@@ -31,6 +31,17 @@ export async function updateHideDistantThresholdMonths(
 	);
 }
 
+export async function updateHideDistantEnabled(
+	uid: string,
+	value: boolean,
+): Promise<void> {
+	await setDoc(
+		doc(db, "users", uid),
+		{ hideDistantEnabled: value },
+		{ merge: true },
+	);
+}
+
 export async function updateNotificationsEnabled(
 	uid: string,
 	value: boolean,
