@@ -13,20 +13,25 @@
 // EOF
 
 import { mkdir } from "node:fs/promises";
+import path from "node:path";
 import readline from "node:readline";
 import { chromium } from "playwright";
 
 const SCREENSHOT_DIR = "screenshots";
 await mkdir(SCREENSHOT_DIR, { recursive: true });
 
+// Chromium's own sandbox works fine as this non-root user in this
+// container (verified directly) — no --no-sandbox needed. If a different
+// environment's launch fails on a sandbox error, add it back there rather
+// than defaulting to it here.
+const browser = await chromium.launch();
 // pt-BR matches this project's e2e suite (playwright.config.ts) and its
 // default locale, so selectors written against pt-BR copy behave the same
-// way here as they do in CI.
-const browser = await chromium.launch({ args: ["--no-sandbox"] });
-const context = await browser.newContext({
-	locale: "pt-BR",
-	permissions: ["camera"],
-});
+// way here as they do in CI. No `permissions` granted by default — this
+// driver only needs to see what an ordinary signed-out visitor sees; a
+// script driving the barcode-scanning flow specifically should request
+// `camera` on its own context.
+const context = await browser.newContext({ locale: "pt-BR" });
 const page = await context.newPage();
 
 const consoleErrors = [];
@@ -46,6 +51,13 @@ async function run(line) {
 
 	switch (cmd) {
 		case "nav": {
+			// http(s) only: this driver points at a local dev server, never at
+			// `file://` — nav-then-screenshot to a local file would otherwise
+			// let a script exfiltrate arbitrary filesystem contents as a PNG.
+			if (!/^https?:\/\//i.test(arg)) {
+				console.log(`err nav: only http(s) URLs are allowed, got: ${arg}`);
+				return;
+			}
 			await page.goto(arg, { waitUntil: "domcontentloaded" });
 			console.log(`ok nav ${arg}`);
 			return;
@@ -76,10 +88,13 @@ async function run(line) {
 			return;
 		}
 		case "screenshot": {
-			const name = arg || `shot-${++shotCount}`;
-			const path = `${SCREENSHOT_DIR}/${name}.png`;
-			await page.screenshot({ path });
-			console.log(`ok screenshot ${path}`);
+			const requested = arg || `shot-${++shotCount}`;
+			// Strip anything but a plain filename — no `/`, `..`, or an absolute
+			// path — so a screenshot name can't write outside SCREENSHOT_DIR.
+			const safeName = path.basename(requested).replace(/^\.+/, "") || "shot";
+			const filePath = path.join(SCREENSHOT_DIR, `${safeName}.png`);
+			await page.screenshot({ path: filePath });
+			console.log(`ok screenshot ${filePath}`);
 			return;
 		}
 		case "console": {

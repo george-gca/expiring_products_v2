@@ -196,3 +196,12 @@ work as you'd expect (the args land on `firebase emulators:exec`, not
   ```bash
   curl -s "http://127.0.0.1:8080/v1/projects/expiring-products-app/databases/(default)/documents/users/<uid>/items"
   ```
+- **`chromium.launch()` fails with a sandbox-related error** (some
+  containers, especially running as root, hit this): the driver
+  deliberately launches without `--no-sandbox` — verified working as
+  this repo's non-root user. If a different environment genuinely needs
+  it, pass `chromium.launch({ args: ["--no-sandbox"] })` there rather
+  than reinstating it as this driver's default; disabling the sandbox
+  is a real reduction in isolation, worth confirming is actually
+  necessary first (try running as a non-root user before reaching for
+  it).
