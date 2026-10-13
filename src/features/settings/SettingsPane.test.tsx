@@ -136,3 +136,12 @@ describe("SettingsPane categories", () => {
 		await screen.findByText("Medicines");
 	});
 });
+
+describe("SettingsPane classes", () => {
+	it("renders the Classes section for the default category", async () => {
+		render(<SettingsPane uid="test-user-settings-ui-7" settings={settings} />);
+
+		await screen.findByText("Foods");
+		await screen.findByRole("button", { name: /add class/i });
+	});
+});

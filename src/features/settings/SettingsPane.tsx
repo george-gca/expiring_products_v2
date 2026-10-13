@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { message } from "../../lib/feedback";
 import i18n from "../../lib/i18n";
 import { CategorySection } from "../categories/CategorySection";
+import { ClassSection } from "../classes/ClassSection";
 import { QuantityStepper } from "../pantry-items/QuantityStepper";
 import { BackupSection } from "./BackupSection";
 import {
@@ -164,6 +165,9 @@ export function SettingsPane({
 			</Card>
 			<Card title={t("settings.sectionCategories")}>
 				<CategorySection uid={uid} />
+			</Card>
+			<Card title={t("settings.sectionClasses")}>
+				<ClassSection uid={uid} />
 			</Card>
 		</Space>
 	);
