@@ -76,6 +76,12 @@ export function EditItemModal({
 	const [happeningNow, setHappeningNow] = useState(true);
 	const [noExpiration, setNoExpiration] = useState(item.expiringDate === null);
 	const [classFormOpen, setClassFormOpen] = useState(false);
+	// `classes` is scoped to the item's original category, so once the
+	// category changes none of its options are valid; the class must be set
+	// in a second edit after saving the move.
+	const selectedCategory = Form.useWatch("category", detailsForm);
+	const categoryChanged =
+		selectedCategory !== undefined && selectedCategory !== item.category;
 
 	// item.recurring reflects this purchase instance's own recurring field,
 	// which can disagree with item_history's authoritative per-item-type flag
@@ -144,7 +150,8 @@ export function EditItemModal({
 					? null
 					: (values.expiringDate?.toDate() ?? null),
 				duration: values.noExpiration ? null : (values.duration ?? null),
-				classKey: values.classKey ?? null,
+				classKey:
+					values.category === item.category ? (values.classKey ?? null) : null,
 			});
 			onClose();
 		} catch {
@@ -289,6 +296,14 @@ export function EditItemModal({
 								value: category.key,
 								label: `${category.emoji} ${category.name}`,
 							}))}
+							onChange={(value) =>
+								detailsForm.setFieldsValue({
+									classKey:
+										value === item.category
+											? (item.classKey ?? undefined)
+											: undefined,
+								})
+							}
 						/>
 					</Form.Item>
 					<Form.Item
@@ -322,11 +337,25 @@ export function EditItemModal({
 							</Form.Item>
 						</>
 					)}
-					<Form.Item name="classKey" label={t("items.itemClassLabel")}>
+					{/* Inline `extra` text rather than a hover Tooltip: this is a
+					    mobile PWA, and touch devices have no hover. */}
+					<Form.Item
+						name="classKey"
+						label={t("items.itemClassLabel")}
+						extra={
+							categoryChanged
+								? t("items.classDisabledAfterCategoryChange")
+								: undefined
+						}
+					>
 						<Select
+							disabled={categoryChanged}
 							allowClear
 							options={[
-								...classes.map((cls) => ({ value: cls.key, label: cls.name })),
+								...classes.map((cls) => ({
+									value: cls.key,
+									label: cls.name,
+								})),
 								{
 									value: CREATE_CLASS_VALUE,
 									label: t("items.itemClassCreateOption"),

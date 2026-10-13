@@ -37,7 +37,8 @@
     "editDetails": "Corrigir dados do item",
     "recordUsage": "Voltar para registrar uso",
     "delete": "Excluir",
-    "deleteConfirmTitle": "Excluir este item? Ele não entrará nas estatísticas."
+    "deleteConfirmTitle": "Excluir este item? Ele não entrará nas estatísticas.",
+    "classDisabledAfterCategoryChange": "Salve a mudança de categoria primeiro e reabra para definir a classe."
   },
   "settings": {
     "tabName": "Configurações",

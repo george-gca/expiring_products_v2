@@ -37,7 +37,8 @@
     "editDetails": "Fix item details",
     "recordUsage": "Back to recording usage",
     "delete": "Delete",
-    "deleteConfirmTitle": "Delete this item? It won't count in stats."
+    "deleteConfirmTitle": "Delete this item? It won't count in stats.",
+    "classDisabledAfterCategoryChange": "Save the category change first, then reopen to set its class."
   },
   "settings": {
     "tabName": "Settings",

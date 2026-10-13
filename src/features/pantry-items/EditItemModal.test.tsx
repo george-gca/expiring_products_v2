@@ -729,4 +729,111 @@ describe("EditItemModal class field", () => {
 		expect(screen.getByLabelText(/^name$/i)).toBeInTheDocument();
 		expect(screen.getByText("Dove Soap")).toBeInTheDocument();
 	});
+
+	// Final review: the class options come from the item's ORIGINAL
+	// category, so a class picked there must never be saved paired with a
+	// newly chosen category.
+	it("disables and clears the class field once the category is changed, saving no stale class", async () => {
+		const user = userEvent.setup();
+		const itemsRef = collection(db, "users", uid, "items");
+		const original = await addDoc(itemsRef, {
+			name: "Dove Soap",
+			category: "foods",
+			quantity: 1,
+			expiring_date: null,
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+			class_key: "soap-key",
+		});
+		const item: PantryItem = {
+			id: original.id,
+			name: "Dove Soap",
+			category: "foods",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+			classKey: "soap-key",
+		};
+		const onClose = vi.fn();
+
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				classes={[soapClass]}
+				onClose={onClose}
+			/>,
+		);
+
+		await user.click(screen.getByRole("button", { name: /fix item details/i }));
+		const classSelect = screen.getByLabelText(/class/i);
+		expect(classSelect).toBeEnabled();
+
+		await user.click(screen.getByLabelText(/^category$/i));
+		await user.click(await screen.findByText("💊 Medicines"));
+
+		expect(screen.getByLabelText(/class/i)).toBeDisabled();
+		expect(screen.queryByText("Soap")).not.toBeInTheDocument();
+		expect(
+			screen.getByText(
+				"Save the category change first, then reopen to set its class.",
+			),
+		).toBeInTheDocument();
+
+		await user.click(screen.getByRole("button", { name: "OK" }));
+		await waitFor(() => expect(onClose).toHaveBeenCalled());
+
+		const itemDoc = await getDoc(doc(db, "users", uid, "items", original.id));
+		expect(itemDoc.data()?.category).toBe("medicines");
+		expect(itemDoc.data()?.class_key).toBeNull();
+	});
+
+	it("re-enables the class field and restores its original class when the category is changed back", async () => {
+		const user = userEvent.setup();
+		const item: PantryItem = {
+			id: "item-category-round-trip",
+			name: "Dove Soap",
+			category: "foods",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+			classKey: "soap-key",
+		};
+
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				classes={[soapClass]}
+				onClose={vi.fn()}
+			/>,
+		);
+
+		await user.click(screen.getByRole("button", { name: /fix item details/i }));
+		await user.click(screen.getByLabelText(/^category$/i));
+		await user.click(await screen.findByText("💊 Medicines"));
+		expect(screen.getByLabelText(/class/i)).toBeDisabled();
+
+		await user.click(screen.getByLabelText(/^category$/i));
+		await user.click(await screen.findByTitle("🍎 Foods"));
+
+		expect(screen.getByLabelText(/class/i)).toBeEnabled();
+		expect(screen.getByText("Soap")).toBeInTheDocument();
+	});
 });
