@@ -135,7 +135,13 @@ export function AddItemModal({
 	};
 
 	const handleOk = async () => {
-		const values = await form.validateFields();
+		let values: AddItemFormValues;
+		try {
+			values = await form.validateFields();
+		} catch {
+			// antd already highlights the invalid fields; no toast needed.
+			return;
+		}
 		const barcode = values.barcode?.trim() || null;
 		try {
 			await addItem(uid, {
