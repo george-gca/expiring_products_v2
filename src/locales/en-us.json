@@ -20,6 +20,8 @@
     "noExpiration": "No expiration date",
     "duration": "Duration after opened (days)",
     "recurring": "Recurring purchase",
+    "itemClassLabel": "Class",
+    "itemClassCreateOption": "+ Create new class",
     "expiresOn": "expires on {{date}}",
     "openedItems": "Opened items",
     "consumedItems": "Consumed items",

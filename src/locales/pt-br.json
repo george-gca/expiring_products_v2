@@ -20,6 +20,8 @@
     "noExpiration": "Sem validade",
     "duration": "Duração após aberto (dias)",
     "recurring": "Compra recorrente",
+    "itemClassLabel": "Classe",
+    "itemClassCreateOption": "+ Criar nova classe",
     "expiresOn": "vence em {{date}}",
     "openedItems": "Itens abertos",
     "consumedItems": "Itens consumidos",

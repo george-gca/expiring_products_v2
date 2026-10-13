@@ -7,6 +7,7 @@ import {
 	Input,
 	InputNumber,
 	Modal,
+	Select,
 	Switch,
 } from "antd";
 import type { Dayjs } from "dayjs";
@@ -18,9 +19,13 @@ import { BarcodeScanner } from "../barcode/BarcodeScanner";
 import { upsertBarcodeProduct } from "../barcode/firestoreWrites";
 import { lookupBarcode } from "../barcode/lookupBarcode";
 import type { Category } from "../categories/schema";
+import { ClassFormModal } from "../classes/ClassFormModal";
+import type { ItemClass } from "../classes/schema";
 import { configureDateInputForMobile, datePickerFormats } from "./dateFormat";
 import { addItem } from "./firestoreWrites";
 import { QuantityStepper } from "./QuantityStepper";
+
+const CREATE_CLASS_VALUE = "__create__";
 
 interface AddItemFormValues {
 	name: string;
@@ -30,6 +35,7 @@ interface AddItemFormValues {
 	expiringDate?: Dayjs;
 	duration?: number;
 	recurring: boolean;
+	classKey?: string;
 }
 
 export function AddItemModal({
@@ -39,6 +45,8 @@ export function AddItemModal({
 	onClose,
 	initialName,
 	initialRecurring = false,
+	classes,
+	initialClassKey,
 }: {
 	uid: string;
 	category: Category;
@@ -50,6 +58,11 @@ export function AddItemModal({
 	// entry only appears there because item_history already marked that item
 	// type recurring) and `false` from the ordinary "+" button.
 	initialRecurring?: boolean;
+	classes: ItemClass[];
+	// Set when opened from the Shopping Mode cart-icon flow on a classed
+	// entry, so the new item defaults into the same class as the shopping
+	// list entry it came from.
+	initialClassKey?: string;
 }) {
 	const { t, i18n } = useTranslation();
 	const [form] = Form.useForm<AddItemFormValues>();
@@ -59,6 +72,7 @@ export function AddItemModal({
 	// picks up initialValues one render later, which briefly shows the wrong
 	// fields.
 	const [noExpiration, setNoExpiration] = useState(false);
+	const [classFormOpen, setClassFormOpen] = useState(false);
 
 	// Re-derived during render (rather than in the useEffect below, which
 	// would cause an extra commit) — the React-recommended "adjusting state
@@ -88,9 +102,10 @@ export function AddItemModal({
 				barcode: "",
 				recurring: initialRecurring,
 				noExpiration: false,
+				classKey: initialClassKey,
 			});
 		}
-	}, [open, initialName, initialRecurring, form]);
+	}, [open, initialName, initialRecurring, initialClassKey, form]);
 
 	const applyBarcodeLookup = async (barcode: string) => {
 		const result = await lookupBarcode(uid, barcode, category.key);
@@ -136,6 +151,7 @@ export function AddItemModal({
 				recurring: values.recurring,
 				barcode,
 				source: barcode ? "barcode" : "manual",
+				classKey: values.classKey ?? null,
 			});
 			if (barcode) {
 				// Associates this barcode with the item's name/category/duration
@@ -186,6 +202,7 @@ export function AddItemModal({
 						quantity: 1,
 						noExpiration: false,
 						recurring: initialRecurring,
+						classKey: initialClassKey,
 					}}
 				>
 					<Form.Item
@@ -243,8 +260,34 @@ export function AddItemModal({
 					>
 						<Switch />
 					</Form.Item>
+					<Form.Item name="classKey" label={t("items.itemClassLabel")}>
+						<Select
+							allowClear
+							options={[
+								...classes.map((cls) => ({ value: cls.key, label: cls.name })),
+								{
+									value: CREATE_CLASS_VALUE,
+									label: t("items.itemClassCreateOption"),
+								},
+							]}
+							onChange={(value) => {
+								if (value === CREATE_CLASS_VALUE) {
+									form.setFieldsValue({ classKey: undefined });
+									setClassFormOpen(true);
+								}
+							}}
+						/>
+					</Form.Item>
 				</Form>
 			)}
+			<ClassFormModal
+				uid={uid}
+				category={category.key}
+				open={classFormOpen}
+				onClose={() => setClassFormOpen(false)}
+				editingClass={null}
+				onCreated={(classId) => form.setFieldsValue({ classKey: classId })}
+			/>
 		</Modal>
 	);
 }

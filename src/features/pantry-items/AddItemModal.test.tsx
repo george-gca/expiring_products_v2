@@ -1,10 +1,12 @@
 import "../../lib/i18n";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as barcodeWritesModule from "../barcode/firestoreWrites";
 import * as lookupBarcodeModule from "../barcode/lookupBarcode";
 import type { Category } from "../categories/schema";
+import * as classWritesModule from "../classes/firestoreWrites";
+import type { ItemClass } from "../classes/schema";
 import { AddItemModal } from "./AddItemModal";
 import * as itemWritesModule from "./firestoreWrites";
 
@@ -39,6 +41,7 @@ describe("AddItemModal", () => {
 				onClose={vi.fn()}
 				initialName="Oat Milk"
 				initialRecurring
+				classes={[]}
 			/>,
 		);
 
@@ -52,6 +55,7 @@ describe("AddItemModal", () => {
 				category={category}
 				open
 				onClose={vi.fn()}
+				classes={[]}
 			/>,
 		);
 
@@ -77,6 +81,7 @@ describe("AddItemModal no expiration date", () => {
 				category={category}
 				open
 				onClose={vi.fn()}
+				classes={[]}
 			/>,
 		);
 
@@ -119,6 +124,7 @@ describe("AddItemModal barcode scanning", () => {
 				category={category}
 				open
 				onClose={vi.fn()}
+				classes={[]}
 			/>,
 		);
 
@@ -153,6 +159,7 @@ describe("AddItemModal barcode scanning", () => {
 				category={category}
 				open
 				onClose={vi.fn()}
+				classes={[]}
 			/>,
 		);
 
@@ -187,6 +194,7 @@ describe("AddItemModal manual barcode entry", () => {
 				category={category}
 				open
 				onClose={onClose}
+				classes={[]}
 			/>,
 		);
 
@@ -240,6 +248,7 @@ describe("AddItemModal manual barcode entry", () => {
 				category={category}
 				open
 				onClose={vi.fn()}
+				classes={[]}
 			/>,
 		);
 
@@ -270,6 +279,7 @@ describe("AddItemModal manual barcode entry", () => {
 				category={category}
 				open
 				onClose={vi.fn()}
+				classes={[]}
 			/>,
 		);
 
@@ -301,6 +311,7 @@ describe("AddItemModal manual barcode entry", () => {
 				category={category}
 				open
 				onClose={vi.fn()}
+				classes={[]}
 			/>,
 		);
 
@@ -308,6 +319,156 @@ describe("AddItemModal manual barcode entry", () => {
 		await userEvent.tab();
 
 		expect(lookupSpy).not.toHaveBeenCalled();
+	});
+});
+
+describe("AddItemModal class field", () => {
+	const soapClass: ItemClass = {
+		id: "class1",
+		key: "soap-key",
+		category: "foods",
+		name: "Soap",
+		archived: false,
+	};
+
+	afterEach(() => {
+		vi.restoreAllMocks();
+	});
+
+	it("pre-selects the class passed via initialClassKey", () => {
+		render(
+			<AddItemModal
+				uid="test-user-add-modal-class-1"
+				category={category}
+				open
+				onClose={vi.fn()}
+				classes={[soapClass]}
+				initialClassKey="soap-key"
+			/>,
+		);
+
+		expect(screen.getByText("Soap")).toBeInTheDocument();
+	});
+
+	// Review Focus: a class entry's cart icon pre-fills classKey but leaves
+	// name blank — the required-name validation must still block submission.
+	it("blocks submission when only the class is pre-filled and no name is typed", async () => {
+		const addSpy = vi
+			.spyOn(itemWritesModule, "addItem")
+			.mockResolvedValue(undefined);
+		const onClose = vi.fn();
+
+		render(
+			<AddItemModal
+				uid="test-user-add-modal-class-2"
+				category={category}
+				open
+				onClose={onClose}
+				classes={[soapClass]}
+				initialClassKey="soap-key"
+			/>,
+		);
+
+		await userEvent.click(screen.getByRole("button", { name: "OK" }));
+
+		await waitFor(() => expect(onClose).not.toHaveBeenCalled());
+		expect(addSpy).not.toHaveBeenCalled();
+	});
+
+	it("creates a new class inline and submits the item with its key", async () => {
+		const createSpy = vi
+			.spyOn(classWritesModule, "createClass")
+			.mockResolvedValue("new-class-key");
+		const addSpy = vi
+			.spyOn(itemWritesModule, "addItem")
+			.mockResolvedValue(undefined);
+		const onClose = vi.fn();
+
+		render(
+			<AddItemModal
+				uid="test-user-add-modal-class-3"
+				category={category}
+				open
+				onClose={onClose}
+				classes={[]}
+			/>,
+		);
+
+		await userEvent.type(screen.getByLabelText(/^name$/i), "Lux Soap");
+		await userEvent.click(screen.getByLabelText(/class/i));
+		await userEvent.click(await screen.findByText(/create.*class/i));
+
+		// Disambiguate from the item's own "Name" field, which is still on
+		// screen behind the nested ClassFormModal. Two things the brief's
+		// literal selector didn't anticipate:
+		// 1. `within(getByRole("dialog", { name: /add class/i }))` doesn't
+		//    work: antd's bundled `@rc-component/util` useId hook hardcodes
+		//    every generated id to the literal "test-id" whenever
+		//    `NODE_ENV === "test"` (confirmed in its sourcemap), so both this
+		//    modal and the parent's share `aria-labelledby="test-id"` — the
+		//    accessible-name lookup always resolves to whichever modal is
+		//    first in the DOM, regardless of the name regex. Locating by the
+		//    title's literal text content and walking up to its dialog
+		//    container sidesteps that collision.
+		// 2. Even once scoped to the right dialog, `within(dialog).getByLabelText`
+		//    still fails: both forms use `Form.Item name="name"`, which antd
+		//    renders as a literal `id="name"` in both — a real duplicate id.
+		//    `within()` only scopes the *label* search; resolving the label's
+		//    associated control still walks the whole document for a node
+		//    matching that id and can return the wrong input. Querying by
+		//    role instead (exactly one textbox inside this dialog) avoids id
+		//    resolution altogether.
+		const classTitle = await screen.findByText("Add class", {
+			selector: ".ant-modal-title",
+		});
+		const classDialog = classTitle.closest('[role="dialog"]');
+		if (!classDialog) throw new Error("Add class dialog not found");
+		const classNameInput = within(classDialog as HTMLElement).getByRole(
+			"textbox",
+		);
+		await userEvent.type(classNameInput, "Soap");
+		await userEvent.click(
+			within(classDialog).getByRole("button", { name: "OK" }),
+		);
+
+		await waitFor(() =>
+			expect(createSpy).toHaveBeenCalledWith(
+				"test-user-add-modal-class-3",
+				"foods",
+				"Soap",
+			),
+		);
+
+		// The brief's literal test never fills the expiring date, but that
+		// field is required (same `rules={[{ required: true }]}` the
+		// "no expiration" and manual-barcode tests above also have to
+		// satisfy) — without it, `form.validateFields()` in `handleOk`
+		// rejects and `addItem` is never called, so this submission would
+		// otherwise hang until the test times out.
+		await userEvent.type(screen.getByLabelText(/expiring date/i), "010127");
+		await userEvent.keyboard("{Enter}");
+
+		// Scope this click to the "Add Item" dialog specifically rather than a
+		// bare `getByRole("button", { name: "OK" })`: a close-animation delay
+		// (rc-motion's exit transition doesn't resolve synchronously under
+		// jsdom) can leave the now-closing ClassFormModal's own "OK" button
+		// in the DOM a little longer, which would otherwise make that query
+		// ambiguous.
+		const addItemTitle = screen.getByText("Add Item", {
+			selector: ".ant-modal-title",
+		});
+		const addItemDialog = addItemTitle.closest('[role="dialog"]');
+		if (!addItemDialog) throw new Error("Add Item dialog not found");
+		await userEvent.click(
+			within(addItemDialog as HTMLElement).getByRole("button", { name: "OK" }),
+		);
+
+		await waitFor(() =>
+			expect(addSpy).toHaveBeenCalledWith(
+				"test-user-add-modal-class-3",
+				expect.objectContaining({ classKey: "new-class-key" }),
+			),
+		);
 	});
 });
 
@@ -319,6 +480,7 @@ describe("AddItemModal date picker mobile behavior", () => {
 				category={category}
 				open
 				onClose={vi.fn()}
+				classes={[]}
 			/>,
 		);
 
@@ -334,6 +496,7 @@ describe("AddItemModal date picker mobile behavior", () => {
 				category={category}
 				open
 				onClose={vi.fn()}
+				classes={[]}
 			/>,
 		);
 
@@ -351,6 +514,7 @@ describe("AddItemModal date picker mobile behavior", () => {
 				category={category}
 				open
 				onClose={vi.fn()}
+				classes={[]}
 			/>,
 		);
 
