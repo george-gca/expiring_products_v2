@@ -13,6 +13,11 @@ export interface ShoppingListEntry {
 	classKey: string | null;
 }
 
+interface RecurringEntry {
+	name: string;
+	classKey: string | null;
+}
+
 export function useShoppingList(
 	uid: string,
 	categoryKey: string,
@@ -20,7 +25,9 @@ export function useShoppingList(
 	threshold: number,
 	classes: ItemClass[],
 ): { shoppingList: ShoppingListEntry[]; loading: boolean } {
-	const [recurringNames, setRecurringNames] = useState<string[]>([]);
+	const [recurringEntries, setRecurringEntries] = useState<RecurringEntry[]>(
+		[],
+	);
 	const [loading, setLoading] = useState(true);
 
 	useEffect(() => {
@@ -32,18 +39,18 @@ export function useShoppingList(
 		const unsubscribe = onSnapshot(
 			historyQuery,
 			(snapshot) => {
-				const names: string[] = [];
+				const entries: RecurringEntry[] = [];
 				for (const d of snapshot.docs) {
 					const parsed = safeParseItemHistoryDoc(d.data());
 					if (parsed) {
-						names.push(parsed.name);
+						entries.push({ name: parsed.name, classKey: parsed.classKey });
 					} else {
 						console.warn(
 							`useShoppingList: skipping malformed item_history doc ${d.id}`,
 						);
 					}
 				}
-				setRecurringNames(names);
+				setRecurringEntries(entries);
 				setLoading(false);
 			},
 			() => {
@@ -56,54 +63,60 @@ export function useShoppingList(
 
 	const liveClassKeys = new Set(classes.map((cls) => cls.key));
 	const classNameByKey = new Map(classes.map((cls) => [cls.key, cls.name]));
-	const recurringNameSet = new Set(recurringNames);
-	const isLiveClassed = (item: PantryItem) =>
-		!!item.classKey && liveClassKeys.has(item.classKey);
+	const liveClassOf = (classKey: string | null | undefined) =>
+		classKey && liveClassKeys.has(classKey) ? classKey : null;
+
+	// A recurring name's class comes from item_history, which survives the
+	// name's item docs being fully consumed. The live-item fallback only
+	// covers names classed before item_history carried class_key.
+	const classOfRecurringName = new Map<string, string | null>();
+	for (const entry of recurringEntries) {
+		const fromLiveItem = pantryItems.find(
+			(item) => item.name === entry.name && liveClassOf(item.classKey),
+		);
+		classOfRecurringName.set(
+			entry.name,
+			liveClassOf(entry.classKey) ?? liveClassOf(fromLiveItem?.classKey),
+		);
+	}
+
+	// A live item's own class tag wins, so a non-recurring member brand (not
+	// in the recurring-only history query) still counts toward its class's
+	// stock; otherwise it inherits its name's durable class.
+	const classOfItem = (item: PantryItem) =>
+		liveClassOf(item.classKey) ?? classOfRecurringName.get(item.name) ?? null;
 
 	const shoppingList: ShoppingListEntry[] = [];
+	const emittedClasses = new Set<string>();
 
-	const classGroups = new Map<string, PantryItem[]>();
-	for (const item of pantryItems) {
-		if (isLiveClassed(item)) {
-			// isLiveClassed guarantees item.classKey is non-null here.
-			const classKey = item.classKey as string;
-			const group = classGroups.get(classKey) ?? [];
-			group.push(item);
-			classGroups.set(classKey, group);
+	for (const [name, classKey] of classOfRecurringName) {
+		if (classKey) {
+			if (emittedClasses.has(classKey)) continue;
+			emittedClasses.add(classKey);
+			const quantity = pantryItems
+				.filter((item) => classOfItem(item) === classKey)
+				.reduce((sum, item) => sum + item.quantity, 0);
+			if (quantity > threshold) continue;
+			shoppingList.push({
+				key: classKey,
+				label: classNameByKey.get(classKey) ?? "",
+				quantity,
+				name: null,
+				classKey,
+			});
+		} else {
+			const quantity = pantryItems
+				.filter((item) => item.name === name && classOfItem(item) === null)
+				.reduce((sum, item) => sum + item.quantity, 0);
+			if (quantity > threshold) continue;
+			shoppingList.push({
+				key: name,
+				label: name,
+				quantity,
+				name,
+				classKey: null,
+			});
 		}
-	}
-	for (const [classKey, groupItems] of classGroups) {
-		const isRecurring = groupItems.some((item) =>
-			recurringNameSet.has(item.name),
-		);
-		if (!isRecurring) continue;
-		const quantity = groupItems.reduce((sum, item) => sum + item.quantity, 0);
-		if (quantity > threshold) continue;
-		shoppingList.push({
-			key: classKey,
-			label: classNameByKey.get(classKey) ?? "",
-			quantity,
-			name: null,
-			classKey,
-		});
-	}
-
-	for (const name of recurringNames) {
-		const occurrences = pantryItems.filter((item) => item.name === name);
-		const fullyClassed =
-			occurrences.length > 0 && occurrences.every(isLiveClassed);
-		if (fullyClassed) continue;
-		const quantity = occurrences
-			.filter((item) => !isLiveClassed(item))
-			.reduce((sum, item) => sum + item.quantity, 0);
-		if (quantity > threshold) continue;
-		shoppingList.push({
-			key: name,
-			label: name,
-			quantity,
-			name,
-			classKey: null,
-		});
 	}
 
 	return { shoppingList, loading };
