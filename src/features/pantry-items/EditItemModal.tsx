@@ -348,7 +348,9 @@ export function EditItemModal({
 				open={classFormOpen}
 				onClose={() => setClassFormOpen(false)}
 				editingClass={null}
-				onCreated={(classId) => detailsForm.setFieldsValue({ classKey: classId })}
+				onCreated={(classId) =>
+					detailsForm.setFieldsValue({ classKey: classId })
+				}
 			/>
 		</Modal>
 	);
