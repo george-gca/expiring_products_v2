@@ -10,8 +10,9 @@ import {
 import { afterEach, describe, expect, it } from "vitest";
 import { db } from "../../lib/firebase";
 import { clearFirestoreEmulator } from "../../test/emulator";
+import { buildBackup } from "./exportBackup";
 import { importBackup } from "./importBackup";
-import type { Backup } from "./schema";
+import { type Backup, parseBackup } from "./schema";
 
 const uid = "test-user-backup-import-1";
 
@@ -50,6 +51,7 @@ const backup: Backup = {
 	itemHistory: [
 		{ name: "Whole Milk", category: "foods", duration: "7", recurring: true },
 	],
+	classes: [],
 };
 
 describe("importBackup", () => {
@@ -135,5 +137,88 @@ describe("importBackup", () => {
 
 		const itemsSnap = await getDocs(collection(db, "users", uid, "items"));
 		expect(itemsSnap.docs[0].data().expiring_date).toBeNull();
+	});
+
+	it("round-trips classes and class assignments through export and import", async () => {
+		await setDoc(doc(db, "users", uid, "classes", "soap-key"), {
+			key: "soap-key",
+			category: "cleaning",
+			name: "Soap",
+			archived: true,
+		});
+		await addDoc(collection(db, "users", uid, "items"), {
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiring_date: null,
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: true,
+			barcode: null,
+			source: "manual",
+			class_key: "soap-key",
+		});
+		const historyId = encodeURIComponent("cleaning_Dove Soap");
+		await setDoc(doc(db, "users", uid, "item_history", historyId), {
+			name: "Dove Soap",
+			category: "cleaning",
+			duration: "",
+			recurring: true,
+			class_key: "soap-key",
+		});
+
+		// Through JSON + parseBackup, exactly like a real file round trip.
+		const exported = parseBackup(
+			JSON.parse(JSON.stringify(await buildBackup(uid))),
+		);
+		await importBackup(uid, exported);
+
+		const classesSnap = await getDocs(collection(db, "users", uid, "classes"));
+		expect(classesSnap.docs.map((d) => d.id)).toEqual(["soap-key"]);
+		expect(classesSnap.docs[0].data()).toEqual({
+			key: "soap-key",
+			category: "cleaning",
+			name: "Soap",
+			archived: true,
+		});
+
+		const itemsSnap = await getDocs(collection(db, "users", uid, "items"));
+		expect(itemsSnap.size).toBe(1);
+		expect(itemsSnap.docs[0].data().class_key).toBe("soap-key");
+
+		const historySnap = await getDoc(
+			doc(db, "users", uid, "item_history", historyId),
+		);
+		expect(historySnap.data()).toEqual({
+			name: "Dove Soap",
+			category: "cleaning",
+			duration: "",
+			recurring: true,
+			class_key: "soap-key",
+		});
+	});
+
+	it("replaces existing classes with the backup's (none, for a pre-classes file)", async () => {
+		await setDoc(doc(db, "users", uid, "classes", "stale-key"), {
+			key: "stale-key",
+			category: "foods",
+			name: "Stale",
+			archived: false,
+		});
+
+		const { classes: _classes, ...oldFile } = backup;
+		await importBackup(uid, parseBackup(JSON.parse(JSON.stringify(oldFile))));
+
+		const classesSnap = await getDocs(collection(db, "users", uid, "classes"));
+		expect(classesSnap.size).toBe(0);
+
+		const itemsSnap = await getDocs(collection(db, "users", uid, "items"));
+		expect(itemsSnap.docs[0].data().class_key).toBeNull();
+
+		const historySnap = await getDocs(
+			collection(db, "users", uid, "item_history"),
+		);
+		expect(historySnap.docs[0].data()).not.toHaveProperty("class_key");
 	});
 });

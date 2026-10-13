@@ -68,11 +68,65 @@ describe("buildBackup", () => {
 				recurring: true,
 				barcode: null,
 				source: "manual",
+				classKey: null,
 			},
 		]);
 		expect(backup.itemHistory).toEqual([
-			{ name: "Milk", category: "foods", duration: "7", recurring: true },
+			{
+				name: "Milk",
+				category: "foods",
+				duration: "7",
+				recurring: true,
+				classKey: null,
+			},
 		]);
+		expect(backup.classes).toEqual([]);
+	});
+
+	it("exports the classes collection and each item's and history entry's classKey", async () => {
+		await setDoc(doc(db, "users", uid, "classes", "soap-key"), {
+			key: "soap-key",
+			category: "cleaning",
+			name: "Soap",
+			archived: false,
+		});
+		await addDoc(collection(db, "users", uid, "items"), {
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiring_date: null,
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: true,
+			barcode: null,
+			source: "manual",
+			class_key: "soap-key",
+		});
+		await setDoc(
+			doc(
+				db,
+				"users",
+				uid,
+				"item_history",
+				encodeURIComponent("cleaning_Dove Soap"),
+			),
+			{
+				name: "Dove Soap",
+				category: "cleaning",
+				duration: "",
+				recurring: true,
+				class_key: "soap-key",
+			},
+		);
+
+		const backup = await buildBackup(uid);
+
+		expect(backup.classes).toEqual([
+			{ key: "soap-key", category: "cleaning", name: "Soap", archived: false },
+		]);
+		expect(backup.items[0].classKey).toBe("soap-key");
+		expect(backup.itemHistory[0].classKey).toBe("soap-key");
 	});
 
 	it("exports a null expiringDate for an item with no expiration date", async () => {

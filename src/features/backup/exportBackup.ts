@@ -1,18 +1,25 @@
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "../../lib/firebase";
 import { parseCategoryDoc } from "../categories/schema";
+import { parseClassDoc } from "../classes/schema";
 import { parseItemDoc, safeParseItemHistoryDoc } from "../pantry-items/schema";
 import { parseSettingsDoc } from "../settings/schema";
 import type { Backup } from "./schema";
 
 export async function buildBackup(uid: string): Promise<Backup> {
-	const [settingsSnap, categoriesSnap, itemsSnap, itemHistorySnap] =
-		await Promise.all([
-			getDoc(doc(db, "users", uid)),
-			getDocs(collection(db, "users", uid, "categories")),
-			getDocs(collection(db, "users", uid, "items")),
-			getDocs(collection(db, "users", uid, "item_history")),
-		]);
+	const [
+		settingsSnap,
+		categoriesSnap,
+		itemsSnap,
+		itemHistorySnap,
+		classesSnap,
+	] = await Promise.all([
+		getDoc(doc(db, "users", uid)),
+		getDocs(collection(db, "users", uid, "categories")),
+		getDocs(collection(db, "users", uid, "items")),
+		getDocs(collection(db, "users", uid, "item_history")),
+		getDocs(collection(db, "users", uid, "classes")),
+	]);
 
 	// `parseSettingsDoc({})` deliberately reuses that function's own
 	// `.catch(3)` default (see settings/schema.ts) rather than duplicating
@@ -38,11 +45,21 @@ export async function buildBackup(uid: string): Promise<Backup> {
 			recurring: item.recurring,
 			barcode: item.barcode,
 			source: item.source,
+			classKey: item.classKey ?? null,
 		}));
 
 	const itemHistory = itemHistorySnap.docs
 		.map((d) => safeParseItemHistoryDoc(d.data()))
 		.filter((entry): entry is NonNullable<typeof entry> => entry !== null);
+
+	const classes = classesSnap.docs
+		.map((d) => parseClassDoc(d.id, d.data()))
+		.map(({ key, category, name, archived }) => ({
+			key,
+			category,
+			name,
+			archived,
+		}));
 
 	return {
 		version: 1,
@@ -51,5 +68,6 @@ export async function buildBackup(uid: string): Promise<Backup> {
 		categories,
 		items,
 		itemHistory,
+		classes,
 	};
 }

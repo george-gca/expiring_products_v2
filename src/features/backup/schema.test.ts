@@ -32,11 +32,40 @@ const validBackup = {
 	itemHistory: [
 		{ name: "Milk", category: "foods", duration: "7", recurring: true },
 	],
+	classes: [],
 };
 
 describe("parseBackup", () => {
 	it("parses a well-formed backup", () => {
 		expect(parseBackup(validBackup)).toEqual(validBackup);
+	});
+
+	it("parses item classes and each item's classKey", () => {
+		const backup = {
+			...validBackup,
+			items: [{ ...validBackup.items[0], classKey: "milk-key" }],
+			itemHistory: [{ ...validBackup.itemHistory[0], classKey: "milk-key" }],
+			classes: [
+				{ key: "milk-key", category: "foods", name: "Milk", archived: false },
+			],
+		};
+		expect(parseBackup(backup)).toEqual(backup);
+	});
+
+	// Backup files exported before item classes existed have no `classes`
+	// array and no per-item/per-history classKey — they must still import.
+	it("parses a pre-classes backup file, defaulting classes to an empty list", () => {
+		const { classes: _classes, ...oldBackup } = validBackup;
+		expect(parseBackup(oldBackup)).toEqual({ ...oldBackup, classes: [] });
+	});
+
+	it("rejects a malformed class entry", () => {
+		expect(() =>
+			parseBackup({
+				...validBackup,
+				classes: [{ key: "", category: "foods", name: "X", archived: false }],
+			}),
+		).toThrow();
 	});
 
 	it("rejects an unsupported version", () => {

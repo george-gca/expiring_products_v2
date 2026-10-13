@@ -29,6 +29,8 @@ const backupItemSchema = z.object({
 	recurring: z.boolean(),
 	barcode: z.string().nullable(),
 	source: z.enum(["manual", "barcode"]),
+	// Optional so backup files exported before item classes still parse.
+	classKey: z.string().nullable().optional(),
 });
 
 const backupItemHistorySchema = z.object({
@@ -36,6 +38,16 @@ const backupItemHistorySchema = z.object({
 	category: z.string().min(1),
 	duration: z.string(),
 	recurring: z.boolean(),
+	// The durable per-name class membership Shopping Mode reads; optional so
+	// pre-classes backup files still parse.
+	classKey: z.string().nullable().optional(),
+});
+
+const backupClassSchema = z.object({
+	key: z.string().min(1),
+	category: z.string().min(1),
+	name: z.string().min(1),
+	archived: z.boolean(),
 });
 
 export const backupSchema = z.object({
@@ -45,6 +57,7 @@ export const backupSchema = z.object({
 	categories: z.array(backupCategorySchema),
 	items: z.array(backupItemSchema),
 	itemHistory: z.array(backupItemHistorySchema),
+	classes: z.array(backupClassSchema).optional().default([]),
 });
 
 export type Backup = z.infer<typeof backupSchema>;

@@ -23,6 +23,7 @@ const fixtureBackup = {
 	categories: [],
 	items: [],
 	itemHistory: [],
+	classes: [],
 };
 
 describe("BackupSection export", () => {
@@ -126,9 +127,10 @@ describe("BackupSection import", () => {
 		expect(okButton).toBeEnabled();
 
 		await userEvent.click(okButton);
-		expect(importBackupSpy).toHaveBeenCalledWith(
-			"test-user-import-ui-3",
-			fixtureImportBackup,
-		);
+		// The fixture file predates item classes; parsing defaults `classes`.
+		expect(importBackupSpy).toHaveBeenCalledWith("test-user-import-ui-3", {
+			...fixtureImportBackup,
+			classes: [],
+		});
 	});
 });
