@@ -251,3 +251,42 @@ and the Add/Edit Item modal's inline class-create action.
   rule change beyond the existing `users/{uid}/{document=**}` isolation
   rule (same reasoning as every other root-level subcollection added so
   far).
+
+## Addendum: class membership must be durable at the name level, not the purchase level
+
+Found during the final whole-branch review of the implementation (after all 15
+plan tasks shipped), not anticipated in the design above.
+
+**The gap:** the original design above derives class membership entirely from
+each `PantryItem`'s own `classKey` field. But fully consuming an item deletes
+its Firestore doc (`updateItemQuantities`'s transaction), so once every
+instance of one brand in a class is used up, no live document carries that
+`classKey` anymore — Shopping Mode's aggregation (`useShoppingList`) falls
+back to listing that brand under its own name instead of its class, exactly
+the problem classes exist to solve.
+
+**The fix:** `item_history` (keyed by name, already the durable "is this name
+recurring" record per Phase 2) now also durably records `class_key` per name.
+`addItem`'s existing merge-write gains an asymmetric guard identical to its
+`recurring` field's (`item_history`'s field is only ever written when the new
+value is truthy — a purchase with no class never clobbers an existing class
+tag, same rationale as never writing `recurring: false` there).
+`updateItemDetails` (the Edit modal's Details-tab correction path) gains the
+same durable write when a class is explicitly set. `useShoppingList` now
+classifies by `item_history`'s `classKey` first, falling back to a live
+item's own `classKey` only for names not yet durably tagged (e.g. classed
+before this fix shipped, or never purchased as recurring) — zero migration,
+same as every other optional field in this codebase.
+
+**Known accepted limitation:** `item_history`'s class durability currently
+only reaches names returned by the `useShoppingList`'s own `recurring == true`
+Firestore query. A class member brand that is itself non-recurring, runs out,
+and is repurchased without the user manually re-picking its class will not
+have its new stock counted toward the class until re-tagged — the same
+narrower gap `recurring` itself already has on rename (a renamed item's new
+name starts untracked until bought/edited again). This is accepted as a
+follow-up rather than fixed immediately: closing it fully requires dropping
+the query's `recurring == true` filter, defaulting `recurring` to `false` in
+`itemHistoryDocSchema` (so non-recurring docs round-trip, including through
+backup export), and reclassifying client-side — a real query-shape change,
+not a quick patch.
