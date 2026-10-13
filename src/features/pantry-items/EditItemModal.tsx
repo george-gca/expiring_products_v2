@@ -20,6 +20,8 @@ import { useTranslation } from "react-i18next";
 import { message } from "../../lib/feedback";
 import { db } from "../../lib/firebase";
 import type { Category } from "../categories/schema";
+import { ClassFormModal } from "../classes/ClassFormModal";
+import type { ItemClass } from "../classes/schema";
 import { configureDateInputForMobile, datePickerFormats } from "./dateFormat";
 import {
 	deleteItem,
@@ -29,6 +31,8 @@ import {
 } from "./firestoreWrites";
 import { QuantityStepper } from "./QuantityStepper";
 import { type PantryItem, safeParseItemHistoryDoc } from "./schema";
+
+const CREATE_CLASS_VALUE = "__create__";
 
 interface UsageFormValues {
 	opened: number;
@@ -46,17 +50,20 @@ interface DetailsFormValues {
 	noExpiration: boolean;
 	expiringDate?: Dayjs;
 	duration?: number;
+	classKey?: string;
 }
 
 export function EditItemModal({
 	uid,
 	item,
 	categories,
+	classes,
 	onClose,
 }: {
 	uid: string;
 	item: PantryItem;
 	categories: Category[];
+	classes: ItemClass[];
 	onClose: () => void;
 }) {
 	const { t, i18n } = useTranslation();
@@ -68,6 +75,7 @@ export function EditItemModal({
 	// initializing straight from `item` here is safe.
 	const [happeningNow, setHappeningNow] = useState(true);
 	const [noExpiration, setNoExpiration] = useState(item.expiringDate === null);
+	const [classFormOpen, setClassFormOpen] = useState(false);
 
 	// item.recurring reflects this purchase instance's own recurring field,
 	// which can disagree with item_history's authoritative per-item-type flag
@@ -136,6 +144,7 @@ export function EditItemModal({
 					? null
 					: (values.expiringDate?.toDate() ?? null),
 				duration: values.noExpiration ? null : (values.duration ?? null),
+				classKey: values.classKey ?? null,
 			});
 			onClose();
 		} catch {
@@ -260,6 +269,7 @@ export function EditItemModal({
 							? dayjs(item.expiringDate)
 							: undefined,
 						duration: item.duration ?? undefined,
+						classKey: item.classKey ?? undefined,
 					}}
 				>
 					<Form.Item
@@ -312,8 +322,34 @@ export function EditItemModal({
 							</Form.Item>
 						</>
 					)}
+					<Form.Item name="classKey" label={t("items.itemClassLabel")}>
+						<Select
+							allowClear
+							options={[
+								...classes.map((cls) => ({ value: cls.key, label: cls.name })),
+								{
+									value: CREATE_CLASS_VALUE,
+									label: t("items.itemClassCreateOption"),
+								},
+							]}
+							onChange={(value) => {
+								if (value === CREATE_CLASS_VALUE) {
+									detailsForm.setFieldsValue({ classKey: undefined });
+									setClassFormOpen(true);
+								}
+							}}
+						/>
+					</Form.Item>
 				</Form>
 			)}
+			<ClassFormModal
+				uid={uid}
+				category={item.category}
+				open={classFormOpen}
+				onClose={() => setClassFormOpen(false)}
+				editingClass={null}
+				onCreated={(classId) => detailsForm.setFieldsValue({ classKey: classId })}
+			/>
 		</Modal>
 	);
 }

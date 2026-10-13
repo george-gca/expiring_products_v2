@@ -14,6 +14,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { db } from "../../lib/firebase";
 import { clearFirestoreEmulator } from "../../test/emulator";
 import type { Category } from "../categories/schema";
+import type { ItemClass } from "../classes/schema";
 import { EditItemModal } from "./EditItemModal";
 import type { PantryItem } from "./schema";
 
@@ -78,6 +79,7 @@ describe("EditItemModal", () => {
 				uid={uid}
 				item={item}
 				categories={categories}
+				classes={[]}
 				onClose={onClose}
 			/>,
 		);
@@ -154,6 +156,7 @@ describe("EditItemModal", () => {
 				uid={uid}
 				item={item}
 				categories={categories}
+				classes={[]}
 				onClose={vi.fn()}
 			/>,
 		);
@@ -200,6 +203,7 @@ describe("EditItemModal details editing", () => {
 				uid={uid}
 				item={item}
 				categories={categories}
+				classes={[]}
 				onClose={onClose}
 			/>,
 		);
@@ -282,6 +286,7 @@ describe("EditItemModal no expiration date", () => {
 				uid={uid}
 				item={item}
 				categories={categories}
+				classes={[]}
 				onClose={onClose}
 			/>,
 		);
@@ -333,6 +338,7 @@ describe("EditItemModal backdating usage", () => {
 				uid={uid}
 				item={item}
 				categories={categories}
+				classes={[]}
 				onClose={vi.fn()}
 			/>,
 		);
@@ -380,6 +386,7 @@ describe("EditItemModal backdating usage", () => {
 				uid={uid}
 				item={item}
 				categories={categories}
+				classes={[]}
 				onClose={onClose}
 			/>,
 		);
@@ -442,6 +449,7 @@ describe("EditItemModal delete", () => {
 				uid={uid}
 				item={item}
 				categories={categories}
+				classes={[]}
 				onClose={onClose}
 			/>,
 		);
@@ -484,6 +492,7 @@ describe("EditItemModal date picker mobile behavior", () => {
 				uid={uid}
 				item={item}
 				categories={categories}
+				classes={[]}
 				onClose={vi.fn()}
 			/>,
 		);
@@ -515,6 +524,7 @@ describe("EditItemModal date picker mobile behavior", () => {
 				uid={uid}
 				item={item}
 				categories={categories}
+				classes={[]}
 				onClose={vi.fn()}
 			/>,
 		);
@@ -547,6 +557,7 @@ describe("EditItemModal date picker mobile behavior", () => {
 				uid={uid}
 				item={item}
 				categories={categories}
+				classes={[]}
 				onClose={vi.fn()}
 			/>,
 		);
@@ -601,6 +612,7 @@ describe("EditItemModal move to another category", () => {
 				uid={uid}
 				item={item}
 				categories={categories}
+				classes={[]}
 				onClose={onClose}
 			/>,
 		);
@@ -615,5 +627,99 @@ describe("EditItemModal move to another category", () => {
 
 		const itemDoc = await getDoc(doc(db, "users", uid, "items", original.id));
 		expect(itemDoc.data()?.category).toBe("medicines");
+	});
+});
+
+describe("EditItemModal class field", () => {
+	const soapClass: ItemClass = {
+		id: "class1",
+		key: "soap-key",
+		category: "foods",
+		name: "Soap",
+		archived: false,
+	};
+
+	it("updates classKey via the details form", async () => {
+		const user = userEvent.setup();
+		const itemsRef = collection(db, "users", uid, "items");
+		const original = await addDoc(itemsRef, {
+			name: "Dove Soap",
+			category: "foods",
+			quantity: 1,
+			expiring_date: null,
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+			class_key: null,
+		});
+		const item: PantryItem = {
+			id: original.id,
+			name: "Dove Soap",
+			category: "foods",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+			classKey: null,
+		};
+		const onClose = vi.fn();
+
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				classes={[soapClass]}
+				onClose={onClose}
+			/>,
+		);
+
+		await user.click(screen.getByRole("button", { name: /fix item details/i }));
+		await user.click(screen.getByLabelText(/class/i));
+		await user.click(await screen.findByText("Soap"));
+		await user.click(screen.getByRole("button", { name: "OK" }));
+
+		await waitFor(() => expect(onClose).toHaveBeenCalled());
+
+		const itemDoc = await getDoc(doc(db, "users", uid, "items", original.id));
+		expect(itemDoc.data()?.class_key).toBe("soap-key");
+	});
+
+	// Review Focus: an item whose classKey refers to a class that's since
+	// been archived/deleted must still render without crashing.
+	it("renders without crashing when the item's classKey refers to a class not in the given list", () => {
+		const item: PantryItem = {
+			id: "item-stale-class",
+			name: "Dove Soap",
+			category: "foods",
+			quantity: 1,
+			expiringDate: new Date("2027-01-01"),
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+			classKey: "stale-soap-key",
+		};
+
+		render(
+			<EditItemModal
+				uid={uid}
+				item={item}
+				categories={categories}
+				classes={[]}
+				onClose={vi.fn()}
+			/>,
+		);
+
+		expect(screen.getByText("Dove Soap")).toBeInTheDocument();
 	});
 });
