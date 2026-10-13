@@ -3,7 +3,9 @@ import { Empty, FloatButton, Input, Listy, Switch, theme } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Category } from "../categories/schema";
+import { useClasses } from "../classes/useClasses";
 import { AddItemModal } from "./AddItemModal";
+import { ClassGroupedItemList } from "./ClassGroupedItemList";
 import { EditItemModal } from "./EditItemModal";
 import { ItemListItem } from "./ItemListItem";
 import { ShoppingList } from "./ShoppingList";
@@ -30,11 +32,15 @@ export function ItemList({
 	const { t } = useTranslation();
 	const { token } = theme.useToken();
 	const { items, loading } = usePantryItems(uid, category.key);
+	const { classes, loading: classesLoading } = useClasses(uid, category.key);
 	const [addOpen, setAddOpen] = useState(false);
 	const [editingItem, setEditingItem] = useState<PantryItem | null>(null);
 	const [addInitialName, setAddInitialName] = useState<string | undefined>(
 		undefined,
 	);
+	const [addInitialClassKey, setAddInitialClassKey] = useState<
+		string | undefined
+	>(undefined);
 	// Whether the Add Item modal's recurring switch should default on. Only
 	// ShoppingList's cart-icon flow sets this true — an entry only appears on
 	// the shopping list because item_history already marked that item type
@@ -49,11 +55,14 @@ export function ItemList({
 		setSearch,
 		isShoppingModeOn,
 		setShoppingModeOn,
+		isGroupByClassOn,
+		setGroupByClassOn,
 	} = useUiPreferencesStore();
 	const direction = getSortDirection(category.key);
 	const filter = getFilter(category.key);
 	const search = getSearch(category.key);
 	const shoppingModeOn = isShoppingModeOn(category.key);
+	const groupByClassOn = isGroupByClassOn(category.key);
 
 	const filtered = items.filter((item) => {
 		if (filter === "opened" && !item.opened) return false;
@@ -66,7 +75,7 @@ export function ItemList({
 	const sorted = sortItems(notDistant);
 	if (direction === "desc") sorted.reverse();
 
-	if (loading) return null;
+	if (loading || classesLoading) return null;
 
 	return (
 		<>
@@ -87,20 +96,36 @@ export function ItemList({
 					style={{ marginBottom: 12 }}
 				/>
 			)}
+			{!shoppingModeOn && (
+				<Switch
+					checked={groupByClassOn}
+					onChange={(checked) => setGroupByClassOn(category.key, checked)}
+					checkedChildren={t("items.groupByClass")}
+					unCheckedChildren={t("items.groupByClass")}
+					style={{ marginBottom: 12 }}
+				/>
+			)}
 			{shoppingModeOn ? (
 				<ShoppingList
 					uid={uid}
 					category={category}
 					pantryItems={items}
 					threshold={lowStockThreshold}
-					onAddItem={(name) => {
-						setAddInitialName(name);
+					onAddItem={(entry) => {
+						setAddInitialName(entry.name);
+						setAddInitialClassKey(entry.classKey);
 						setAddInitialRecurring(true);
 						setAddOpen(true);
 					}}
 				/>
 			) : sorted.length === 0 ? (
 				<Empty description={t("items.empty")} />
+			) : groupByClassOn ? (
+				<ClassGroupedItemList
+					items={sorted}
+					classes={classes}
+					onItemClick={setEditingItem}
+				/>
 			) : (
 				<Listy
 					items={sorted}
@@ -133,16 +158,20 @@ export function ItemList({
 				onClose={() => {
 					setAddOpen(false);
 					setAddInitialName(undefined);
+					setAddInitialClassKey(undefined);
 					setAddInitialRecurring(false);
 				}}
 				initialName={addInitialName}
 				initialRecurring={addInitialRecurring}
+				classes={classes}
+				initialClassKey={addInitialClassKey}
 			/>
 			{editingItem && (
 				<EditItemModal
 					uid={uid}
 					item={editingItem}
 					categories={categories}
+					classes={classes}
 					onClose={() => setEditingItem(null)}
 				/>
 			)}

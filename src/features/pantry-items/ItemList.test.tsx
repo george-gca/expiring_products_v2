@@ -1,8 +1,12 @@
 import "../../lib/i18n";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { addDoc, collection } from "firebase/firestore";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { db } from "../../lib/firebase";
+import { clearFirestoreEmulator } from "../../test/emulator";
 import type { Category } from "../categories/schema";
+import { useClasses } from "../classes/useClasses";
 import { ItemList } from "./ItemList";
 import type { PantryItem } from "./schema";
 import { useUiPreferencesStore } from "./store";
@@ -10,6 +14,17 @@ import { usePantryItems } from "./usePantryItems";
 
 vi.mock("./usePantryItems", () => ({ usePantryItems: vi.fn() }));
 const mockedUsePantryItems = vi.mocked(usePantryItems);
+
+// Mocked the same way as usePantryItems above: the "group by class" describe
+// below overrides this with the real implementation (it needs genuine
+// emulator-backed Firestore data), while every other, pre-existing describe
+// in this file renders synchronously and has no opinion on classes — so it
+// gets a default empty/loaded value here rather than hitting the emulator.
+vi.mock("../classes/useClasses", () => ({ useClasses: vi.fn() }));
+const mockedUseClasses = vi.mocked(useClasses);
+beforeEach(() => {
+	mockedUseClasses.mockReturnValue({ classes: [], loading: false });
+});
 
 const category: Category = {
 	id: "foods-id",
@@ -141,5 +156,79 @@ describe("ItemList hideDistantEnabled", () => {
 		);
 
 		expect(screen.getByText("Trash Bags")).toBeInTheDocument();
+	});
+});
+
+describe("ItemList group by class", () => {
+	const classUid = "test-user-item-list-class-1";
+
+	afterEach(async () => {
+		vi.restoreAllMocks();
+		await clearFirestoreEmulator(import.meta.env.VITE_FIREBASE_PROJECT_ID);
+	});
+
+	it("collapses classed items into a group row when the toggle is switched on", async () => {
+		// This test exercises the real onSnapshot-backed hooks against the
+		// emulator (unlike the other describes above, which stub them), so it
+		// needs the actual implementations instead of the module-level mocks.
+		const { usePantryItems: actualUsePantryItems } =
+			await vi.importActual<typeof import("./usePantryItems")>(
+				"./usePantryItems",
+			);
+		mockedUsePantryItems.mockImplementation(actualUsePantryItems);
+		const { useClasses: actualUseClasses } = await vi.importActual<
+			typeof import("../classes/useClasses")
+		>("../classes/useClasses");
+		mockedUseClasses.mockImplementation(actualUseClasses);
+
+		await addDoc(collection(db, "users", classUid, "classes"), {
+			key: "soap-key",
+			category: "cleaning",
+			name: "Soap",
+			archived: false,
+		});
+		await addDoc(collection(db, "users", classUid, "items"), {
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiring_date: null,
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+			class_key: "soap-key",
+		});
+
+		const cleaningCategory: Category = {
+			id: "cleaning-id",
+			key: "cleaning",
+			name: "Cleaning",
+			emoji: "🧼",
+			order: 0,
+			archived: false,
+		};
+
+		render(
+			<ItemList
+				uid={classUid}
+				category={cleaningCategory}
+				categories={[cleaningCategory]}
+				lowStockThreshold={3}
+				hideDistantThresholdMonths={6}
+				hideDistantEnabled={false}
+			/>,
+		);
+
+		await screen.findByText("Dove Soap");
+		expect(screen.queryByText("Soap (1)")).not.toBeInTheDocument();
+
+		await userEvent.click(
+			screen.getByRole("switch", { name: /group by class/i }),
+		);
+
+		await screen.findByText("Soap (1)");
+		expect(screen.queryByText("Dove Soap")).not.toBeInTheDocument();
 	});
 });
