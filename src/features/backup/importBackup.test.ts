@@ -207,8 +207,12 @@ describe("importBackup", () => {
 			archived: false,
 		});
 
-		const { classes: _classes, ...oldFile } = backup;
-		await importBackup(uid, parseBackup(JSON.parse(JSON.stringify(oldFile))));
+		// JSON drops the undefined key, leaving a file with no `classes` field.
+		const oldFile = JSON.parse(
+			JSON.stringify({ ...backup, classes: undefined }),
+		);
+		expect(oldFile).not.toHaveProperty("classes");
+		await importBackup(uid, parseBackup(oldFile));
 
 		const classesSnap = await getDocs(collection(db, "users", uid, "classes"));
 		expect(classesSnap.size).toBe(0);

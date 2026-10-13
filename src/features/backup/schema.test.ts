@@ -55,8 +55,12 @@ describe("parseBackup", () => {
 	// Backup files exported before item classes existed have no `classes`
 	// array and no per-item/per-history classKey — they must still import.
 	it("parses a pre-classes backup file, defaulting classes to an empty list", () => {
-		const { classes: _classes, ...oldBackup } = validBackup;
-		expect(parseBackup(oldBackup)).toEqual({ ...oldBackup, classes: [] });
+		// JSON drops the undefined key, leaving a file with no `classes` field.
+		const oldBackup = JSON.parse(
+			JSON.stringify({ ...validBackup, classes: undefined }),
+		);
+		expect(oldBackup).not.toHaveProperty("classes");
+		expect(parseBackup(oldBackup)).toEqual(validBackup);
 	});
 
 	it("rejects a malformed class entry", () => {
