@@ -16,9 +16,18 @@ import { type PantryItem, parseItemDoc, toItemDoc } from "./schema";
 // `undefined` when the form's recurring value is false so that field is
 // omitted from the write entirely (see addItem below for why), while
 // setItemRecurring always passes an explicit true/false for its deliberate
-// full overwrite.
+// overwrite of that field. `class_key` follows addItem's asymmetric-merge rule for
+// `recurring`: only written when the item actually has a class, never as
+// null, so a later purchase where the user didn't re-pick the class can't
+// silently un-class the whole name (useShoppingList reads class membership
+// from here because it survives the item docs being fully consumed).
 function toItemHistoryDoc(
-	item: { name: string; category: string; duration: number | null },
+	item: {
+		name: string;
+		category: string;
+		duration: number | null;
+		classKey?: string | null;
+	},
 	recurring?: boolean,
 ) {
 	return {
@@ -26,6 +35,7 @@ function toItemHistoryDoc(
 		category: item.category,
 		duration: item.duration !== null ? String(item.duration) : "",
 		...(recurring !== undefined ? { recurring } : {}),
+		...(item.classKey ? { class_key: item.classKey } : {}),
 	};
 }
 
@@ -146,8 +156,11 @@ interface ItemDetailsChanges {
 
 // Corrects a mis-entered item in place — distinct from updateItemQuantities,
 // which records a usage event (open/consume/discard) rather than fixing the
-// stored record itself. A plain field overwrite: no item_history or
-// waste_events write, so a correction never appears in Insights history.
+// stored record itself. A plain field overwrite with no waste_events write,
+// so a correction never appears in Insights history. The one item_history
+// touch: an explicitly set class is merged into the name's history doc
+// (same never-write-null guard as addItem), because that is where
+// useShoppingList reads durable class membership from.
 export async function updateItemDetails(
 	uid: string,
 	itemId: string,
@@ -163,6 +176,18 @@ export async function updateItemDetails(
 		duration: changes.duration,
 		class_key: changes.classKey,
 	});
+
+	if (changes.classKey) {
+		// Post-edit name/category, matching where addItem would write for this
+		// pair. name/category/duration ride along so a rename (whose history id
+		// may not exist yet) never leaves a bare `{ class_key }` stub doc.
+		const historyId = encodeURIComponent(`${changes.category}_${changes.name}`);
+		await setDoc(
+			doc(db, "users", uid, "item_history", historyId),
+			toItemHistoryDoc(changes),
+			{ merge: true },
+		);
+	}
 }
 
 // Removes a mis-entered item entirely. Deliberately just the item doc — no
@@ -178,9 +203,13 @@ export async function setItemRecurring(
 	recurring: boolean,
 ): Promise<void> {
 	const historyId = encodeURIComponent(`${item.category}_${item.name}`);
+	// Merge so an existing class_key survives toggling recurring from a
+	// purchase instance that carries no class; `recurring` itself is always
+	// written explicitly, so this is still a deliberate overwrite of it.
 	await setDoc(
 		doc(db, "users", uid, "item_history", historyId),
 		toItemHistoryDoc(item, recurring),
+		{ merge: true },
 	);
 
 	await updateDoc(doc(db, "users", uid, "items", item.id), { recurring });

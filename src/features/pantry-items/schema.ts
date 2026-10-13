@@ -97,6 +97,11 @@ export const itemHistoryDocSchema = z.object({
 	category: z.string().min(1),
 	duration: z.string(),
 	recurring: z.boolean(),
+	// Durable "which class does this item NAME belong to" record. Lives here
+	// (keyed by name) rather than only on per-purchase `items` docs because
+	// fully consuming an item deletes its doc — useShoppingList must still
+	// know a fully-consumed brand belongs to its class.
+	class_key: z.string().nullable().optional(),
 });
 
 export interface ItemHistoryEntry {
@@ -104,10 +109,23 @@ export interface ItemHistoryEntry {
 	category: string;
 	duration: string;
 	recurring: boolean;
+	classKey: string | null;
+}
+
+function toItemHistoryEntry(
+	parsed: z.infer<typeof itemHistoryDocSchema>,
+): ItemHistoryEntry {
+	return {
+		name: parsed.name,
+		category: parsed.category,
+		duration: parsed.duration,
+		recurring: parsed.recurring,
+		classKey: parsed.class_key ?? null,
+	};
 }
 
 export function parseItemHistoryDoc(data: unknown): ItemHistoryEntry {
-	return itemHistoryDocSchema.parse(data);
+	return toItemHistoryEntry(itemHistoryDocSchema.parse(data));
 }
 
 // `item_history` is legacy v1 data this codebase has never validated before
@@ -122,7 +140,7 @@ export function safeParseItemHistoryDoc(
 	data: unknown,
 ): ItemHistoryEntry | null {
 	const result = itemHistoryDocSchema.safeParse(data);
-	return result.success ? result.data : null;
+	return result.success ? toItemHistoryEntry(result.data) : null;
 }
 
 export const wasteEventDocSchema = z.object({

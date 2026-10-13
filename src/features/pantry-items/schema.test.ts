@@ -5,6 +5,7 @@ import {
 	parseItemHistoryDoc,
 	parseWasteEventDoc,
 	safeParseItemDoc,
+	safeParseItemHistoryDoc,
 	safeParseWasteEventDoc,
 	toItemDoc,
 } from "./schema";
@@ -209,6 +210,34 @@ describe("parseItemHistoryDoc", () => {
 			category: "foods",
 			duration: "7",
 			recurring: true,
+			classKey: null,
+		});
+	});
+
+	it("defaults classKey to null when class_key is absent", () => {
+		const result = parseItemHistoryDoc({
+			name: "Dove Soap",
+			category: "cleaning",
+			duration: "",
+			recurring: true,
+		});
+		expect(result.classKey).toBeNull();
+	});
+
+	it("round-trips a provided class_key as classKey, without leaking the snake_case field", () => {
+		const result = parseItemHistoryDoc({
+			name: "Dove Soap",
+			category: "cleaning",
+			duration: "",
+			recurring: true,
+			class_key: "soap-key",
+		});
+		expect(result).toEqual({
+			name: "Dove Soap",
+			category: "cleaning",
+			duration: "",
+			recurring: true,
+			classKey: "soap-key",
 		});
 	});
 
@@ -226,6 +255,44 @@ describe("parseItemHistoryDoc", () => {
 		expect(() =>
 			parseItemHistoryDoc({ name: "X", category: "foods", duration: "" }),
 		).toThrow();
+	});
+});
+
+describe("safeParseItemHistoryDoc", () => {
+	it("returns classKey from class_key, defaulting to null", () => {
+		expect(
+			safeParseItemHistoryDoc({
+				name: "Milk",
+				category: "foods",
+				duration: "",
+				recurring: true,
+			}),
+		).toEqual({
+			name: "Milk",
+			category: "foods",
+			duration: "",
+			recurring: true,
+			classKey: null,
+		});
+		expect(
+			safeParseItemHistoryDoc({
+				name: "Dove Soap",
+				category: "cleaning",
+				duration: "",
+				recurring: true,
+				class_key: "soap-key",
+			}),
+		).toEqual({
+			name: "Dove Soap",
+			category: "cleaning",
+			duration: "",
+			recurring: true,
+			classKey: "soap-key",
+		});
+	});
+
+	it("returns null for a malformed doc", () => {
+		expect(safeParseItemHistoryDoc({ name: "X" })).toBeNull();
 	});
 });
 

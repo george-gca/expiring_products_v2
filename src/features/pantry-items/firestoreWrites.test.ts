@@ -86,6 +86,67 @@ describe("addItem", () => {
 		expect(historyDoc.data()?.recurring).toBe(true);
 	});
 
+	it("writes class_key to item_history when the item has a class", async () => {
+		await addItem(uid, {
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: true,
+			barcode: null,
+			source: "manual",
+			classKey: "soap-key",
+		});
+
+		const historyDoc = await getDoc(
+			doc(
+				db,
+				"users",
+				uid,
+				"item_history",
+				encodeURIComponent("cleaning_Dove Soap"),
+			),
+		);
+		expect(historyDoc.data()?.class_key).toBe("soap-key");
+	});
+
+	// Same asymmetric-merge rationale as the recurring clobber test above:
+	// item_history.class_key is the durable per-name class membership read
+	// by useShoppingList, so re-buying without re-picking the class must not
+	// silently un-class the whole name.
+	it("does not clobber an existing item_history.class_key when re-added without a class", async () => {
+		const historyId = encodeURIComponent("cleaning_Dove Soap");
+		await setDoc(doc(db, "users", uid, "item_history", historyId), {
+			name: "Dove Soap",
+			category: "cleaning",
+			duration: "",
+			recurring: true,
+			class_key: "soap-key",
+		});
+
+		await addItem(uid, {
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 2,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+			classKey: null,
+		});
+
+		const historyDoc = await getDoc(
+			doc(db, "users", uid, "item_history", historyId),
+		);
+		expect(historyDoc.data()?.class_key).toBe("soap-key");
+	});
+
 	it("sanitizes item names containing a slash into a valid history doc id", async () => {
 		await addItem(uid, {
 			name: "Milk 1/2 gal",
@@ -196,6 +257,133 @@ describe("updateItemDetails", () => {
 		const itemDoc = await getDoc(doc(db, "users", uid, "items", itemRef.id));
 		expect(itemDoc.data()?.class_key).toBe("soap-key");
 	});
+
+	it("merges class_key into the existing item_history doc when a class is set via Edit", async () => {
+		const historyId = encodeURIComponent("cleaning_Dove Soap");
+		await setDoc(doc(db, "users", uid, "item_history", historyId), {
+			name: "Dove Soap",
+			category: "cleaning",
+			duration: "",
+			recurring: true,
+		});
+		const itemRef = doc(collection(db, "users", uid, "items"));
+		await setDoc(
+			itemRef,
+			toItemDoc({
+				name: "Dove Soap",
+				category: "cleaning",
+				quantity: 1,
+				expiringDate: null,
+				duration: null,
+				dateOpened: null,
+				opened: false,
+				recurring: true,
+				barcode: null,
+				source: "manual",
+			}),
+		);
+
+		await updateItemDetails(uid, itemRef.id, {
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			classKey: "soap-key",
+		});
+
+		const historyDoc = await getDoc(
+			doc(db, "users", uid, "item_history", historyId),
+		);
+		expect(historyDoc.data()).toEqual({
+			name: "Dove Soap",
+			category: "cleaning",
+			duration: "",
+			recurring: true,
+			class_key: "soap-key",
+		});
+	});
+
+	// A rename in the same Edit lands on a history id that may not exist yet;
+	// the merge must still produce a doc carrying name/category/duration so
+	// it is never a bare `{ class_key }` stub.
+	it("writes a well-formed item_history doc when a class is set alongside a rename", async () => {
+		const itemRef = doc(collection(db, "users", uid, "items"));
+		await setDoc(
+			itemRef,
+			toItemDoc({
+				name: "Dove Sop",
+				category: "cleaning",
+				quantity: 1,
+				expiringDate: null,
+				duration: null,
+				dateOpened: null,
+				opened: false,
+				recurring: false,
+				barcode: null,
+				source: "manual",
+			}),
+		);
+
+		await updateItemDetails(uid, itemRef.id, {
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			classKey: "soap-key",
+		});
+
+		const historyDoc = await getDoc(
+			doc(
+				db,
+				"users",
+				uid,
+				"item_history",
+				encodeURIComponent("cleaning_Dove Soap"),
+			),
+		);
+		expect(historyDoc.data()).toEqual({
+			name: "Dove Soap",
+			category: "cleaning",
+			duration: "",
+			class_key: "soap-key",
+		});
+	});
+
+	it("does not touch item_history when no class is set", async () => {
+		const historyId = encodeURIComponent("cleaning_Trash Bags");
+		const itemRef = doc(collection(db, "users", uid, "items"));
+		await setDoc(
+			itemRef,
+			toItemDoc({
+				name: "Trash Bags",
+				category: "cleaning",
+				quantity: 1,
+				expiringDate: null,
+				duration: null,
+				dateOpened: null,
+				opened: false,
+				recurring: false,
+				barcode: null,
+				source: "manual",
+			}),
+		);
+
+		await updateItemDetails(uid, itemRef.id, {
+			name: "Trash Bags",
+			category: "cleaning",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			classKey: null,
+		});
+
+		const historyDoc = await getDoc(
+			doc(db, "users", uid, "item_history", historyId),
+		);
+		expect(historyDoc.exists()).toBe(false);
+	});
 });
 
 describe("updateItemQuantities classKey carry-over", () => {
@@ -272,6 +460,40 @@ describe("setItemRecurring", () => {
 
 		const itemDoc = await getDoc(doc(db, "users", uid, "items", itemId));
 		expect(itemDoc.data()?.recurring).toBe(true);
+	});
+
+	it("preserves item_history.class_key when toggled from an unclassed purchase", async () => {
+		const historyId = encodeURIComponent("cleaning_Dove Soap");
+		await setDoc(doc(db, "users", uid, "item_history", historyId), {
+			name: "Dove Soap",
+			category: "cleaning",
+			duration: "",
+			recurring: true,
+			class_key: "soap-key",
+		});
+		const itemRef = doc(collection(db, "users", uid, "items"));
+		const item = {
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: true,
+			barcode: null,
+			source: "manual" as const,
+			classKey: null,
+		};
+		await setDoc(itemRef, toItemDoc(item));
+
+		await setItemRecurring(uid, { ...item, id: itemRef.id }, false);
+
+		const historyDoc = await getDoc(
+			doc(db, "users", uid, "item_history", historyId),
+		);
+		expect(historyDoc.data()?.recurring).toBe(false);
+		expect(historyDoc.data()?.class_key).toBe("soap-key");
 	});
 });
 
