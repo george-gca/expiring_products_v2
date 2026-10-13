@@ -1,7 +1,10 @@
 import "../../lib/i18n";
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { doc, setDoc } from "firebase/firestore";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { db } from "../../lib/firebase";
+import { clearFirestoreEmulator } from "../../test/emulator";
 import * as barcodeWritesModule from "../barcode/firestoreWrites";
 import * as lookupBarcodeModule from "../barcode/lookupBarcode";
 import type { Category } from "../categories/schema";
@@ -475,6 +478,112 @@ describe("AddItemModal class field", () => {
 			expect(addSpy).toHaveBeenCalledWith(
 				"test-user-add-modal-class-3",
 				expect.objectContaining({ classKey: "new-class-key" }),
+			),
+		);
+	});
+});
+
+describe("AddItemModal class history prefill", () => {
+	const soapClass: ItemClass = {
+		id: "class1",
+		key: "soap-key",
+		category: "foods",
+		name: "Soap",
+		archived: false,
+	};
+
+	afterEach(async () => {
+		vi.restoreAllMocks();
+		await clearFirestoreEmulator(import.meta.env.VITE_FIREBASE_PROJECT_ID);
+	});
+
+	it("prefills the class from item_history when an existing item name is typed and blurred", async () => {
+		const uid = "test-user-add-modal-history-1";
+		await setDoc(
+			doc(
+				db,
+				"users",
+				uid,
+				"item_history",
+				encodeURIComponent("foods_Lux Soap"),
+			),
+			{
+				name: "Lux Soap",
+				category: "foods",
+				duration: "",
+				recurring: false,
+				class_key: "soap-key",
+			},
+		);
+
+		render(
+			<AddItemModal
+				uid={uid}
+				category={category}
+				open
+				onClose={vi.fn()}
+				classes={[soapClass]}
+			/>,
+		);
+
+		await userEvent.type(screen.getByLabelText(/^name$/i), "Lux Soap");
+		await userEvent.tab();
+
+		await waitFor(() => expect(screen.getByText("Soap")).toBeInTheDocument());
+	});
+
+	it("does not overwrite a manually picked class after a later name-history lookup", async () => {
+		const uid = "test-user-add-modal-history-2";
+		await setDoc(
+			doc(
+				db,
+				"users",
+				uid,
+				"item_history",
+				encodeURIComponent("foods_Lux Soap"),
+			),
+			{
+				name: "Lux Soap",
+				category: "foods",
+				duration: "",
+				recurring: false,
+				class_key: "soap-key",
+			},
+		);
+		const otherClass: ItemClass = {
+			id: "class2",
+			key: "other-key",
+			category: "foods",
+			name: "Other",
+			archived: false,
+		};
+
+		render(
+			<AddItemModal
+				uid={uid}
+				category={category}
+				open
+				onClose={vi.fn()}
+				classes={[soapClass, otherClass]}
+			/>,
+		);
+
+		await userEvent.click(screen.getByLabelText(/class/i));
+		await userEvent.click(await screen.findByText("Other"));
+
+		await userEvent.type(screen.getByLabelText(/^name$/i), "Lux Soap");
+		await userEvent.tab();
+
+		// Give the best-effort history lookup a turn to resolve, then confirm
+		// the manual pick survived. The dropdown stays mounted (jsdom never
+		// fires the outside-click that normally closes it), so `getByText`
+		// against "Other"/"Soap" also matches its lingering option nodes —
+		// read the Select's own current-value node directly instead.
+		const classSelect = screen.getByRole("combobox", { name: /class/i });
+		await waitFor(() =>
+			expect(classSelect.closest(".ant-select-content")).toHaveAttribute(
+				"title",
+				"Other",
 			),
 		);
 	});

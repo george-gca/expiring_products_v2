@@ -11,10 +11,12 @@ import {
 	Switch,
 } from "antd";
 import type { Dayjs } from "dayjs";
+import { doc, getDoc } from "firebase/firestore";
 import type { FocusEvent } from "react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { message } from "../../lib/feedback";
+import { db } from "../../lib/firebase";
 import { BarcodeScanner } from "../barcode/BarcodeScanner";
 import { upsertBarcodeProduct } from "../barcode/firestoreWrites";
 import { lookupBarcode } from "../barcode/lookupBarcode";
@@ -24,6 +26,7 @@ import type { ItemClass } from "../classes/schema";
 import { configureDateInputForMobile, datePickerFormats } from "./dateFormat";
 import { addItem } from "./firestoreWrites";
 import { QuantityStepper } from "./QuantityStepper";
+import { safeParseItemHistoryDoc } from "./schema";
 
 const CREATE_CLASS_VALUE = "__create__";
 
@@ -73,6 +76,10 @@ export function AddItemModal({
 	// fields.
 	const [noExpiration, setNoExpiration] = useState(false);
 	const [classFormOpen, setClassFormOpen] = useState(false);
+	// Once the user has explicitly picked/cleared a class (or finished the
+	// inline create-class flow), a later name-blur history lookup must not
+	// overwrite it — this flag is the guard for that.
+	const [classTouched, setClassTouched] = useState(false);
 
 	// Re-derived during render (rather than in the useEffect below, which
 	// would cause an extra commit) — the React-recommended "adjusting state
@@ -83,6 +90,7 @@ export function AddItemModal({
 		if (open) {
 			setScannerOpen(false);
 			setNoExpiration(false);
+			setClassTouched(false);
 		}
 	}
 
@@ -131,6 +139,28 @@ export function AddItemModal({
 		const barcode = e.target.value.trim();
 		if (barcode) {
 			applyBarcodeLookup(barcode);
+		}
+	};
+
+	// Durable per-name class association, mirroring how item_history already
+	// seeds EditItemModal's recurring switch. Skipped once the user has
+	// explicitly set the class field themselves (classTouched) — their choice
+	// always wins over a history lookup.
+	const handleNameBlur = async (e: FocusEvent<HTMLInputElement>) => {
+		const name = e.target.value.trim();
+		if (!name || classTouched) return;
+		const historyId = encodeURIComponent(`${category.key}_${name}`);
+		try {
+			const snapshot = await getDoc(
+				doc(db, "users", uid, "item_history", historyId),
+			);
+			if (!snapshot.exists()) return;
+			const parsed = safeParseItemHistoryDoc(snapshot.data());
+			if (parsed) {
+				form.setFieldsValue({ classKey: parsed.classKey ?? undefined });
+			}
+		} catch {
+			// Best-effort prefill only — leave whatever's already in the field.
 		}
 	};
 
@@ -216,7 +246,7 @@ export function AddItemModal({
 						label={t("items.name")}
 						rules={[{ required: true }]}
 					>
-						<Input />
+						<Input onBlur={handleNameBlur} />
 					</Form.Item>
 					<Form.Item name="barcode" label={t("items.barcode")}>
 						<Input onBlur={handleBarcodeBlur} />
@@ -277,6 +307,7 @@ export function AddItemModal({
 								},
 							]}
 							onChange={(value) => {
+								setClassTouched(true);
 								if (value === CREATE_CLASS_VALUE) {
 									form.setFieldsValue({ classKey: undefined });
 									setClassFormOpen(true);
@@ -292,7 +323,10 @@ export function AddItemModal({
 				open={classFormOpen}
 				onClose={() => setClassFormOpen(false)}
 				editingClass={null}
-				onCreated={(classId) => form.setFieldsValue({ classKey: classId })}
+				onCreated={(classId) => {
+					setClassTouched(true);
+					form.setFieldsValue({ classKey: classId });
+				}}
 			/>
 		</Modal>
 	);
