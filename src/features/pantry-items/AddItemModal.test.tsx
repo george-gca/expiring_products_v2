@@ -428,7 +428,7 @@ describe("AddItemModal class field", () => {
 		);
 		await userEvent.type(classNameInput, "Soap");
 		await userEvent.click(
-			within(classDialog).getByRole("button", { name: "OK" }),
+			within(classDialog as HTMLElement).getByRole("button", { name: "OK" }),
 		);
 
 		await waitFor(() =>
