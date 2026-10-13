@@ -1,5 +1,5 @@
 import { PlusOutlined } from "@ant-design/icons";
-import { Empty, FloatButton, Input, Listy, Switch, theme } from "antd";
+import { Empty, Flex, FloatButton, Input, Listy, Switch, theme } from "antd";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Category } from "../categories/schema";
@@ -79,13 +79,22 @@ export function ItemList({
 
 	return (
 		<>
-			<Switch
-				checked={shoppingModeOn}
-				onChange={(checked) => setShoppingModeOn(category.key, checked)}
-				checkedChildren={t("items.shoppingMode")}
-				unCheckedChildren={t("items.shoppingMode")}
-				style={{ marginBottom: 12 }}
-			/>
+			<Flex gap={12} style={{ marginBottom: 12 }}>
+				<Switch
+					checked={shoppingModeOn}
+					onChange={(checked) => setShoppingModeOn(category.key, checked)}
+					checkedChildren={t("items.shoppingMode")}
+					unCheckedChildren={t("items.shoppingMode")}
+				/>
+				{!shoppingModeOn && (
+					<Switch
+						checked={groupByClassOn}
+						onChange={(checked) => setGroupByClassOn(category.key, checked)}
+						checkedChildren={t("items.groupByClass")}
+						unCheckedChildren={t("items.groupByClass")}
+					/>
+				)}
+			</Flex>
 			{!shoppingModeOn && (
 				<Input.Search
 					aria-label={t("items.search")}
@@ -93,15 +102,6 @@ export function ItemList({
 					allowClear
 					value={search}
 					onChange={(e) => setSearch(category.key, e.target.value)}
-					style={{ marginBottom: 12 }}
-				/>
-			)}
-			{!shoppingModeOn && (
-				<Switch
-					checked={groupByClassOn}
-					onChange={(checked) => setGroupByClassOn(category.key, checked)}
-					checkedChildren={t("items.groupByClass")}
-					unCheckedChildren={t("items.groupByClass")}
 					style={{ marginBottom: 12 }}
 				/>
 			)}
