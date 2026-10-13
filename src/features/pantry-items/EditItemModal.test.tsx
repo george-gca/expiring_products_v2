@@ -694,7 +694,8 @@ describe("EditItemModal class field", () => {
 
 	// Review Focus: an item whose classKey refers to a class that's since
 	// been archived/deleted must still render without crashing.
-	it("renders without crashing when the item's classKey refers to a class not in the given list", () => {
+	it("renders without crashing when the item's classKey refers to a class not in the given list", async () => {
+		const user = userEvent.setup();
 		const item: PantryItem = {
 			id: "item-stale-class",
 			name: "Dove Soap",
@@ -720,6 +721,12 @@ describe("EditItemModal class field", () => {
 			/>,
 		);
 
+		await user.click(screen.getByRole("button", { name: /fix item details/i }));
+
+		// Details form mounted (and with it the classKey Select, built from
+		// an empty `classes` list against a non-matching value) without
+		// throwing.
+		expect(screen.getByLabelText(/^name$/i)).toBeInTheDocument();
 		expect(screen.getByText("Dove Soap")).toBeInTheDocument();
 	});
 });
