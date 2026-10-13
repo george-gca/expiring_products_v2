@@ -17,6 +17,7 @@ export const itemDocSchema = z.object({
 	barcode: z.string().nullable().optional(),
 	source: z.enum(["manual", "barcode"]).optional(),
 	last_notified_at: timestampSchema.nullable().optional(),
+	class_key: z.string().nullable().optional(),
 });
 
 export interface PantryItem {
@@ -32,6 +33,7 @@ export interface PantryItem {
 	barcode: string | null;
 	source: "manual" | "barcode";
 	lastNotifiedAt?: Date | null;
+	classKey?: string | null;
 }
 
 export function parseItemDoc(id: string, data: unknown): PantryItem {
@@ -51,6 +53,7 @@ export function parseItemDoc(id: string, data: unknown): PantryItem {
 		lastNotifiedAt: parsed.last_notified_at
 			? parsed.last_notified_at.toDate()
 			: null,
+		classKey: parsed.class_key ?? null,
 	};
 }
 
@@ -85,6 +88,7 @@ export function toItemDoc(item: Omit<PantryItem, "id">) {
 		last_notified_at: item.lastNotifiedAt
 			? Timestamp.fromDate(item.lastNotifiedAt)
 			: null,
+		class_key: item.classKey ?? null,
 	};
 }
 

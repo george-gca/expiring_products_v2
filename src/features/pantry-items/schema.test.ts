@@ -130,6 +130,72 @@ describe("toItemDoc", () => {
 	});
 });
 
+describe("parseItemDoc class_key", () => {
+	it("defaults classKey to null when the field is absent", () => {
+		const result = parseItemDoc("item1", {
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiring_date: null,
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+		});
+		expect(result.classKey).toBeNull();
+	});
+
+	it("round-trips a provided class_key", () => {
+		const result = parseItemDoc("item1", {
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiring_date: null,
+			duration: null,
+			date_opened: null,
+			opened: false,
+			recurring: false,
+			class_key: "soap-key",
+		});
+		expect(result.classKey).toBe("soap-key");
+	});
+});
+
+describe("toItemDoc class_key", () => {
+	it("writes class_key: null when classKey is omitted", () => {
+		const result = toItemDoc({
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+		});
+		expect(result.class_key).toBeNull();
+	});
+
+	it("writes the provided classKey", () => {
+		const result = toItemDoc({
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			dateOpened: null,
+			opened: false,
+			recurring: false,
+			barcode: null,
+			source: "manual",
+			classKey: "soap-key",
+		});
+		expect(result.class_key).toBe("soap-key");
+	});
+});
+
 describe("parseItemHistoryDoc", () => {
 	it("parses a valid item_history document", () => {
 		const result = parseItemHistoryDoc({
