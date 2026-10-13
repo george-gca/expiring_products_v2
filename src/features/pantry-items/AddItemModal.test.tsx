@@ -369,8 +369,16 @@ describe("AddItemModal class field", () => {
 			/>,
 		);
 
+		// Satisfy the date requirement so only the name rule can block submit.
+		await userEvent.click(
+			screen.getByRole("checkbox", { name: /no expiration/i }),
+		);
 		await userEvent.click(screen.getByRole("button", { name: "OK" }));
 
+		// Wait for the name rule's own inline error (antd's default message,
+		// keyed by field name) — proves validation actually ran and that it
+		// was the name rule, not some other field, that blocked submission.
+		expect(await screen.findByText("'name' is required")).toBeInTheDocument();
 		await waitFor(() => expect(onClose).not.toHaveBeenCalled());
 		expect(addSpy).not.toHaveBeenCalled();
 	});
