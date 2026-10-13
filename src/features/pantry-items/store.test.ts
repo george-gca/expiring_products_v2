@@ -60,3 +60,18 @@ describe("shopping mode state", () => {
 		expect(getSkippedNames("foods")).toEqual(new Set());
 	});
 });
+
+describe("group by class state", () => {
+	it("defaults to off for an unseen category", () => {
+		const state = useUiPreferencesStore.getState();
+		expect(state.isGroupByClassOn("foods")).toBe(false);
+	});
+
+	it("tracks group-by-class per category independently", () => {
+		const { setGroupByClassOn, isGroupByClassOn } =
+			useUiPreferencesStore.getState();
+		setGroupByClassOn("foods", true);
+		expect(isGroupByClassOn("foods")).toBe(true);
+		expect(isGroupByClassOn("medicines")).toBe(false);
+	});
+});

@@ -9,16 +9,19 @@ interface UiPreferencesState {
 	searchByCategory: Record<string, string>;
 	shoppingModeOnByCategory: Record<string, boolean>;
 	skippedNamesByCategory: Record<string, Set<string>>;
+	groupByClassByCategory: Record<string, boolean>;
 	getSortDirection: (categoryKey: string) => SortDirection;
 	getFilter: (categoryKey: string) => Filter;
 	getSearch: (categoryKey: string) => string;
 	isShoppingModeOn: (categoryKey: string) => boolean;
 	getSkippedNames: (categoryKey: string) => Set<string>;
+	isGroupByClassOn: (categoryKey: string) => boolean;
 	setSortDirection: (categoryKey: string, direction: SortDirection) => void;
 	setFilter: (categoryKey: string, filter: Filter) => void;
 	setSearch: (categoryKey: string, search: string) => void;
 	setShoppingModeOn: (categoryKey: string, on: boolean) => void;
 	skipItem: (categoryKey: string, name: string) => void;
+	setGroupByClassOn: (categoryKey: string, on: boolean) => void;
 }
 
 export const useUiPreferencesStore = create<UiPreferencesState>((set, get) => ({
@@ -27,6 +30,7 @@ export const useUiPreferencesStore = create<UiPreferencesState>((set, get) => ({
 	searchByCategory: {},
 	shoppingModeOnByCategory: {},
 	skippedNamesByCategory: {},
+	groupByClassByCategory: {},
 	getSortDirection: (categoryKey) =>
 		get().sortDirectionByCategory[categoryKey] ?? "asc",
 	getFilter: (categoryKey) => get().filterByCategory[categoryKey] ?? "all",
@@ -35,6 +39,8 @@ export const useUiPreferencesStore = create<UiPreferencesState>((set, get) => ({
 		get().shoppingModeOnByCategory[categoryKey] ?? false,
 	getSkippedNames: (categoryKey) =>
 		get().skippedNamesByCategory[categoryKey] ?? new Set(),
+	isGroupByClassOn: (categoryKey) =>
+		get().groupByClassByCategory[categoryKey] ?? false,
 	setSortDirection: (categoryKey, direction) =>
 		set((state) => ({
 			sortDirectionByCategory: {
@@ -71,6 +77,13 @@ export const useUiPreferencesStore = create<UiPreferencesState>((set, get) => ({
 					...(state.skippedNamesByCategory[categoryKey] ?? new Set()),
 					name,
 				]),
+			},
+		})),
+	setGroupByClassOn: (categoryKey, on) =>
+		set((state) => ({
+			groupByClassByCategory: {
+				...state.groupByClassByCategory,
+				[categoryKey]: on,
 			},
 		})),
 }));
