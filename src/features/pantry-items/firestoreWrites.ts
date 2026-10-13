@@ -112,6 +112,7 @@ export async function updateItemQuantities(
 					recurring: item.recurring,
 					barcode: item.barcode,
 					source: item.source,
+					classKey: item.classKey,
 				}),
 			);
 		}
@@ -140,6 +141,7 @@ interface ItemDetailsChanges {
 	quantity: number;
 	expiringDate: Date | null;
 	duration: number | null;
+	classKey: string | null;
 }
 
 // Corrects a mis-entered item in place — distinct from updateItemQuantities,
@@ -159,6 +161,7 @@ export async function updateItemDetails(
 			? Timestamp.fromDate(changes.expiringDate)
 			: null,
 		duration: changes.duration,
+		class_key: changes.classKey,
 	});
 }
 

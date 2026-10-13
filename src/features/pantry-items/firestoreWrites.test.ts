@@ -159,10 +159,74 @@ describe("updateItemDetails", () => {
 			quantity: 1,
 			expiringDate: null,
 			duration: null,
+			classKey: null,
 		});
 
 		const itemDoc = await getDoc(doc(db, "users", uid, "items", itemRef.id));
 		expect(itemDoc.data()?.expiring_date).toBeNull();
+	});
+
+	it("updates class_key via updateItemDetails", async () => {
+		const itemRef = doc(collection(db, "users", uid, "items"));
+		await setDoc(
+			itemRef,
+			toItemDoc({
+				name: "Dove Soap",
+				category: "cleaning",
+				quantity: 1,
+				expiringDate: null,
+				duration: null,
+				dateOpened: null,
+				opened: false,
+				recurring: false,
+				barcode: null,
+				source: "manual",
+			}),
+		);
+
+		await updateItemDetails(uid, itemRef.id, {
+			name: "Dove Soap",
+			category: "cleaning",
+			quantity: 1,
+			expiringDate: null,
+			duration: null,
+			classKey: "soap-key",
+		});
+
+		const itemDoc = await getDoc(doc(db, "users", uid, "items", itemRef.id));
+		expect(itemDoc.data()?.class_key).toBe("soap-key");
+	});
+});
+
+describe("updateItemQuantities classKey carry-over", () => {
+	it("carries classKey onto the split opened-item doc", async () => {
+		const itemRef = doc(collection(db, "users", uid, "items"));
+		await setDoc(
+			itemRef,
+			toItemDoc({
+				name: "Dove Soap",
+				category: "cleaning",
+				quantity: 3,
+				expiringDate: null,
+				duration: null,
+				dateOpened: null,
+				opened: false,
+				recurring: false,
+				barcode: null,
+				source: "manual",
+				classKey: "soap-key",
+			}),
+		);
+
+		await updateItemQuantities(uid, itemRef.id, {
+			opened: 1,
+			consumed: 0,
+			discarded: 0,
+		});
+
+		const itemsSnapshot = await getDocs(collection(db, "users", uid, "items"));
+		const openedItem = itemsSnapshot.docs.find((d) => d.data().opened);
+		expect(openedItem?.data().class_key).toBe("soap-key");
 	});
 });
 
