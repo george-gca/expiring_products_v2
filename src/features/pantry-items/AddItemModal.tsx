@@ -299,8 +299,12 @@ export function AddItemModal({
 					<Form.Item name="classKey" label={t("items.itemClassLabel")}>
 						<Select
 							allowClear
+							showSearch
+							optionFilterProp="label"
 							options={[
-								...classes.map((cls) => ({ value: cls.key, label: cls.name })),
+								...[...classes]
+									.sort((a, b) => a.name.localeCompare(b.name, i18n.language))
+									.map((cls) => ({ value: cls.key, label: cls.name })),
 								{
 									value: CREATE_CLASS_VALUE,
 									label: t("items.itemClassCreateOption"),
